@@ -13,7 +13,7 @@ export type DraftLine = z.infer<typeof rawLineSchema>;
 const recordedLlm = z.object({ lines: z.array(rawLineSchema), ms: z.number().nonnegative() });
 
 export interface DraftResult {
-  /** Lines whose code is in the price list, one per code (first mention wins). */
+  /** Lines whose code is in the price list, one per code, in order of first mention. A repeated code keeps its last urgency and text, like score.py. */
   lines: DraftLine[];
   /** Codes the provider named that are not in the price list (the "invented" count). */
   droppedCodes: string[];
@@ -60,13 +60,13 @@ export async function draftLines(text: string, provider: string, opts: DraftOpti
 }
 
 function finish(raw: DraftLine[], ms: number, list: PriceList): DraftResult {
-  const lines: DraftLine[] = [];
+  const byCode = new Map<string, DraftLine>();
   const dropped = new Set<string>();
   for (const line of raw) {
     if (!list.byCode(line.code)) dropped.add(line.code);
-    else if (!lines.some((l) => l.code === line.code)) lines.push(line);
+    else byCode.set(line.code, line);
   }
-  return { lines, droppedCodes: [...dropped], raw, ms };
+  return { lines: [...byCode.values()], droppedCodes: [...dropped], raw, ms };
 }
 
 // --- keywords: no model. Port of baseline() in docs/2026-10-31-lbl-measure/score.py, same words, same order. ---

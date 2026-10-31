@@ -16,7 +16,7 @@ How well does a mechanic's spoken note become the right lines of the shop's pric
 |---|---|
 | **Exact notes N/32** (the main one) | notes where the set of codes equals the expected set |
 | precision, recall | over all codes of all notes |
-| invented codes | codes the model named that are not in the price list (dropped before they reach a line); goal 0 |
+| invented codes | codes the model named that are not in the price list (dropped before they reach a line); goal 0. As in the Python prototype, scoring uses the model's answer before that filter: an invented code counts as a false positive and the note is not exact. A code named twice keeps its last urgency |
 | urgency | urgency right, counted on lines whose code was right |
 | WER | word error rate of speech recognition against the note text. Spoken and written numbers count as equal (`two millimeters` = `2mm`, `a hundred and ten thousand` = `110,000`, `P zero four two zero` = `P0420`). No other normalization, so contractions and homophones still count as errors |
 | latency p50, p95 | speech recognition plus lines, per note, upper median as in the Python prototype |
@@ -43,7 +43,8 @@ npm run eval -- --stt groq:whisper-large-v3-turbo --llm groq:openai/gpt-oss-120b
 
 - Speech providers: `recorded:<name>` (`recordings/stt/<name>.jsonl`), `groq:whisper-large-v3`, `groq:whisper-large-v3-turbo`, `local:parakeet` (the `stt-local` tool on the development Mac, not for hosting).
 - Line providers: `keywords`, `recorded:<name>` (`recordings/llm/<name>.jsonl`), `groq:openai/gpt-oss-120b`, `groq:openai/gpt-oss-20b`.
-- `groq:*` is a paid service and is refused before any network call unless `LBL_LLM_LIVE=1` and `GROQ_API_KEY` are set. Tests never set them.
+- `groq:*` is a paid service and is refused before any network call unless `LBL_LLM_LIVE=1` and `GROQ_API_KEY` are set. Tests that exercise the live path set `LBL_LLM_LIVE=1` and a fake key with `fetch` stubbed out; no test reaches the network.
 - `--record <name>` saves the answers of the live providers of that run to `recordings/` (it refuses to overwrite), so the run can be replayed later without a key.
+- With `--record`, each answer is appended to the recording file as it arrives, so a run that fails on note 31 keeps the answers of notes 1 to 30 (they are not reused automatically: the name is then taken, so pick a new one or move the partial file).
 - Every run writes `results/<speech>__<lines>.json` (per-note rows, transcripts, WER) and prints a one-line summary for the README.
 - `recordings/stt/parakeet-local.jsonl`: transcripts from NVIDIA Parakeet-TDT-0.6B-v3 run locally on all 32 audio files (0 errors, p50 755 ms).

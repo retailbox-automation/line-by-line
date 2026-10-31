@@ -1,4 +1,6 @@
-// Scoring of the voice-to-line benchmark. Same rules as docs/2026-10-31-lbl-measure/score.py.
+// Scoring of the voice-to-line benchmark. Same rules as docs/2026-10-31-lbl-measure/score.py:
+// the prediction is what the model answered, before the price list filtered it, so a code that is not
+// in the list counts as a false positive and the note is not exact. A repeated code keeps its last urgency.
 
 import { readFileSync } from "node:fs";
 import { z } from "zod";
@@ -24,9 +26,9 @@ export function loadFindings(path: string | URL): Finding[] {
 }
 
 export interface Prediction {
-  /** Lines after the price list filtered them. */
+  /** The model's lines as answered, invented codes included (not the filtered lines). */
   lines: Array<{ code: string; urgency: Urgency }>;
-  /** Codes the model named that are not in the price list. */
+  /** Codes among `lines` that are not in the price list; counted in `invented`. */
   droppedCodes: string[];
 }
 

@@ -2,7 +2,7 @@
 // Providers: stt = recorded:<name> | groq:whisper-large-v3[-turbo] | local:parakeet; llm = keywords | recorded:<name> | groq:<model>.
 // Live providers (groq:*) need LBL_LLM_LIVE=1 and GROQ_API_KEY; without them the run stops before any network call.
 
-import { existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { appendFileSync, existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { parseArgs } from "node:util";
@@ -76,15 +76,19 @@ export async function runEval(opts: EvalOptions): Promise<EvalReport> {
   if (opts.record !== undefined) {
     if (!recordStt && !recordLlm) throw new Error("--record needs a live provider (groq:* or local:parakeet); nothing to record");
     for (const [wanted, file] of [[recordStt, sttFile], [recordLlm, llmFile]] as const) {
-      if (wanted && existsSync(file)) throw new Error(`${file} already exists; pick another --record name`);
+      if (wanted && existsSync(file)) throw new Error(`${file} already exists (a failed run leaves its partial answers there); pick another --record name`);
     }
   }
 
   const predictions = new Map<string, Prediction>();
   const extras: Array<Pick<NoteResult, "transcript" | "wer" | "ms">> = [];
-  const sttRecords: unknown[] = [];
-  const llmRecords: unknown[] = [];
   const wers: number[] = [];
+  // Each answer goes to the recording file as soon as it arrives, so a failure on note 31 keeps the paid answers of notes 1 to 30.
+  const keep = (wanted: boolean, file: string, row: unknown): void => {
+    if (!wanted) return;
+    mkdirSync(dirname(file), { recursive: true });
+    appendFileSync(file, `${JSON.stringify(row)}\n`);
+  };
 
   for (const f of findings) {
     let text = f.note;
@@ -93,11 +97,11 @@ export async function runEval(opts: EvalOptions): Promise<EvalReport> {
       const heard = await transcribe(join(dir, "audio", `${f.id}.wav`), opts.stt, { recordingsDir });
       text = heard.text;
       sttMs = heard.ms;
-      sttRecords.push({ id: f.id, text, ms: sttMs });
+      keep(recordStt, sttFile, { id: f.id, text, ms: sttMs });
     }
     const drafted = await draftLines(text, opts.llm, { id: f.id, priceList, recordingsDir });
-    llmRecords.push({ id: f.id, lines: drafted.raw, ms: drafted.ms });
-    predictions.set(f.id, { lines: drafted.lines, droppedCodes: drafted.droppedCodes });
+    keep(recordLlm, llmFile, { id: f.id, lines: drafted.raw, ms: drafted.ms });
+    predictions.set(f.id, { lines: drafted.raw, droppedCodes: drafted.droppedCodes });
     const noteWer = fromText ? undefined : wer(f.note, text);
     if (noteWer !== undefined) wers.push(noteWer);
     extras.push({ ...(noteWer === undefined ? {} : { transcript: text, wer: round(noteWer) }), ms: sttMs + drafted.ms });
@@ -126,13 +130,6 @@ export async function runEval(opts: EvalOptions): Promise<EvalReport> {
     const name = `${opts.stt}__${opts.llm}`.replace(/[^A-Za-z0-9._-]+/g, "-");
     mkdirSync(join(dir, "results"), { recursive: true });
     writeFileSync(join(dir, "results", `${name}.json`), `${JSON.stringify(report, null, 2)}\n`);
-  }
-  if (opts.record !== undefined) {
-    for (const [wanted, file, records] of [[recordStt, sttFile, sttRecords], [recordLlm, llmFile, llmRecords]] as const) {
-      if (!wanted) continue;
-      mkdirSync(dirname(file), { recursive: true });
-      writeFileSync(file, records.map((r) => JSON.stringify(r)).join("\n") + "\n");
-    }
   }
   return report;
 }

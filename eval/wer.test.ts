@@ -24,6 +24,31 @@ describe("normalizeWords", () => {
     expect(normalizeWords("one hundred and five")).toEqual(["105"]);
   });
 
+  it("does not run number words across a comma or a sentence end", () => {
+    expect(normalizeWords("two, four millimeters")).toEqual(["2", "4mm"]);
+    expect(normalizeWords("Rear is at three. Two bulbs out")).toEqual(["rear", "is", "at", "3", "2", "bulbs", "out"]);
+    expect(wer("two, four millimeters", "2, 4mm")).toBe(0);
+  });
+
+  it("keeps two tens or teens in a row as two numbers, and still adds up one number", () => {
+    expect(normalizeWords("eleven twelve")).toEqual(["11", "12"]);
+    expect(normalizeWords("twenty twenty")).toEqual(["20", "20"]);
+    expect(normalizeWords("two thousand twenty one")).toEqual(["2021"]);
+    expect(normalizeWords("one hundred twelve")).toEqual(["112"]);
+  });
+
+  it("joins a trouble code however the digits come back from speech recognition", () => {
+    expect(wer("P zero four two zero", "P 0 4 2 0")).toBe(0);
+    expect(wer("P zero four two zero", "P0420")).toBe(0);
+    expect(wer("P zero four two zero", "P 04 20")).toBe(0);
+    expect(normalizeWords("code p0420 2 plugs")).toEqual(["code", "p0420", "2", "plugs"]);
+  });
+
+  it("treats a curly apostrophe like a straight one", () => {
+    expect(normalizeWords("can\u2019t let it go")).toEqual(["can't", "let", "it", "go"]);
+    expect(wer("can\u2019t let it go", "can't let it go")).toBe(0);
+  });
+
   it("leaves ordinary words alone, including a lone article and the word and", () => {
     expect(normalizeWords("Pads and rotors, a bit worn")).toEqual(["pads", "and", "rotors", "a", "bit", "worn"]);
     expect(normalizeWords("constructor toString")).toEqual(["constructor", "tostring"]);

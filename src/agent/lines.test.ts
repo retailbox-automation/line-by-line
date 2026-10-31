@@ -48,9 +48,9 @@ describe("recorded provider", () => {
   });
   afterEach(() => rmSync(dir, { recursive: true, force: true }));
 
-  it("drops a code that is not in the price list, keeps one line per code, and keeps the raw answer", async () => {
+  it("drops a code that is not in the price list, keeps one line per code (the last mention wins, as in score.py), and keeps the raw answer", async () => {
     const r = await draftLines("ignored", "recorded:t", { id: "N1", recordingsDir: dir });
-    expect(r.lines).toEqual([{ code: "BRK-PAD-F", urgency: "safety", customerText: "Pads are thin." }]);
+    expect(r.lines).toEqual([{ code: "BRK-PAD-F", urgency: "soon", customerText: "again" }]);
     expect(r.droppedCodes).toEqual(["MADE-UP"]);
     expect(r.raw).toHaveLength(3);
     expect(r.ms).toBe(321);

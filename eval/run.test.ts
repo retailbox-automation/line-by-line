@@ -96,6 +96,19 @@ describe("live providers and recordings", () => {
     await expect(runEval(live)).rejects.toThrow(/already exists/);
   });
 
+  it("a live run that fails on a later note keeps the answers already received", async () => {
+    const ok = () => new Response(JSON.stringify({ choices: [{ message: { content: JSON.stringify({ lines: [] }) } }] }), { status: 200 });
+    let calls = 0;
+    const fake = vi.fn(async () => (++calls === 3 ? new Response("boom", { status: 500 }) : ok()));
+    vi.stubGlobal("fetch", fake);
+    vi.stubEnv("LBL_LLM_LIVE", "1");
+    vi.stubEnv("GROQ_API_KEY", "fake-test-key-not-real");
+    await expect(runEval({ stt: "text", llm: "groq:openai/gpt-oss-20b", record: "r2", writeResults: true, evalDir: dir })).rejects.toThrow(/500/);
+    const saved = readFileSync(join(dir, "recordings", "llm", "r2.jsonl"), "utf8").trim().split("\n").map((l) => JSON.parse(l) as { id: string });
+    expect(saved.map((r) => r.id)).toEqual(["F01", "F02"]);
+    expect(existsSync(join(dir, "results"))).toBe(false);
+  });
+
   it("a recorded live run replays to the same numbers", async () => {
     const answer = { lines: [{ code: "BRK-PAD-F", urgency: "safety", customerText: "Pads are worn." }, { code: "MADE-UP", urgency: "soon", customerText: "?" }] };
     const fake = vi.fn(async () => new Response(JSON.stringify({ choices: [{ message: { content: JSON.stringify(answer) } }] }), { status: 200 }));
@@ -104,7 +117,10 @@ describe("live providers and recordings", () => {
     vi.stubEnv("GROQ_API_KEY", "fake-test-key-not-real");
     const live = await runEval({ stt: "text", llm: "groq:openai/gpt-oss-20b", record: "r1", writeResults: true, evalDir: dir });
     expect(fake).toHaveBeenCalledTimes(32);
-    expect(live.exact).toBe(1); // only F01 expects exactly BRK-PAD-F
+    // Same as `score.py lines` on the same answers: MADE-UP is a false positive on every note, so no note is exact (0/32, precision 0.031, recall 0.061, 32 hallucinated).
+    expect(live.exact).toBe(0);
+    expect(live.precision.toFixed(3)).toBe("0.031");
+    expect(live.recall.toFixed(3)).toBe("0.061");
     expect(live.invented).toBe(32);
     expect(existsSync(join(dir, "results", "text__groq-openai-gpt-oss-20b.json"))).toBe(true);
     expect(JSON.stringify(readFileSync(join(dir, "results", "text__groq-openai-gpt-oss-20b.json"), "utf8"))).not.toContain("fake-test-key-not-real");

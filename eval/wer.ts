@@ -11,14 +11,18 @@ const MM = new Set(["mm", "mil", "mils", "millimeter", "millimeters"]);
 const isDigitWord = (w: string): boolean => Object.hasOwn(UNITS, w) && (UNITS[w] ?? 10) < 10;
 const isNumberWord = (w: string): boolean => Object.hasOwn(UNITS, w) || Object.hasOwn(TENS, w) || Object.hasOwn(SCALES, w);
 
+const BREAK = "|"; // a comma, period or similar: spoken numbers do not run across it
+
 /** Lower-cased words with spoken numbers turned into digits ("a hundred and ten thousand" -> "110000"). */
 export function normalizeWords(text: string): string[] {
   const cleaned = text
     .toLowerCase()
+    .replace(/[\u2018\u2019]/g, "'")
     .replace(/%/g, " percent ")
     .replace(/-/g, " ")
     .replace(/(?<=\d),(?=\d{3}(?!\d))/g, "")
-    .replace(/[^a-z0-9' ]+/g, " ");
+    .replace(/[,.;:!?]+/g, ` ${BREAK} `)
+    .replace(/[^a-z0-9' |]+/g, " ");
   const words = cleaned.split(/\s+/).filter(Boolean);
 
   const out: string[] = [];
@@ -52,9 +56,16 @@ export function normalizeWords(text: string): string[] {
       let current = 0;
       for (const x of run) {
         if (x === "a" || x === "and") continue;
-        if (Object.hasOwn(UNITS, x)) current += UNITS[x] as number;
-        else if (Object.hasOwn(TENS, x)) current += TENS[x] as number;
-        else if (x === "hundred") current = (current || 1) * 100;
+        if (Object.hasOwn(UNITS, x) || Object.hasOwn(TENS, x)) {
+          const v = (UNITS[x] ?? TENS[x]) as number;
+          // "eleven twelve" and "twenty twenty" are two numbers, not one sum.
+          if (v >= 10 && current % 100 !== 0) {
+            out.push(String(total + current));
+            total = 0;
+            current = 0;
+          }
+          current += v;
+        } else if (x === "hundred") current = (current || 1) * 100;
         else {
           total += (current || 1) * 1000;
           current = 0;
@@ -65,15 +76,15 @@ export function normalizeWords(text: string): string[] {
     i = j;
   }
 
-  // "p 0420" -> "p0420" and "2 millimeters" -> "2mm".
+  // "p 0420" -> "p0420", "p 0 4 2 0" -> "p0420" (a trouble code has four digits) and "2 millimeters" -> "2mm".
   const merged: string[] = [];
   for (const w of out) {
     const prev = merged[merged.length - 1];
-    if (prev === "p" && /^\d+$/.test(w)) merged[merged.length - 1] = `p${w}`;
+    if (prev !== undefined && /^p\d{0,3}$/.test(prev) && /^\d+$/.test(w) && prev.length - 1 + w.length <= 4) merged[merged.length - 1] = `${prev}${w}`;
     else if (prev !== undefined && /^\d+$/.test(prev) && MM.has(w)) merged[merged.length - 1] = `${prev}mm`;
     else merged.push(w);
   }
-  return merged;
+  return merged.filter((w) => w !== BREAK);
 }
 
 /** Word-level edit distance of the normalized texts, divided by the reference length. */

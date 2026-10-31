@@ -37,6 +37,22 @@ describe("scoreLines", () => {
     expect(s.rows[2]).toMatchObject({ expected: ["B", "C"], got: ["B"] });
   });
 
+  it("an invented code is a false positive and makes the note not exact, a repeated code keeps its last urgency", () => {
+    // What the run feeds in: the model's lines as answered, invented code included.
+    const answered = (lines: Array<[string, "safety" | "soon" | "can_wait"]>, droppedCodes: string[]): Prediction => ({ lines: lines.map(([code, urgency]) => ({ code, urgency })), droppedCodes });
+    const s = scoreLines(
+      [f("N1", ["A", "safety"]), f("N2", ["A", "safety"])],
+      new Map([
+        ["N1", answered([["A", "safety"], ["MADE-UP", "soon"]], ["MADE-UP"])],
+        ["N2", answered([["A", "soon"], ["A", "safety"]], [])],
+      ]),
+    );
+    expect(s.rows.map((r) => r.ok)).toEqual([false, true]);
+    expect(s.precision).toBeCloseTo(2 / 3); // tp 2, fp 1 (MADE-UP)
+    expect(s.invented).toBe(1);
+    expect(s.urgencyOk).toBe(2);
+  });
+
   it("counts a dropped code once per note, however often it was named", () => {
     const s = scoreLines([f("N1")], new Map([["N1", { lines: [], droppedCodes: ["Z", "Z", "Y"] }]]));
     expect(s.invented).toBe(2);
