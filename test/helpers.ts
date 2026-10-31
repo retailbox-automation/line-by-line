@@ -1,10 +1,13 @@
 import { PGlite } from "@electric-sql/pglite";
+import type { Hono } from "hono";
 import { createEstimateOrder, createRepairOrder, onApproved, type CoreDeps } from "../src/core/index.js";
 import type { Db } from "../src/db/db.js";
 import { migrate } from "../src/db/migrate.js";
 import { wrapPglite } from "../src/db/pglite.js";
 import { createPayPalClient, type PayPalClient } from "../src/paypal/client.js";
+import { createApp } from "../src/http/app.js";
 import { dbCallSink } from "../src/paypal/journal.js";
+import { createWebhookReceiver, type WebhookReceiver } from "../src/webhooks/paypal.js";
 import { FakePayPal } from "./fake-paypal.js";
 
 export class Clock {
@@ -92,4 +95,51 @@ export async function dumpTables(db: Db): Promise<string> {
   const out: Record<string, unknown> = {};
   for (const t of tables) out[t] = (await db.query(`SELECT * FROM ${t}`)).rows;
   return JSON.stringify(out);
+}
+
+export const PUBLIC_BASE = "https://lbl.example.test";
+export const JOB_TOKEN = "test-job-token-0123456789";
+export const WEBHOOK_ID = "WH-TEST-PLACEHOLDER";
+
+export interface AppEnv extends Env {
+  app: Hono;
+  webhooks: WebhookReceiver;
+}
+
+/** makeEnv plus the HTTP app. `null` leaves PAYPAL_WEBHOOK_ID / JOB_TOKEN unset. */
+export async function makeAppEnv(o: { webhookId?: string | null; jobToken?: string | null } = {}): Promise<AppEnv> {
+  const env = await makeEnv();
+  const webhooks = createWebhookReceiver(env.deps, o.webhookId === null ? undefined : (o.webhookId ?? WEBHOOK_ID));
+  const app = createApp({ deps: env.deps, publicBaseUrl: PUBLIC_BASE, jobToken: o.jobToken === null ? undefined : (o.jobToken ?? JOB_TOKEN), webhooks });
+  return { ...env, app, webhooks };
+}
+
+export interface Reply {
+  status: number;
+  /** Parsed JSON body (null when empty or not JSON). */
+  json: any;
+  text: string;
+  headers: Headers;
+}
+
+/** One HTTP request to the app. A non-string body is sent as JSON with content-type application/json. */
+export async function call(app: Hono, method: string, path: string, body?: unknown, headers: Record<string, string> = {}): Promise<Reply> {
+  const h: Record<string, string> = { ...headers };
+  const init: RequestInit = { method, headers: h };
+  if (body !== undefined) {
+    if (typeof body === "string") init.body = body;
+    else {
+      h["content-type"] ??= "application/json";
+      init.body = JSON.stringify(body);
+    }
+  }
+  const res = await app.request(path, init);
+  const text = await res.text();
+  let json: unknown = null;
+  try {
+    json = text ? JSON.parse(text) : null;
+  } catch {
+    json = null;
+  }
+  return { status: res.status, json, text, headers: res.headers };
 }

@@ -26,6 +26,28 @@ _Filled in after the model benchmark (day 4)._
 
 [docs/sponsor-feedback.md](docs/sponsor-feedback.md) — what worked and what did not, with dates and debug details.
 
+## Run locally
+
+Node 22 or newer. Values come from the environment only; `.env.example` lists the names, never values.
+
+```bash
+npm ci
+npm test                      # unit and integration tests, no network
+npm run build && npm start    # API on PORT (default 8080), migrations run on start
+```
+
+| Variable | Needed | What it is |
+|---|---|---|
+| `PAYPAL_SANDBOX_CLIENT_ID`, `PAYPAL_SANDBOX_CLIENT_SECRET` | yes | a PayPal sandbox REST app (live keys are refused) |
+| `PUBLIC_BASE_URL` | yes | the public address of the app; PayPal sends the customer back to it |
+| `DATABASE_URL` | for a real run | Postgres; without it a local in-process database is used (`PGLITE_DIR` keeps it on disk) |
+| `PAYPAL_WEBHOOK_ID` | for webhooks | the webhook route answers 503 without it |
+| `JOB_TOKEN` | for the reauthorize job | bearer token of `POST /api/jobs/reauthorize`, at least 16 characters |
+| `PORT`, `BRAND_NAME` | no | listening port; the shop name on the PayPal page |
+
+The API contract is in [docs/api.md](docs/api.md). `npm run e2e:sandbox` walks the whole story against the sandbox; it
+prints each approval link for you to approve as the sandbox buyer.
+
 ## License
 
 MIT, see [LICENSE](LICENSE).
