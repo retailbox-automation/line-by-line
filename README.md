@@ -10,8 +10,8 @@ When a mechanic finds something new, the customer gets each line on their phone 
 
 | Claim | Proof | What you will see |
 |---|---|---|
-| Each approved line is its own PayPal hold | _added on day 2_ | |
-| Capture only what was approved, void the rest | _added on day 2_ | |
+| Each approved line is its own PayPal hold | [sandbox evidence](docs/sandbox-evidence.md): estimate order `9R8100836T065372J`, rotor line order `0DE79626HT245092A`, declined filter line has no order | two authorizations, one per approval; nothing for the declined line |
+| Capture only what was approved, void the rest | [sandbox evidence](docs/sandbox-evidence.md): capture `6G777920EC171302S` ($398 of $412, then void) and `2ST05119E70486816` ($186 in full, no void) | estimate hold `VOIDED` with $398 captured; rotor hold `CAPTURED` |
 | A real reauthorization on a hold older than 3 days | _added on day 7_ | |
 
 ## How it uses PayPal
