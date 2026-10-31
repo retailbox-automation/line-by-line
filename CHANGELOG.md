@@ -33,3 +33,6 @@
   API: signed 2-hour sessions without login, the $412 demo repair order, a pool of aged sandbox holds
   (`npm run seed:pool`, explicit ids only) and one real reauthorization per session; the reauthorize job never touches
   pool holds.
+- Judge pool race closed: reauthorize-next locks a hold and checks it again before claiming it, and a refusal for good
+  flags the hold in the same transaction that records it, so two judges never send two reauthorizations to one hold.
+  The public pool listing no longer shows the operator's note or the text of a flag.

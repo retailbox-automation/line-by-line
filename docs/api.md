@@ -527,7 +527,7 @@ reauthorized), items that do not add up to the hold, a hold of a shop repair ord
 never touched):
 
 ```json
-{ "authorizationId": "4RR33540BR8604004", "label": "RO-2910-A", "purpose": "judge", "wave": 1, "note": "",
+{ "authorizationId": "4RR33540BR8604004", "label": "RO-2910-A", "purpose": "judge", "wave": 1,
   "roId": "ro_pool_4RR33540BR8604004", "amountCents": 14250, "amount": "142.50", "createdAt": "…", "ageDays": 6,
   "expirationTime": "…", "status": "CREATED", "live": { "status": "CREATED", "expirationTime": "…" }, "liveError": null,
   "window": { "opensAt": "…", "closesAt": "…", "open": true },
@@ -537,7 +537,9 @@ never touched):
 - `window`: reauthorize is allowed from 4 days 10 minutes after the hold was created until it expires.
 - `reauthorized`: `{ "at", "newId", "expirationTime", "live", "liveError" }` once done (the new id keeps the old expiry).
 - `available` is `false` with a `reason` for a `reserved` hold (kept for a test or a recording; listed, never handed
-  out), one already reauthorized, too young, expired, picked up or flagged.
+  out), one already reauthorized, too young, expired, picked up or flagged. A flagged hold only says
+  `flagged for the service desk`: the flag's text (PayPal's refusal) and the operator's `--note` are not on this public
+  listing; the desk reads the flag as `needsAttention` on `GET /api/ro/ro_pool_<authId>`.
 
 `POST /api/judge/pool/reauthorize-next` → `200`:
 
@@ -548,13 +550,17 @@ never touched):
 ```
 
 - It takes the oldest `judge` hold whose window is open and that is free, and calls the core's reauthorize step for it
-  (same amount, the same PayPal-Request-Id scheme as the job). Two judges at the same moment get two different holds.
+  (same amount, the same PayPal-Request-Id scheme as the job). Two judges at the same moment get two different holds:
+  before it claims a hold, the call locks its row and checks again that it is still free, so a judge working from a
+  list read just before another judge's reauthorize (or PayPal's refusal) of that hold took effect moves on to the
+  next one instead of sending a second reauthorize under a new PayPal-Request-Id.
 - Second call in the same session: `409 ALREADY_USED`. No free hold: `409 POOL_EMPTY` with
   `details.lastReauthorized` (the hold reauthorized last, with a live GET of its new id; `null` if there is none); the
   session is not used up.
 - PayPal refuses or does not answer: `502 PAYPAL`, and the session gets its one use back. After no answer the next call
   retries the same hold with the same PayPal-Request-Id; a hold PayPal refused for good (not
-  `REAUTHORIZATION_TOO_SOON`) gets `needsAttention`, so the next call takes the next hold.
+  `REAUTHORIZATION_TOO_SOON`) gets `needsAttention` in the same transaction that records the refusal, so the next call
+  takes the next hold.
 - The reauthorize job never touches pool holds (`judge` or `reserved`).
 
 ## Screen flow (customer page `/c/:roId`)

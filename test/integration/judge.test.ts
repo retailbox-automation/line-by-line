@@ -1,7 +1,10 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { findReauthorizable, getRepairOrder, pickup, reconcile, runReauthorize } from "../../src/core/index.js";
+import { findReauthorizable, getRepairOrder, pickup, reconcile, runReauthorize, type CoreDeps } from "../../src/core/index.js";
+import type { Db, Queryable } from "../../src/db/db.js";
 import { createApp } from "../../src/http/app.js";
-import { seedPool, type PoolSeedInput } from "../../src/judge/pool.js";
+import { reauthorizeNext, seedPool, type PoolSeedInput, type ReauthorizeNextResult } from "../../src/judge/pool.js";
+import { createPayPalClient } from "../../src/paypal/client.js";
+import { dbCallSink } from "../../src/paypal/journal.js";
 import { JUDGE_SESSION_MS, signJudgeToken } from "../../src/judge/session.js";
 import { formatResults, parseSeedArgs } from "../../scripts/seed-pool.js";
 import { approvedEstimate, call, CONSENT, desk, DESK_TOKEN, JOB_TOKEN, makeAppEnv, PUBLIC_BASE, START, type AppEnv, type Reply } from "../helpers.js";
@@ -372,6 +375,70 @@ async function agedPool(t: AppEnv) {
   return { r, h1, h2, y };
 }
 
+/** The session id inside a judge token (j.<sessionId>.<expiresAt>.<hmac>). */
+function sessionOf(j: Judge): string {
+  return j.token.split(".")[1]!;
+}
+
+/**
+ * deps whose every statement runs on `q`, an open transaction of another caller (a nested tx is just `q`), with a
+ * PayPal client that journals on `q` too. PGlite runs one transaction at a time, so this is how a second caller's
+ * writes can land between two statements of the first: the first caller's later statements see them as they would
+ * see a commit under READ COMMITTED.
+ */
+function onTx(t: AppEnv, q: Queryable): CoreDeps {
+  const db: Db = { ...t.db, query: q.query, exec: q.exec, tx: (fn) => fn(q) };
+  const paypal = createPayPalClient({
+    clientId: "test-client-id",
+    clientSecret: "test-client-secret",
+    brandName: "Line by Line demo shop",
+    fetch: t.fake.fetch,
+    now: () => t.clock.now().getTime(),
+    onCall: dbCallSink(q),
+    retryDelayMs: 0,
+    timeoutMs: 200,
+  });
+  return { ...t.deps, db, paypal };
+}
+
+/** deps whose transactions run `between(q)` once, right after the first statement that reads judge_pool (the list of free holds). */
+function afterFirstPoolRead(deps: CoreDeps, between: (q: Queryable) => Promise<void>): CoreDeps {
+  let fired = false;
+  const tx: Db["tx"] = (fn) =>
+    deps.db.tx((q) =>
+      fn({
+        ...q,
+        async query<T>(sql: string, params?: unknown[]) {
+          const r = await q.query<T>(sql, params);
+          if (!fired && sql.includes("judge_pool")) {
+            fired = true;
+            await between(q);
+          }
+          return r;
+        },
+      }),
+    );
+  return { ...deps, db: { ...deps.db, tx } };
+}
+
+/** deps that run `after()` each time one of their own statements or transactions has finished (and committed). */
+function afterEachWrite(deps: CoreDeps, after: () => Promise<void>): CoreDeps {
+  const db: Db = {
+    ...deps.db,
+    async query<T>(sql: string, params?: unknown[]) {
+      const r = await deps.db.query<T>(sql, params);
+      await after();
+      return r;
+    },
+    async tx(fn) {
+      const r = await deps.db.tx(fn);
+      await after();
+      return r;
+    },
+  };
+  return { ...deps, db };
+}
+
 describe("judge pool: reauthorize-next", () => {
   it("takes the oldest free judge hold with an open window, skips reserved and young ones, once per session, then POOL_EMPTY", async () => {
     const t = await judgeEnv();
@@ -444,6 +511,19 @@ describe("judge pool: reauthorize-next", () => {
     expect((await t.db.query(`SELECT needs_attention FROM authorizations WHERE id = $1`, [h1.authId])).rows[0]).toEqual({ needs_attention: expect.stringContaining("judge reauthorize refused") });
     const next = await j.go("POST", "/api/judge/pool/reauthorize-next");
     expect(next.json).toMatchObject({ parentId: h2.authId });
+
+    // The public listing says the hold is flagged, without PayPal's text or the operator's note; the desk keeps both.
+    expect((await seed(t, [h1.authId], { label: "H1", note: "filming 05.11" })).map((x) => x.outcome)).toEqual(["updated"]);
+    const list = await (await newJudge(t)).go("GET", "/api/judge/pool");
+    expect(list.status, list.text).toBe(200);
+    const h1Row = (list.json.holds as { authorizationId: string }[]).find((x) => x.authorizationId === h1.authId);
+    expect(h1Row).toMatchObject({ available: false, reason: "flagged for the service desk" });
+    for (const hold of list.json.holds) expect(hold).not.toHaveProperty("note");
+    expect(list.text).not.toContain("filming");
+    expect(list.text).not.toContain("AUTHORIZATION_VOIDED");
+    expect(list.text).not.toContain("refused");
+    const atDesk = await desk(t.app, "GET", `/api/ro/ro_pool_${h1.authId}`);
+    expect(atDesk.json.authorizations.find((x: { id: string }) => x.id === h1.authId).needsAttention).toContain("AUTHORIZATION_VOIDED");
   });
 
   it("REAUTHORIZATION_TOO_SOON is not held against the hold: the next call retries it with a new request id", async () => {
@@ -476,6 +556,57 @@ describe("judge pool: reauthorize-next", () => {
     const [ra, rb] = await Promise.all([a.go("POST", "/api/judge/pool/reauthorize-next"), b.go("POST", "/api/judge/pool/reauthorize-next")]);
     expect([ra.status, rb.status]).toEqual([200, 200]);
     expect(new Set([ra.json.parentId, rb.json.parentId])).toEqual(new Set([h1.authId, h2.authId]));
+  });
+
+  it("a judge whose list of free holds was read before another judge's reauthorize of the first one landed takes the next hold, never the same one again", async () => {
+    const t = await judgeEnv();
+    const { h1, h2 } = await agedPool(t);
+    const [a, b] = [await newJudge(t), await newJudge(t)];
+    // B reads the free holds (H1 is first); A's whole reauthorize-next on H1 then lands before B's next statement.
+    // Before the fix B claimed H1 again: one finished operation moved the attempt to 2, so a new PayPal-Request-Id.
+    let ra: ReauthorizeNextResult | null = null;
+    const depsB = afterFirstPoolRead(t.deps, async (q) => {
+      ra = await reauthorizeNext(onTx(t, q), sessionOf(a));
+    });
+    const rb = await reauthorizeNext(depsB, sessionOf(b));
+    expect(ra).toMatchObject({ parentId: h1.authId, requestId: `lbl:reauth:${h1.authId}:1` });
+    expect(rb).toMatchObject({ parentId: h2.authId, requestId: `lbl:reauth:${h2.authId}:1` });
+    expect(t.fake.requestIds(`/authorizations/${h1.authId}/reauthorize`)).toEqual([`lbl:reauth:${h1.authId}:1`]);
+    expect((await t.db.query(`SELECT reauthorized_to, needs_attention FROM authorizations WHERE id = $1`, [h1.authId])).rows[0]).toEqual({ reauthorized_to: ra!.newId, needs_attention: null });
+    const ops = (await t.db.query(`SELECT request_id, state FROM ops WHERE op = 'reauth'`)).rows;
+    expect(ops).toHaveLength(2);
+    expect(ops).toEqual(
+      expect.arrayContaining([
+        { request_id: `lbl:reauth:${h1.authId}:1`, state: "done" },
+        { request_id: `lbl:reauth:${h2.authId}:1`, state: "done" },
+      ]),
+    );
+  });
+
+  it("a judge who comes in the moment PayPal's refusal of a hold is on record does not try that hold again", async () => {
+    const t = await judgeEnv();
+    const { h1, h2 } = await agedPool(t);
+    const [a, b] = [await newJudge(t), await newJudge(t)];
+    t.fake.script((c) => c.path.endsWith(`/authorizations/${h1.authId}/reauthorize`), {
+      kind: "respond",
+      status: 422,
+      body: { name: "UNPROCESSABLE_ENTITY", details: [{ issue: "AUTHORIZATION_VOIDED", description: "A voided authorization cannot be captured or reauthorized." }] },
+    });
+    // B runs whole right after the first of A's writes that records H1's operation as failed. Before the fix that
+    // write and the needs_attention flag were two commits, and B sent a second reauthorize to H1 in between.
+    let rb: ReauthorizeNextResult | null = null;
+    const depsA = afterEachWrite(t.deps, async () => {
+      if (rb) return;
+      const op = (await t.db.query<{ state: string }>(`SELECT state FROM ops WHERE request_id = $1`, [`lbl:reauth:${h1.authId}:1`])).rows[0];
+      if (op?.state === "failed") rb = await reauthorizeNext(t.deps, sessionOf(b));
+    });
+    await expect(reauthorizeNext(depsA, sessionOf(a))).rejects.toMatchObject({ code: "PAYPAL", details: { issue: "AUTHORIZATION_VOIDED" } });
+    expect(rb).toMatchObject({ parentId: h2.authId, requestId: `lbl:reauth:${h2.authId}:1` });
+    expect(t.fake.requestIds(`/authorizations/${h1.authId}/reauthorize`)).toEqual([`lbl:reauth:${h1.authId}:1`]);
+    expect((await t.db.query(`SELECT needs_attention, reauthorized_to FROM authorizations WHERE id = $1`, [h1.authId])).rows[0]).toEqual({
+      needs_attention: expect.stringContaining("AUTHORIZATION_VOIDED"),
+      reauthorized_to: null,
+    });
   });
 
   it("the core works on a pool hold like on its own: pickup after the judge's reauthorization captures the child and voids the parent", async () => {

@@ -75,9 +75,17 @@ function persistReauth(deps: CoreDeps, a: Authorization) {
   };
 }
 
-/** Reauthorizes one hold whose operation (reauthSpec) the caller has already claimed with claimOp. */
-export function executeReauthorize(deps: CoreDeps, a: Authorization, claimed: { requestId: string }): Promise<ParsedAuthorization> {
-  return executeOp(deps, claimed, reauthSpec(a).intent, reauthCall(deps, a), persistReauth(deps, a));
+/**
+ * Reauthorizes one hold whose operation (reauthSpec) the caller has already claimed with claimOp. `onFailed` runs in
+ * the transaction that records a definite refusal (see executeOp).
+ */
+export function executeReauthorize(
+  deps: CoreDeps,
+  a: Authorization,
+  claimed: { requestId: string },
+  onFailed?: (q: Queryable, err: unknown) => Promise<void>,
+): Promise<ParsedAuthorization> {
+  return executeOp(deps, claimed, reauthSpec(a).intent, reauthCall(deps, a), persistReauth(deps, a), onFailed);
 }
 
 /** The scheduled job: every due wallet hold of every repair order, same amount. Never throws on a single hold. */

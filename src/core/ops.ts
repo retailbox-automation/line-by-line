@@ -135,7 +135,9 @@ function errorSummary(err: unknown): Record<string, unknown> {
 
 /**
  * Phases 2 and 3 of an operation whose id is already claimed: the PayPal call, then our write and `done` in one
- * transaction. `persist` must only use the `q` it gets.
+ * transaction. `persist` must only use the `q` it gets. `onFailed`, when given, runs in the transaction that
+ * finishes the operation as `failed` (a definite refusal), before the finish, and must only use its `q`: take the
+ * same row locks as the claim, first, so the refusal and what it changes commit together.
  */
 export async function executeOp<T>(
   deps: CoreDeps,
@@ -143,6 +145,7 @@ export async function executeOp<T>(
   intent: Record<string, unknown>,
   call: (requestId: string) => Promise<T>,
   persist: (q: Queryable, result: T, requestId: string) => Promise<void>,
+  onFailed?: (q: Queryable, err: unknown) => Promise<void>,
 ): Promise<T> {
   const { requestId } = claimed;
   let result: T;
@@ -150,7 +153,13 @@ export async function executeOp<T>(
     result = await call(requestId);
   } catch (err) {
     const definite = isDefiniteFailure(err) || err instanceof GuardError || err instanceof MoneyError;
-    if (definite) await finishOp(deps.db, requestId, "failed", { intent, error: errorSummary(err) }, deps.now());
+    const failed = { intent, error: errorSummary(err) };
+    if (definite && onFailed) {
+      await deps.db.tx(async (q) => {
+        await onFailed(q, err);
+        await finishOp(q, requestId, "failed", failed, deps.now());
+      });
+    } else if (definite) await finishOp(deps.db, requestId, "failed", failed, deps.now());
     else await markUnknown(deps.db, requestId, intent, err, deps.now());
     throw err;
   }

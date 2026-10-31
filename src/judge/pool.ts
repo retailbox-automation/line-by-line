@@ -130,7 +130,6 @@ interface PoolRow {
   label: string;
   purpose: PoolPurpose;
   wave: number;
-  note: string;
   ro_id: string;
   ro_status: string;
   amount_cents: number;
@@ -149,12 +148,12 @@ interface LiveRead {
   expirationTime: Date | null;
 }
 
+/** One hold as a judge sees it. The operator's note and the text of a flag stay off this public listing. */
 export interface PoolHold {
   authorizationId: string;
   label: string;
   purpose: PoolPurpose;
   wave: number;
-  note: string;
   roId: string;
   amountCents: number;
   createdAt: Date;
@@ -191,7 +190,7 @@ function ageDays(createdAt: Date, now: Date): number {
 export async function listPool(deps: CoreDeps): Promise<PoolHold[]> {
   const rows = (
     await deps.db.query<PoolRow>(
-      `SELECT p.authorization_id, p.label, p.purpose, p.wave, p.note, a.ro_id, r.status AS ro_status, a.amount_cents, a.captured_cents,
+      `SELECT p.authorization_id, p.label, p.purpose, p.wave, a.ro_id, r.status AS ro_status, a.amount_cents, a.captured_cents,
               a.needs_attention, a.created_at, a.expiration_time, a.reauthorized_to, a.reauthorized_at, c.expiration_time AS child_expiration
          FROM judge_pool p JOIN authorizations a ON a.id = p.authorization_id JOIN repair_orders r ON r.id = a.ro_id
          LEFT JOIN authorizations c ON c.id = a.reauthorized_to
@@ -220,7 +219,7 @@ export async function listPool(deps: CoreDeps): Promise<PoolHold[]> {
           : status !== "CREATED"
             ? `status ${status}`
             : r.needs_attention
-              ? `needs attention: ${r.needs_attention}`
+              ? "flagged for the service desk"
               : r.ro_status !== "open" || r.captured_cents > 0
                 ? "already picked up"
                 : !open
@@ -233,7 +232,6 @@ export async function listPool(deps: CoreDeps): Promise<PoolHold[]> {
       label: r.label,
       purpose: r.purpose,
       wave: r.wave,
-      note: r.note,
       roId: r.ro_id,
       amountCents: r.amount_cents,
       createdAt: r.created_at,
@@ -267,20 +265,47 @@ export interface ReauthorizeNextResult {
   liveError: string | null;
 }
 
-/** Free 'judge' holds whose reauthorize window is open, oldest first (the same conditions as the job's window). */
+/** A free 'judge' hold whose reauthorize window is open (the same conditions as the job's window). $1 cutoff, $2 now. */
+const FREE_JUDGE_HOLD = `SELECT a.id FROM authorizations a JOIN repair_orders r ON r.id = a.ro_id JOIN judge_pool p ON p.authorization_id = a.id
+  WHERE p.purpose = 'judge' AND a.payment_source = 'paypal' AND a.status = 'CREATED' AND a.captured_cents = 0 AND a.parent_id IS NULL
+    AND a.reauthorized_to IS NULL AND a.needs_attention IS NULL
+    AND a.created_at <= $1::timestamptz AND a.expiration_time > $2::timestamptz AND r.status <> 'picked_up'`;
+
+function windowParams(now: Date): [string, string] {
+  return [new Date(now.getTime() - REAUTH_MIN_AGE_MS).toISOString(), now.toISOString()];
+}
+
+/** Free 'judge' holds whose reauthorize window is open, oldest first. No lock: claim one only after lockIfStillFree. */
 async function freeJudgeHolds(q: Queryable, now: Date): Promise<(Authorization & { label: string })[]> {
-  const cutoff = new Date(now.getTime() - REAUTH_MIN_AGE_MS).toISOString();
   return (
     await q.query<Authorization & { label: string }>(
-      `SELECT ${AUTH_COLS}, (SELECT label FROM judge_pool WHERE authorization_id = authorizations.id) AS label FROM authorizations WHERE id IN (
-         SELECT a.id FROM authorizations a JOIN repair_orders r ON r.id = a.ro_id JOIN judge_pool p ON p.authorization_id = a.id
-          WHERE p.purpose = 'judge' AND a.payment_source = 'paypal' AND a.status = 'CREATED' AND a.captured_cents = 0 AND a.parent_id IS NULL
-            AND a.reauthorized_to IS NULL AND a.needs_attention IS NULL
-            AND a.created_at <= $1::timestamptz AND a.expiration_time > $2::timestamptz AND r.status <> 'picked_up')
-       ORDER BY created_at, id`,
-      [cutoff, now.toISOString()],
+      `SELECT ${AUTH_COLS}, (SELECT label FROM judge_pool WHERE authorization_id = authorizations.id) AS label FROM authorizations
+        WHERE id IN (${FREE_JUDGE_HOLD})
+        ORDER BY created_at, id`,
+      windowParams(now),
     )
   ).rows;
+}
+
+/**
+ * Takes the row lock on a hold. Every transaction that finishes a judge's reauthorize of it first takes a lock that
+ * conflicts with this one: a refusal through this function (flagRefusal), a success through persistReauth's insert of
+ * the child, whose foreign key locks the parent row, before the parent is updated.
+ */
+async function lockHold(q: Queryable, id: string): Promise<void> {
+  await q.query(`SELECT id FROM authorizations WHERE id = $1 FOR UPDATE`, [id]);
+}
+
+/**
+ * Locks the hold, then checks on fresh rows that it is still free. The list may predate another judge's reauthorize
+ * of it or PayPal's refusal, and once that operation is finished the attempt number moves on, so claiming from the
+ * old list would send a second reauthorize with a new PayPal-Request-Id (runOp's precheck, for this claim loop). The
+ * success (reauthorized_to) and a refusal (the op `failed` with needs_attention) both commit under this lock, and a
+ * new statement under READ COMMITTED sees every commit made before the lock was granted.
+ */
+async function lockIfStillFree(q: Queryable, id: string, now: Date): Promise<boolean> {
+  await lockHold(q, id);
+  return (await q.query(`${FREE_JUDGE_HOLD} AND a.id = $3`, [...windowParams(now), id])).rows.length > 0;
 }
 
 /** The pool hold reauthorized last, with a live GET of its new id (the fallback when the pool is empty). */
@@ -322,8 +347,9 @@ export async function reauthorizeNext(deps: CoreDeps, sessionId: string): Promis
     if (!s) throw new HttpError(401, "UNAUTHORIZED", "the judge session has expired; start a new one");
     if (s.reauthorized) throw new HttpError(409, "ALREADY_USED", "this judge session has already reauthorized a hold; start a new session to do it again");
     for (const a of await freeJudgeHolds(q, now)) {
+      if (!(await lockIfStillFree(q, a.id, now))) continue;
       try {
-        // The claim (a row in ops) is the lock: another judge at the same moment gets IN_PROGRESS and takes the next hold.
+        // The claim (a row in ops) marks the hold taken: another judge at the same moment gets IN_PROGRESS and takes the next hold.
         const claimed = await claimOp(q, reauthSpec(a), now, opStaleMs(deps));
         await q.query(`UPDATE judge_sessions SET reauthorized = true WHERE id = $1`, [sessionId]);
         return { a, claimed };
@@ -339,14 +365,19 @@ export async function reauthorizeNext(deps: CoreDeps, sessionId: string): Promis
   }
 
   const { a, claimed } = claim;
+  // A refusal for good (not "too soon") flags the hold in the same transaction that finishes its operation as
+  // failed, so no judge can find the operation failed and the hold still unflagged and try it again.
+  const flagRefusal = async (q: Queryable, e: unknown) => {
+    await lockHold(q, a.id);
+    if ((isDefiniteFailure(e) || e instanceof GuardError) && classify(e) !== "REAUTHORIZATION_TOO_SOON") {
+      await q.query(`UPDATE authorizations SET needs_attention = $2 WHERE id = $1 AND needs_attention IS NULL`, [a.id, `judge reauthorize refused: ${describeError(e)}`]);
+    }
+  };
   let child;
   try {
-    child = await executeReauthorize(deps, a, claimed);
+    child = await executeReauthorize(deps, a, claimed, flagRefusal);
   } catch (e) {
     await deps.db.query(`UPDATE judge_sessions SET reauthorized = false WHERE id = $1`, [sessionId]);
-    if ((isDefiniteFailure(e) || e instanceof GuardError) && classify(e) !== "REAUTHORIZATION_TOO_SOON") {
-      await deps.db.query(`UPDATE authorizations SET needs_attention = $2 WHERE id = $1 AND needs_attention IS NULL`, [a.id, `judge reauthorize refused: ${describeError(e)}`]);
-    }
     throw wrapPayPal(e, `reauthorizing pool hold ${a.id}`);
   }
   if (child.id === a.id) {
