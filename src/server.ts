@@ -5,9 +5,14 @@ import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { serve, type ServerType } from "@hono/node-server";
 import type { AddressInfo } from "node:net";
+import { GROQ_LLM_MODELS } from "./agent/lines.js";
+import { DEFAULT_LIVE_DAILY_CAP } from "./agent/liveCap.js";
+import { RECORDING_NAME } from "./agent/recordings.js";
+import { GROQ_STT_MODELS } from "./agent/transcribe.js";
 import type { CoreDeps } from "./core/deps.js";
 import { migrate, openDb } from "./db/index.js";
 import { createApp } from "./http/app.js";
+import { DEFAULT_JUDGE_DAILY_SESSIONS } from "./judge/session.js";
 import { createPayPalClient } from "./paypal/client.js";
 import { dbCallSink } from "./paypal/journal.js";
 import { createWebhookReceiver } from "./webhooks/paypal.js";
@@ -31,11 +36,28 @@ export interface ServerConfig {
   jobToken: string | undefined;
   databaseUrl: string | undefined;
   pgliteDir: string | undefined;
+  /** LBL_STT (unset = no live voice notes), LBL_LLM, LBL_LLM_RECORDED, LBL_LIVE_DAILY_CAP. */
+  voice: { stt: string | undefined; llm: string; llmRecorded: string | undefined; liveDailyCap: number };
+  /** LBL_JUDGE_DAILY_SESSIONS, LBL_JUDGE_LIVE_VOICE. */
+  judge: { dailySessions: number; liveVoice: boolean };
 }
 
 function opt(v: string | undefined): string | undefined {
   const t = v?.trim();
   return t ? t : undefined;
+}
+
+const isGroq = (provider: string, models: readonly string[]) => provider.startsWith("groq:") && models.includes(provider.slice("groq:".length));
+
+/** A whole number of 0 or more, or the default when unset; a problem is recorded otherwise. */
+function count(env: Record<string, string | undefined>, name: string, fallback: number, problems: string[]): number {
+  const raw = opt(env[name]);
+  if (raw === undefined) return fallback;
+  if (!/^\d{1,9}$/.test(raw)) {
+    problems.push(`${name} must be a whole number of 0 or more`);
+    return fallback;
+  }
+  return Number(raw);
 }
 
 /** Reads and checks the environment. Throws one error that names every missing or bad variable (never a value). */
@@ -77,6 +99,23 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
   const brandName = opt(env.BRAND_NAME) ?? DEFAULT_BRAND_NAME;
   if (brandName.length > 127) problems.push("BRAND_NAME must be at most 127 characters");
 
+  // Voice notes. recorded:<name> speech recognition replays stored answers by file name: tests and local runs only.
+  const stt = opt(env.LBL_STT);
+  if (stt !== undefined && !(isGroq(stt, GROQ_STT_MODELS) || stt === "local:parakeet" || (stt.startsWith("recorded:") && RECORDING_NAME.test(stt.slice("recorded:".length))))) {
+    problems.push(`LBL_STT must be groq:${GROQ_STT_MODELS.join(" | groq:")}, local:parakeet or recorded:<name>`);
+  }
+  const llm = opt(env.LBL_LLM) ?? "keywords";
+  if (llm !== "keywords" && !isGroq(llm, GROQ_LLM_MODELS)) problems.push(`LBL_LLM must be keywords or groq:${GROQ_LLM_MODELS.join(" | groq:")}`);
+  const llmRecorded = opt(env.LBL_LLM_RECORDED);
+  if (llmRecorded !== undefined && !RECORDING_NAME.test(llmRecorded)) problems.push("LBL_LLM_RECORDED must be a recording name ([A-Za-z0-9._-], not starting with . or -)");
+  if ([stt, llm].some((p) => p?.startsWith("groq:")) && (env.LBL_LLM_LIVE !== "1" || !opt(env.GROQ_API_KEY))) {
+    problems.push("a groq: provider in LBL_STT or LBL_LLM needs LBL_LLM_LIVE=1 and GROQ_API_KEY (paid calls are off otherwise)");
+  }
+  const liveDailyCap = count(env, "LBL_LIVE_DAILY_CAP", DEFAULT_LIVE_DAILY_CAP, problems);
+  const dailySessions = count(env, "LBL_JUDGE_DAILY_SESSIONS", DEFAULT_JUDGE_DAILY_SESSIONS, problems);
+  const liveVoiceRaw = opt(env.LBL_JUDGE_LIVE_VOICE);
+  if (liveVoiceRaw !== undefined && liveVoiceRaw !== "1" && liveVoiceRaw !== "0") problems.push("LBL_JUDGE_LIVE_VOICE must be 1 or 0");
+
   if (problems.length) throw new Error(`configuration: ${problems.join("; ")}`);
   return {
     port,
@@ -89,6 +128,8 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
     jobToken,
     databaseUrl: opt(env.DATABASE_URL),
     pgliteDir: opt(env.PGLITE_DIR),
+    voice: { stt, llm, llmRecorded, liveDailyCap },
+    judge: { dailySessions, liveVoice: liveVoiceRaw === "1" },
   };
 }
 
@@ -120,7 +161,7 @@ export async function startServer(config: ServerConfig): Promise<RunningServer> 
     config: { returnUrl: `${config.publicBaseUrl}/api/paypal/return`, cancelUrl: `${config.publicBaseUrl}/api/paypal/cancel` },
   };
   const webhooks = createWebhookReceiver(deps, config.webhookId);
-  const app = createApp({ deps, publicBaseUrl: config.publicBaseUrl, deskToken: config.deskToken, jobToken: config.jobToken, webhooks });
+  const app = createApp({ deps, publicBaseUrl: config.publicBaseUrl, deskToken: config.deskToken, jobToken: config.jobToken, webhooks, voice: config.voice, judge: config.judge });
 
   const server: ServerType = await new Promise((ok, fail) => {
     const s = serve({ fetch: app.fetch, port: config.port }, () => ok(s));
@@ -128,7 +169,7 @@ export async function startServer(config: ServerConfig): Promise<RunningServer> 
   });
   const port = (server.address() as AddressInfo).port;
   console.log(
-    `line-by-line listening on port ${port} (database: ${config.databaseUrl ? "postgres" : "pglite"}, webhooks: ${config.webhookId ? "on" : "off"}, reauthorize job: ${config.jobToken ? "on" : "off"})`,
+    `line-by-line listening on port ${port} (database: ${config.databaseUrl ? "postgres" : "pglite"}, webhooks: ${config.webhookId ? "on" : "off"}, reauthorize job: ${config.jobToken ? "on" : "off"}, speech recognition: ${config.voice.stt ?? "off"}, line drafting: ${config.voice.llm})`,
   );
 
   // PayPal does not deliver an event again after our 200: events whose processing failed are retried here.

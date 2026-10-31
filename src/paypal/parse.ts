@@ -32,10 +32,19 @@ export interface ParsedCapture {
   authorizationId: string | null;
 }
 
+/** One `items[]` entry of the purchase unit (our own line names, not payer data). */
+export interface ParsedItem {
+  name: string;
+  unitCents: number;
+  quantity: number;
+}
+
 export interface ParsedOrder {
   id: string;
   status: string;
   amountCents: number | null;
+  /** `purchase_units[0].items`; [] when there are none, null when one of them cannot be read. */
+  items: ParsedItem[] | null;
   /** The `payer-action` link the customer opens to approve. */
   approveUrl: string | null;
   paymentSource: PaymentSourceKind;
@@ -126,6 +135,21 @@ export function parseCapture(raw: unknown): ParsedCapture {
   };
 }
 
+function parseItems(raw: unknown): ParsedItem[] | null {
+  if (raw === undefined) return [];
+  if (!Array.isArray(raw)) return null;
+  const out: ParsedItem[] = [];
+  for (const it of raw) {
+    const o = obj(it);
+    const name = str(o?.name);
+    const unitCents = lenientCents(o?.unit_amount);
+    const quantity = typeof o?.quantity === "string" && /^[1-9][0-9]{0,5}$/.test(o.quantity) ? Number(o.quantity) : null;
+    if (!name || unitCents === null || quantity === null) return null;
+    out.push({ name, unitCents, quantity });
+  }
+  return out;
+}
+
 export function paymentSourceKind(raw: unknown): PaymentSourceKind {
   const ps = obj(raw);
   if (!ps) return "unknown";
@@ -157,6 +181,7 @@ export function parseOrder(raw: unknown): ParsedOrder {
     id,
     status: required(o, "status", "order"),
     amountCents: unit ? lenientCents(unit.amount) : null,
+    items: unit ? parseItems(unit.items) : [],
     approveUrl,
     paymentSource: paymentSourceKind(o.payment_source),
     authorizations: auths.map((a) => parseAuthorization(a, id)),

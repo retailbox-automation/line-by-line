@@ -15,7 +15,8 @@
     "build": "tsc -p tsconfig.build.json",
     "migrate": "tsx src/db/migrate-cli.ts",
     "start": "node dist/server.js",
-    "e2e:sandbox": "tsx scripts/e2e-sandbox.ts"
+    "e2e:sandbox": "tsx scripts/e2e-sandbox.ts",
+    "seed:pool": "tsx scripts/seed-pool.ts"
   },
   "dependencies": {
     "@hono/node-server": "2.1.5",

@@ -1,13 +1,13 @@
 # Line by Line HTTP API
 
-The contract between the server and the screens (service desk, mechanic phone, customer page). Everything here is
-checked by `test/integration/http.test.ts` and `test/integration/webhooks.test.ts`. Sandbox only: the server talks to
-`api-m.sandbox.paypal.com` and refuses any other PayPal origin.
+The contract between the server and the screens (service desk, mechanic phone, customer page, judge mode). Everything
+here is checked by `test/integration/http.test.ts`, `webhooks.test.ts`, `voice.test.ts` and `judge.test.ts`. Sandbox
+only: the server talks to `api-m.sandbox.paypal.com` and refuses any other PayPal origin.
 
 ## Basics
 
 - **JSON in, JSON out.** Requests with a body must send `Content-Type: application/json` (otherwise `415`). Bodies
-  larger than 256 KB get `413`.
+  larger than 256 KB get `413`. The one exception is `POST /api/ro/:id/voice`: raw audio, up to 2 MB.
 - **Money** is whole US cents. Every `fooCents` field comes with a `foo` string in dollars, and a bare `cents` field
   comes with `amount`: `"priceCents": 18600, "price": "186.00"`. A `null` amount stays `null` in both fields. Requests
   take cents only.
@@ -20,8 +20,10 @@ checked by `test/integration/http.test.ts` and `test/integration/webhooks.test.t
 
   | Caller | Sends | May call |
   |---|---|---|
-  | Desk and mechanic screens | `Authorization: Bearer <DESK_TOKEN>` | every route below except the job and the webhook |
+  | Desk and mechanic screens | `Authorization: Bearer <DESK_TOKEN>` | every route below except the job, the webhook and `/api/judge/*` |
   | Customer page `/c/:roId` | `Authorization: Bearer <k>`, where `k` is the query parameter of the customer link | for **its own** repair order only: `GET /api/ro/:id`, `POST /api/ro/:id/estimate/approval`, `POST /api/ro/:id/decisions`, `POST /api/orders/:orderId/refresh`; never `channel: "desk"` (`403 FORBIDDEN`) |
+  | Judge (no login) | `Authorization: Bearer <judge token>` or the `lbl_judge` cookie, both from `POST /api/judge/session` | `/api/judge/*`, and with the desk's rights **only on repair orders created in its session**: `GET /api/ro/:id`, `POST /api/ro/:id/estimate/approval`, `/lines`, `/lines/draft`, `/voice/sample/:sampleId`, `/decisions`, `/pickup`, `GET /api/authorizations/:id` (of those repair orders); `POST /api/ro/:id/voice` only when `LBL_JUDGE_LIVE_VOICE=1`. Another repair order: `403 FORBIDDEN` |
+  | Anyone | nothing | `POST /api/judge/session`, `GET /api/samples`, `GET /api/samples/:id.wav`, `GET /healthz` |
   | PayPal (browser redirect) | nothing | `GET /api/paypal/return`, `GET /api/paypal/cancel` |
   | PayPal (webhook) | its signature | `POST /api/webhooks/paypal` |
   | Scheduler | `Authorization: Bearer <JOB_TOKEN>` | `POST /api/jobs/reauthorize` |
@@ -31,6 +33,9 @@ checked by `test/integration/http.test.ts` and `test/integration/webhooks.test.t
   (nothing stored; a new `DESK_TOKEN` invalidates every link). The bare repair order id opens nothing. PayPal's return
   redirect does **not** carry the token: the customer page keeps `k` from the link it was opened with (for example in
   `sessionStorage`) and sends it again after the redirect.
+- **Which credential counts.** A bearer token decides: the desk token, a judge token (`j.…`), or a customer token. The
+  `lbl_judge` cookie is used only when there is no `Authorization` header, so a judge who opens the customer link in
+  the same browser acts as the customer there. `DESK_TOKEN` itself never appears in any answer to a judge.
 
 ### Errors
 
@@ -46,8 +51,16 @@ something useful, for example the list of validation issues or the PayPal issue)
 | 502 | `PAYPAL` | PayPal refused or did not answer. `details`: `outcome`, `issue`, `httpStatus`, `debugId`, `text` | show "PayPal did not confirm", let the desk retry |
 | 413 | `TOO_LARGE` | Body over 256 KB | |
 | 415 | `UNSUPPORTED_MEDIA_TYPE` | Body not sent as `application/json` | |
-| 401 | `UNAUTHORIZED` | No or wrong bearer token for this route (desk token, this repair order's customer token, or `JOB_TOKEN`); `WWW-Authenticate: Bearer` | ask for the link or sign in again |
-| 403 | `FORBIDDEN` | The customer page tried to record a decision with `channel: "desk"` | |
+| 401 | `UNAUTHORIZED` | No or wrong bearer token for this route (desk token, this repair order's customer token, a judge session, or `JOB_TOKEN`); also a judge token that is forged, expired or of an ended session; `WWW-Authenticate: Bearer` | ask for the link or sign in again; a judge starts a new session |
+| 403 | `FORBIDDEN` | The customer page tried to record a decision with `channel: "desk"`; a judge on a repair order of another session (or of the shop); a judge sending live audio while `LBL_JUDGE_LIVE_VOICE` is off | |
+| 409 | `ALREADY_USED` | The judge session has already reauthorized a hold | start a new session |
+| 409 | `POOL_EMPTY` | No free aged hold; `details.lastReauthorized` is the hold reauthorized last, with a live GET (or `null`) | show that one instead |
+| 413 | `TOO_LARGE` | Voice note over 2 MB | record a shorter note |
+| 415 | `UNSUPPORTED_MEDIA_TYPE` | Voice note not sent as `audio/webm`, `audio/mp4`, `audio/mpeg`, `audio/wav` or `audio/ogg` (parameters such as `;codecs=opus` are fine) | |
+| 429 | `DAILY_CAP` | The day's (UTC) ceiling of paid model calls (`LBL_LIVE_DAILY_CAP`) or of new judge sessions (`LBL_JUDGE_DAILY_SESSIONS`) is reached | use a sample; try after 00:00 UTC |
+| 429 | `DEMO_LIMIT` | The judge session already created 5 demo repair orders | start a new session |
+| 502 | `MODEL_ERROR` | Speech recognition or line drafting failed (provider error or no answer); the text says which | let the mechanic type the note or pick lines by hand |
+| 503 | `VOICE_DISABLED` | `POST /api/ro/:id/voice` called, but `LBL_STT` is not set ("speech recognition is not configured") | use `/lines/draft` or a sample |
 | 503 | `JOB_DISABLED` | Reauthorize job called, but `JOB_TOKEN` is not set on the server | |
 | 503 | `UNAVAILABLE` | `/healthz`: the database does not answer | |
 | 500 | `INTERNAL` | A bug; the server log has the stack | |
@@ -69,7 +82,8 @@ added line:     proposed ──decision: approve──▶ sent ──PayPal auth
 
 `kind` is `estimate` (from the desk, approved as a whole) or `added` (found during the repair; the customer decides
 each one). `performed` means `performedCents > 0` at pickup, `not_performed` means 0. A line that was never approved
-is never billed.
+is never billed. `priceCode` is the price-list code when the line came from the list (`data/price-list.json`), else
+`null`. `repairOrder.kind` is `shop`, or `pool` for the repair orders `npm run seed:pool` makes around aged holds.
 
 ### Approval order (`orders[]`)
 
@@ -130,6 +144,12 @@ CREATED ──day 4+, PayPal wallet only──▶ reauthorize: new row with pare
   `FL`; `estimateLines` 1–50.
 - A line: `title` 1–127, `description` up to 2000 (default `""`), `priceCents` whole number 1 to 1,000,000,
   `urgency` `safety` | `soon` | `can_wait` | `null` (default), `source` `desk` | `mechanic`.
+- Or a line from the price list: `priceCode` (for example `"BRK-ROT-F"`) instead of `title` and `priceCents`. The
+  title and price are the list's. A `title` or `priceCents` sent along must equal the list's, otherwise `400
+  VALIDATION` (nothing is silently overridden). `description` is then the text for the customer: at most 300
+  characters, and a text that names a price (`$`, `€`, `£`, dollars, USD, bucks, cents) is replaced by the item name, so
+  the customer sees one price, the list's. An unknown code is `400 VALIDATION` with the path
+  (`estimateLines.1.priceCode`).
 
 Desk only. `201` with the full state, the same shape as `GET /api/ro/:id`, plus `customerUrl`. Errors: `400 VALIDATION`,
 `401 UNAUTHORIZED`.
@@ -217,8 +237,9 @@ Errors: `400 VALIDATION`, `401 UNAUTHORIZED`, `403 FORBIDDEN` (customer page wit
 
 ### `POST /api/ro/:id/lines` — a new line from the mechanic or the desk
 
-Desk only. Body: one line, as in `POST /api/ro` (`title`, `priceCents`, `source`, optional `description`, `urgency`).
-`201 {"line": {…, "kind": "added", "status": "proposed"}}`.
+Desk, or a judge on its own repair order. Body: one line, as in `POST /api/ro` (`title`, `priceCents`, `source`,
+optional `description`, `urgency`; or `priceCode` instead of title and price — the way a drafted voice line is
+confirmed). `201 {"line": {…, "kind": "added", "status": "proposed", "priceCode": "BRK-ROT-F"}}`.
 Errors: `400 VALIDATION`, `401 UNAUTHORIZED`, `404 NOT_FOUND`, `409 CONFLICT` (repair order already picked up).
 
 ### `POST /api/ro/:id/decisions` — the customer decides on added lines
@@ -301,7 +322,7 @@ If PayPal does not answer, nothing is cancelled (`code=PAYPAL`).
   never finished (`409 CONFLICT`, "did not finish"), open the order's return link again, then pick up.
 - Every authorized order of the repair order is settled. A line is billed on one hold only (the earliest); should a
   second hold carry the same line, it bills nothing for it and the warning says so.
-- Desk only.
+- Desk, or a judge on its own repair order.
 
 `200`:
 
@@ -335,8 +356,8 @@ Errors: `400 VALIDATION`, `401 UNAUTHORIZED`, `404 NOT_FOUND`, `409 CONFLICT`, `
 
 ### `GET /api/authorizations/:id` — live check
 
-Desk only. Live GET of the authorization and its order at PayPal, compared with our records. Statuses are taken from
-PayPal; amounts are never rewritten and no money moves.
+Desk, or a judge for an authorization of its own repair order. Live GET of the authorization and its order at PayPal,
+compared with our records. Statuses are taken from PayPal; amounts are never rewritten and no money moves.
 
 ```json
 { "ok": true, "diffs": [],
@@ -351,7 +372,8 @@ Errors: `401 UNAUTHORIZED`, `404 NOT_FOUND`, `502 PAYPAL`.
 
 Header `Authorization: Bearer <JOB_TOKEN>`; no body. Reauthorizes, once and for the same amount, every hold paid
 with a PayPal wallet that is at least 4 days 10 minutes old, still `CREATED`, not captured, not expired, not already
-reauthorized, on a repair order not picked up. `200`:
+reauthorized, on a repair order not picked up, and **not in the judge pool** (a pool hold's one reauthorization
+belongs to a judge or, if `reserved`, to a test or a recording). `200`:
 
 ```json
 { "reauthorized": [ { "parentId": "A…", "newId": "A…", "roId": "ro_…", "amountCents": 41200, "amount": "412.00", "expirationTime": "…" } ],
@@ -392,6 +414,148 @@ What processing does:
 - Anything else, or ids that are not ours: recorded as ignored.
 
 PayPal says delivery is usually within 30 minutes but can take up to 3 hours, so no screen waits for a webhook.
+
+## Voice note → draft lines
+
+The mechanic dictates what was found; the server turns it into lines of the shop's price list. The answer is a
+**draft**: nothing is created until the mechanic (or the desk) confirms each line with `POST /api/ro/:id/lines` and its
+`priceCode`. Every price comes from the price list, never from a model; a code the model invents is dropped and listed
+in `droppedCodes`. Desk, or a judge on its own repair order. No audio and no transcript is stored anywhere (a judge's
+voice is personal data).
+
+The draft (same shape for all three routes):
+
+```json
+{
+  "transcript": "Front pads are down to about two millimeters. The wipers are streaking.",
+  "lines": [
+    { "priceCode": "BRK-PAD-F", "name": "Front brake pads — replace", "cents": 18900, "amount": "189.00", "usd": "189.00",
+      "urgency": "safety", "customerText": "Front brake pads — replace" }
+  ],
+  "droppedCodes": [],
+  "priceTextCodes": [],
+  "provider": "keywords",
+  "ms": 0
+}
+```
+
+- `usd` and `amount` are the same dollar string (`amount` follows the money rule above).
+- `customerText`: at most 300 characters; a text that named a price was replaced by the item name and its code is in
+  `priceTextCodes`.
+- `provider` is the line drafting provider (`LBL_LLM`: `keywords` by default, no model; or `groq:<model>`); `ms` is the
+  providers' time.
+
+### `POST /api/ro/:id/lines/draft` — from text
+
+`{"text": "…"}`, 1–1000 characters after trimming. `200` with the draft (`transcript` is the text). Errors: `400
+VALIDATION`, `401`, `403`, `404`, `415`, `429 DAILY_CAP` (paid provider only), `502 MODEL_ERROR`.
+
+### `POST /api/ro/:id/voice` — from live audio
+
+The body is the raw recording with its type in `Content-Type` (`audio/webm`, `audio/mp4`, `audio/mpeg`, `audio/wav`,
+`audio/ogg`; `MediaRecorder`'s `audio/webm;codecs=opus` is fine), at most 2 MB (this route only; the rest keep 256
+KB). The audio is written to a temporary file readable only by the server (mode `0600`, in its own temporary folder),
+recognized (`LBL_STT`), drafted (`LBL_LLM`), and the folder is deleted when the request ends, also on errors.
+`200` with the draft plus `stt` (the speech provider) and `timings` (`sttMs`, `llmMs`). Errors: `503 VOICE_DISABLED`
+when `LBL_STT` is not set, `415`, `413`, `400` (empty body), `401`, `403` (a judge while `LBL_JUDGE_LIVE_VOICE` is off),
+`404`, `429 DAILY_CAP`, `502 MODEL_ERROR`.
+
+### Ceiling on paid model calls
+
+Each live call of a `groq:` provider (speech recognition or line drafting) is counted in `model_calls` per UTC day
+**before** the call; a voice note with both providers on Groq counts two. Past `LBL_LIVE_DAILY_CAP` (default 200) the
+answer is `429 DAILY_CAP` and nothing is sent to the provider. `keywords` and recorded providers are not counted. A
+`groq:` provider also needs `LBL_LLM_LIVE=1` and `GROQ_API_KEY` (the server refuses to start without them).
+
+## Samples
+
+32 synthetic voice notes (macOS text-to-speech, labeled by us; the benchmark set in `eval/`), so a judge can try the
+voice step without recording and without a live model call. Their speech recognition is recorded
+(`recorded:parakeet-local`); their lines come from recorded model answers (`LBL_LLM_RECORDED`) when there is one for
+that note, otherwise from `keywords`.
+
+- `GET /api/samples` (anyone): `{"samples": [{"id": "F01", "text": "Front pads are down to about two millimeters. …",
+  "voice": "Eddy (English (US))", "audioUrl": "/api/samples/F01.wav", "synthetic": true}, …]}`.
+- `GET /api/samples/:id.wav` (anyone): the WAV file (`audio/wav`). Only ids `F` + two digits from the set; the file path
+  comes from the manifest, never from the request. Anything else is `404`.
+- `POST /api/ro/:id/voice/sample/:sampleId` (desk, or a judge on its own repair order; no body): the draft plus
+  `sampleId`, `stt`, `timings`, `source: "recorded"` and `recordings: {"stt": "recorded:parakeet-local", "llm":
+  "recorded:<name>" | "keywords"}` (which recordings were used). Unknown sample: `404`.
+
+## Judge mode
+
+A judge proves the whole path in three minutes without a login, with **their own** PayPal sandbox buyer, and sees a
+real reauthorization on a hold older than 3 days. What is live and what is prepared:
+
+| Step | Live or prepared |
+|---|---|
+| Session, demo repair order, PayPal order, approval, authorize, decisions, pickup, captures and voids | live (sandbox) |
+| Voice step | prepared by default: recorded samples; live audio only with `LBL_JUDGE_LIVE_VOICE=1` |
+| Reauthorization | live call on a hold made days earlier (the pool), because PayPal allows it only from day 4 |
+
+### The flow
+
+1. `POST /api/judge/session` (anyone, no body) → `201 {"token": "j.<sessionId>.<expiresAt>.<hmac>", "expiresAt": "…",
+   "liveVoice": false}` and the cookie `lbl_judge` (HttpOnly, Secure, SameSite=Lax, Path=/, 2 hours). The token is an
+   HMAC-SHA256 under a key derived from `DESK_TOKEN` with its own label (checked in constant time); a new `DESK_TOKEN`
+   ends every session. At most `LBL_JUDGE_DAILY_SESSIONS` (default 200) new sessions per UTC day, then `429 DAILY_CAP`.
+2. `POST /api/judge/demo` (judge) with the consent record, exactly as `POST /api/ro/:id/estimate/approval` takes it
+   (`{"approverName": "…", "channel": "link", "esignConsent": true}`; the judge screen shows the FL disclosure and the
+   e-records consent first) → `201 {"roId", "order", "approveUrl", "customerUrl"}`. The estimate is $412 in four
+   price-list lines: front brake pads $189 (`BRK-PAD-F`), check engine light diagnosis $129 (`DIAG-CEL`), front wiper
+   blades $49 (`WIPER-F`), engine air filter $45 (`FLT-ENGINE`); no two or three items of the list add up to $412, and
+   every price comes from the list. At most 5 per session (`429 DEMO_LIMIT`). If PayPal fails, the repair order exists:
+   `502 PAYPAL` with `details.roId`, and `POST /api/ro/:roId/estimate/approval` asks again.
+3. The judge opens `approveUrl` and approves as their own sandbox buyer; PayPal returns to `/api/paypal/return` as usual.
+4. `POST /api/ro/:id/voice/sample/:sampleId` → draft → `POST /api/ro/:id/lines` with `priceCode` → `POST
+   /api/ro/:id/decisions` → approve the new link → `POST /api/ro/:id/pickup` → `GET /api/authorizations/:id`. All as
+   for the desk, on this repair order only.
+5. `GET /api/judge/pool` (judge): the aged holds (below).
+6. `POST /api/judge/pool/reauthorize-next` (judge, no body): once per session, the oldest free hold.
+
+### Pool of aged holds
+
+Holds are made in the sandbox days ahead and recorded with `npm run seed:pool -- --purpose judge|reserved --wave N
+--label L [--note "…"] <authId>…` (explicit ids only; nothing is searched or listed at PayPal). Per id: live GET of the
+authorization and of its order; only a `CREATED` hold paid from a PayPal wallet is taken. A new hold becomes a repair
+order of kind `pool` (lines from the order's items with PayPal's prices, its order and authorization), so pickup,
+reconcile and the reauthorize step work on it like on our own. Running it again with the same id only updates the pool
+row (label, purpose, wave, note). Refused: another status, a card, an order with more than one authorization (already
+reauthorized), items that do not add up to the hold, a hold of a shop repair order.
+
+`GET /api/judge/pool` → `{"holds": [ … ]}`, oldest first, each with a live GET (its status is written back; amounts are
+never touched):
+
+```json
+{ "authorizationId": "4RR33540BR8604004", "label": "RO-2910-A", "purpose": "judge", "wave": 1, "note": "",
+  "roId": "ro_pool_4RR33540BR8604004", "amountCents": 14250, "amount": "142.50", "createdAt": "…", "ageDays": 6,
+  "expirationTime": "…", "status": "CREATED", "live": { "status": "CREATED", "expirationTime": "…" }, "liveError": null,
+  "window": { "opensAt": "…", "closesAt": "…", "open": true },
+  "reauthorized": null, "available": true, "reason": null }
+```
+
+- `window`: reauthorize is allowed from 4 days 10 minutes after the hold was created until it expires.
+- `reauthorized`: `{ "at", "newId", "expirationTime", "live", "liveError" }` once done (the new id keeps the old expiry).
+- `available` is `false` with a `reason` for a `reserved` hold (kept for a test or a recording; listed, never handed
+  out), one already reauthorized, too young, expired, picked up or flagged.
+
+`POST /api/judge/pool/reauthorize-next` → `200`:
+
+```json
+{ "label": "RO-2910-A", "parentId": "4RR33540BR8604004", "newId": "…", "requestId": "lbl:reauth:4RR33540BR8604004:1",
+  "amountCents": 14250, "amount": "142.50", "ageDays": 6, "expirationTime": "…",
+  "live": { "status": "CREATED", "amountCents": 14250, "amount": "142.50", "expirationTime": "…" }, "liveError": null }
+```
+
+- It takes the oldest `judge` hold whose window is open and that is free, and calls the core's reauthorize step for it
+  (same amount, the same PayPal-Request-Id scheme as the job). Two judges at the same moment get two different holds.
+- Second call in the same session: `409 ALREADY_USED`. No free hold: `409 POOL_EMPTY` with
+  `details.lastReauthorized` (the hold reauthorized last, with a live GET of its new id; `null` if there is none); the
+  session is not used up.
+- PayPal refuses or does not answer: `502 PAYPAL`, and the session gets its one use back. After no answer the next call
+  retries the same hold with the same PayPal-Request-Id; a hold PayPal refused for good (not
+  `REAUTHORIZATION_TOO_SOON`) gets `needsAttention`, so the next call takes the next hold.
+- The reauthorize job never touches pool holds (`judge` or `reserved`).
 
 ## Screen flow (customer page `/c/:roId`)
 

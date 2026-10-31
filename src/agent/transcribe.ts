@@ -21,6 +21,8 @@ export interface TranscribeOptions {
 export const GROQ_STT_MODELS = ["whisper-large-v3", "whisper-large-v3-turbo"] as const;
 
 const recordedStt = z.object({ text: z.string(), ms: z.number().nonnegative() });
+/** Media type of the upload by file extension (the voice route writes .webm, .m4a, .mp3, .wav or .ogg). */
+const AUDIO_TYPES: Record<string, string> = { ".wav": "audio/wav", ".webm": "audio/webm", ".m4a": "audio/mp4", ".mp3": "audio/mpeg", ".ogg": "audio/ogg" };
 const groqAnswer = z.object({ text: z.string() });
 const run = promisify(execFile);
 
@@ -45,7 +47,7 @@ export async function transcribe(audioPath: string, provider: string, opts: Tran
     groqKey(); // refuse before the file is even read
     const started = performance.now();
     const form = new FormData();
-    form.set("file", new Blob([await readFile(audioPath)], { type: "audio/wav" }), basename(audioPath));
+    form.set("file", new Blob([await readFile(audioPath)], { type: AUDIO_TYPES[extname(audioPath).toLowerCase()] ?? "application/octet-stream" }), basename(audioPath));
     form.set("model", arg);
     form.set("response_format", "json");
     form.set("temperature", "0");

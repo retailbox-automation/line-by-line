@@ -22,8 +22,34 @@ export interface VoiceOptions extends TranscribeOptions {
   priceList?: PriceList;
 }
 
+/** Longest text for the customer on a line. */
+export const MAX_CUSTOMER_TEXT = 300;
+
 /** A currency sign or a money word. The model is told to write no prices; this enforces it. */
 const PRICE_TALK = /[$€£]|\b(?:dollars?|usd|bucks?|cents?)\b/i;
+
+/**
+ * The text the customer sees on a price-list line: a text that names a price becomes the item name (the screen shows
+ * one price, the list's), and a long text is cut to 300 characters.
+ */
+export function customerText(text: string, itemName: string): { text: string; namedPrice: boolean } {
+  if (PRICE_TALK.test(text)) return { text: itemName, namedPrice: true };
+  const t = text.trim();
+  return { text: t.length <= MAX_CUSTOMER_TEXT ? t : `${t.slice(0, MAX_CUSTOMER_TEXT - 1)}…`, namedPrice: false };
+}
+
+/** Puts the list's title and price on drafted lines and cleans their customer text. */
+export function priceLines(drafted: DraftLine[], list: PriceList): { lines: PricedLine[]; priceTextCodes: string[] } {
+  const priceTextCodes: string[] = [];
+  const lines = drafted.map((l) => {
+    const item = list.byCode(l.code);
+    if (!item) throw new Error(`line ${l.code} survived the price-list filter without a price`);
+    const t = customerText(l.customerText, item.name);
+    if (t.namedPrice) priceTextCodes.push(l.code);
+    return { ...l, customerText: t.text, title: item.name, priceCents: item.cents };
+  });
+  return { lines, priceTextCodes };
+}
 
 let defaultList: PriceList | undefined;
 
@@ -31,15 +57,6 @@ export async function voiceToLines(audioPath: string, providers: { stt: string; 
   const list = opts.priceList ?? (defaultList ??= loadPriceList());
   const heard = await transcribe(audioPath, providers.stt, opts);
   const drafted = await draftLines(heard.text, providers.llm, { id: noteId(audioPath), priceList: list, recordingsDir: opts.recordingsDir });
-  const priceTextCodes: string[] = [];
-  const lines = drafted.lines.map((l) => {
-    const item = list.byCode(l.code);
-    if (!item) throw new Error(`line ${l.code} survived the price-list filter without a price`);
-    if (PRICE_TALK.test(l.customerText)) {
-      priceTextCodes.push(l.code);
-      return { ...l, customerText: item.name, title: item.name, priceCents: item.cents };
-    }
-    return { ...l, title: item.name, priceCents: item.cents };
-  });
+  const { lines, priceTextCodes } = priceLines(drafted.lines, list);
   return { transcript: heard.text, lines, droppedCodes: drafted.droppedCodes, priceTextCodes, timings: { sttMs: heard.ms, llmMs: drafted.ms } };
 }

@@ -25,19 +25,22 @@ export {
   type PickupResult,
 } from "./pickup.js";
 export { billable, MoneyGuardError, planPickup, type PickupPlan, type PlanAuthorization, type PlanStep } from "./plan.js";
-export { findReauthorizable, REAUTH_MIN_AGE_MS, runReauthorize, type ReauthorizeRunResult } from "./reauthorize.js";
+export { executeReauthorize, findReauthorizable, REAUTH_MIN_AGE_MS, reauthSpec, runReauthorize, type ReauthorizeRunResult } from "./reauthorize.js";
 export { reconcile, type ReconcileDiff, type ReconcileResult } from "./reconcile.js";
 export {
   addLine,
   createRepairOrder,
   CreateRepairOrderSchema,
   getRepairOrder,
+  insertRepairOrder,
   LineInputSchema,
   MAX_LINE_CENTS,
   newId,
   parseInput,
+  resolveLines,
   type CreateRepairOrderInput,
   type LineInput,
+  type NewLine,
   type RepairOrderState,
 } from "./repairOrders.js";
 export * from "./rows.js";

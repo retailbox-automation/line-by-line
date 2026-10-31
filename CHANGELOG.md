@@ -26,3 +26,10 @@
 - Benchmark `npm run eval` on 32 synthetic voice notes (`eval/`): exact notes, precision, recall, invented codes, urgency,
   WER with spoken numbers normalized, latency. Lower bound without a model: 16/32 on the note text, 12/32 after local speech
   recognition.
+- Voice note to draft lines in the API: `POST /api/ro/:id/lines/draft` (text), `POST /api/ro/:id/voice` (raw audio up to
+  2 MB, kept only in a 0600 temporary file for the request; off until `LBL_STT` is set), ready-made samples
+  (`GET /api/samples`, `POST /api/ro/:id/voice/sample/:id`, recorded answers, no live call), lines by price-list code
+  (`priceCode`: the list sets title and price), a daily ceiling on paid model calls (`LBL_LIVE_DAILY_CAP`). Judge mode
+  API: signed 2-hour sessions without login, the $412 demo repair order, a pool of aged sandbox holds
+  (`npm run seed:pool`, explicit ids only) and one real reauthorization per session; the reauthorize job never touches
+  pool holds.

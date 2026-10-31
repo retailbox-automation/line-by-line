@@ -15,6 +15,8 @@ export interface RepairOrder {
   customerLabel: string;
   state: string;
   status: "open" | "picked_up";
+  /** `pool`: made by scripts/seed-pool.ts around an aged hold for the judges. */
+  kind: "shop" | "pool";
   createdAt: Date;
 }
 
@@ -29,6 +31,8 @@ export interface Line {
   source: LineSource;
   status: LineStatus;
   performedCents: number | null;
+  /** Price-list code when the line came from the list (its price and title are the list's). */
+  priceCode: string | null;
   createdAt: Date;
 }
 
@@ -92,9 +96,9 @@ export interface Capture {
   confirmedAt: Date | null;
 }
 
-export const RO_COLS = `id, customer_label AS "customerLabel", state, status, created_at AS "createdAt"`;
+export const RO_COLS = `id, customer_label AS "customerLabel", state, status, kind, created_at AS "createdAt"`;
 export const LINE_COLS = `id, ro_id AS "roId", kind, title, description, price_cents AS "priceCents", urgency, source, status,
-  performed_cents AS "performedCents", created_at AS "createdAt"`;
+  performed_cents AS "performedCents", price_code AS "priceCode", created_at AS "createdAt"`;
 export const CONSENT_COLS = `id, ro_id AS "roId", line_id AS "lineId", decision, decided_at AS "decidedAt", channel,
   approver_name AS "approverName", esign_consent AS "esignConsent", disclosure_version AS "disclosureVersion",
   amount_cents AS "amountCents", new_total_cents AS "newTotalCents", paypal_order_id AS "paypalOrderId",

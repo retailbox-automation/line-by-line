@@ -20,7 +20,7 @@ PayPal Orders v2 with `intent: AUTHORIZE`, Payments v2 authorizations (capture w
 
 ## How it uses AI
 
-The module in `src/agent/` turns what a mechanic dictates into lines of the shop's price list (code, urgency, a sentence for the customer); the screens do not call it yet. The model only names price-list codes: the price always comes from the list, and a code that is not in the list is dropped and counted as invented.
+The module in `src/agent/` turns what a mechanic dictates into lines of the shop's price list (code, urgency, a sentence for the customer). The API offers it as a draft the mechanic confirms line by line (`POST /api/ro/:id/voice`, `/lines/draft`, and 32 recorded samples for judges, see [docs/api.md](docs/api.md)); the screens do not call it yet. The model only names price-list codes: the price always comes from the list, and a code that is not in the list is dropped and counted as invented.
 
 What we measure: how often the lines of a note match what a service writer would add, on 32 synthetic notes (spoken by text-to-speech, labeled by us; see [eval/README.md](eval/README.md)). Without any model, keyword matching on the price list gets 16/32 notes exactly right on the note text and 12/32 after local speech recognition. A model has to beat that.
 
@@ -53,6 +53,9 @@ npm run build && npm start    # API on PORT (default 8080), migrations run on st
 | `PAYPAL_WEBHOOK_ID` | for webhooks | the webhook route answers 503 without it |
 | `JOB_TOKEN` | for the reauthorize job | bearer token of `POST /api/jobs/reauthorize`, at least 16 characters |
 | `PORT`, `BRAND_NAME` | no | listening port; the shop name on the PayPal page |
+| `LBL_STT`, `LBL_LLM`, `LBL_LLM_RECORDED` | no | speech recognition for live voice notes (unset = off), line drafting (default `keywords`), recorded line answers for the samples |
+| `LBL_LIVE_DAILY_CAP`, `LBL_JUDGE_DAILY_SESSIONS`, `LBL_JUDGE_LIVE_VOICE` | no | paid model calls per day (200), judge sessions per day (200), live audio for judges (`1`; default off) |
+| `GROQ_API_KEY`, `LBL_LLM_LIVE` | for a `groq:` provider | both are needed; without `LBL_LLM_LIVE=1` no paid call is made |
 
 The API contract is in [docs/api.md](docs/api.md). `npm run e2e:sandbox` walks the whole story against the sandbox; it
 prints each approval link for you to approve as the sandbox buyer.
