@@ -103,6 +103,7 @@ export function createWebhookReceiver(deps: CoreDeps, webhookId: string | undefi
 
       let verified: boolean;
       try {
+        // verified live: pending — a real sandbox delivery checked with PAYPAL_WEBHOOK_ID (simulator events never verify).
         verified = await deps.paypal.verifyWebhookSignature({ headers, rawBody, webhookId });
       } catch (e) {
         // No verdict from PayPal: answer 5xx so PayPal delivers the event again later.
@@ -218,6 +219,7 @@ function lenientCents(v: unknown): number | null {
  * itself, its own status is used.
  */
 async function refundEvent(deps: CoreDeps, resource: Obj, resourceId: string, reversed: boolean): Promise<string> {
+  // verified live: pending — the REFUNDED/REVERSED resource shape (refund with rel:up to the capture) is from the docs.
   let captureId: string | null = null;
   for (const l of Array.isArray(resource.links) ? resource.links : []) {
     const link = obj(l);
