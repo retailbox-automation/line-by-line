@@ -20,3 +20,9 @@
 - Approval orders use `user_action: CONTINUE`, as planned. A live side-by-side on the sandbox mobile approval page
   (2026-10-31) showed the line name, description and exact amount in both modes and no "up to" amount; `PAY_NOW` only
   relabels the button "Pay". `--user-action PAY_NOW` in the sandbox script keeps the comparison possible.
+- AI module `src/agent/`: price list with validation (`data/price-list.json`), voice note to price-list lines (`keywords`,
+  `recorded:` and `groq:` providers; the price always comes from the list), speech to text, and `voiceToLines`. Groq calls
+  are refused before any network use unless `LBL_LLM_LIVE=1`.
+- Benchmark `npm run eval` on 32 synthetic voice notes (`eval/`): exact notes, precision, recall, invented codes, urgency,
+  WER with spoken numbers normalized, latency. Lower bound without a model: 16/32 on the note text, 12/32 after local speech
+  recognition.

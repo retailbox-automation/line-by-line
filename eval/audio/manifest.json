@@ -1,0 +1,230 @@
+{
+ "synthetic": true,
+ "tool": "macOS say + ffmpeg",
+ "items": [
+  {
+   "id": "F01",
+   "file": "audio/F01.wav",
+   "voice": "Eddy (English (US))",
+   "rate_wpm": 175,
+   "noise": false
+  },
+  {
+   "id": "F02",
+   "file": "audio/F02.wav",
+   "voice": "Flo (English (US))",
+   "rate_wpm": 195,
+   "noise": true
+  },
+  {
+   "id": "F03",
+   "file": "audio/F03.wav",
+   "voice": "Reed (English (UK))",
+   "rate_wpm": 215,
+   "noise": false
+  },
+  {
+   "id": "F04",
+   "file": "audio/F04.wav",
+   "voice": "Rocko (English (US))",
+   "rate_wpm": 185,
+   "noise": true
+  },
+  {
+   "id": "F05",
+   "file": "audio/F05.wav",
+   "voice": "Grandpa (English (US))",
+   "rate_wpm": 205,
+   "noise": false
+  },
+  {
+   "id": "F06",
+   "file": "audio/F06.wav",
+   "voice": "Fred",
+   "rate_wpm": 175,
+   "noise": true
+  },
+  {
+   "id": "F07",
+   "file": "audio/F07.wav",
+   "voice": "Kathy",
+   "rate_wpm": 195,
+   "noise": false
+  },
+  {
+   "id": "F08",
+   "file": "audio/F08.wav",
+   "voice": "Ralph",
+   "rate_wpm": 215,
+   "noise": true
+  },
+  {
+   "id": "F09",
+   "file": "audio/F09.wav",
+   "voice": "Albert",
+   "rate_wpm": 185,
+   "noise": false
+  },
+  {
+   "id": "F10",
+   "file": "audio/F10.wav",
+   "voice": "Karen",
+   "rate_wpm": 205,
+   "noise": true
+  },
+  {
+   "id": "F11",
+   "file": "audio/F11.wav",
+   "voice": "Aman (English (India))",
+   "rate_wpm": 175,
+   "noise": false
+  },
+  {
+   "id": "F12",
+   "file": "audio/F12.wav",
+   "voice": "Daniel (English (UK))",
+   "rate_wpm": 195,
+   "noise": true
+  },
+  {
+   "id": "F13",
+   "file": "audio/F13.wav",
+   "voice": "Eddy (English (US))",
+   "rate_wpm": 215,
+   "noise": false
+  },
+  {
+   "id": "F14",
+   "file": "audio/F14.wav",
+   "voice": "Flo (English (US))",
+   "rate_wpm": 185,
+   "noise": true
+  },
+  {
+   "id": "F15",
+   "file": "audio/F15.wav",
+   "voice": "Reed (English (UK))",
+   "rate_wpm": 205,
+   "noise": false
+  },
+  {
+   "id": "F16",
+   "file": "audio/F16.wav",
+   "voice": "Rocko (English (US))",
+   "rate_wpm": 175,
+   "noise": true
+  },
+  {
+   "id": "F17",
+   "file": "audio/F17.wav",
+   "voice": "Grandpa (English (US))",
+   "rate_wpm": 195,
+   "noise": false
+  },
+  {
+   "id": "F18",
+   "file": "audio/F18.wav",
+   "voice": "Fred",
+   "rate_wpm": 215,
+   "noise": true
+  },
+  {
+   "id": "F19",
+   "file": "audio/F19.wav",
+   "voice": "Kathy",
+   "rate_wpm": 185,
+   "noise": false
+  },
+  {
+   "id": "F20",
+   "file": "audio/F20.wav",
+   "voice": "Ralph",
+   "rate_wpm": 205,
+   "noise": true
+  },
+  {
+   "id": "F21",
+   "file": "audio/F21.wav",
+   "voice": "Albert",
+   "rate_wpm": 175,
+   "noise": false
+  },
+  {
+   "id": "F22",
+   "file": "audio/F22.wav",
+   "voice": "Karen",
+   "rate_wpm": 195,
+   "noise": true
+  },
+  {
+   "id": "F23",
+   "file": "audio/F23.wav",
+   "voice": "Aman (English (India))",
+   "rate_wpm": 215,
+   "noise": false
+  },
+  {
+   "id": "F24",
+   "file": "audio/F24.wav",
+   "voice": "Daniel (English (UK))",
+   "rate_wpm": 185,
+   "noise": true
+  },
+  {
+   "id": "F25",
+   "file": "audio/F25.wav",
+   "voice": "Eddy (English (US))",
+   "rate_wpm": 205,
+   "noise": false
+  },
+  {
+   "id": "F26",
+   "file": "audio/F26.wav",
+   "voice": "Flo (English (US))",
+   "rate_wpm": 175,
+   "noise": true
+  },
+  {
+   "id": "F27",
+   "file": "audio/F27.wav",
+   "voice": "Reed (English (UK))",
+   "rate_wpm": 195,
+   "noise": false
+  },
+  {
+   "id": "F28",
+   "file": "audio/F28.wav",
+   "voice": "Rocko (English (US))",
+   "rate_wpm": 215,
+   "noise": true
+  },
+  {
+   "id": "F29",
+   "file": "audio/F29.wav",
+   "voice": "Grandpa (English (US))",
+   "rate_wpm": 185,
+   "noise": false
+  },
+  {
+   "id": "F30",
+   "file": "audio/F30.wav",
+   "voice": "Fred",
+   "rate_wpm": 205,
+   "noise": true
+  },
+  {
+   "id": "F31",
+   "file": "audio/F31.wav",
+   "voice": "Kathy",
+   "rate_wpm": 175,
+   "noise": false
+  },
+  {
+   "id": "F32",
+   "file": "audio/F32.wav",
+   "voice": "Ralph",
+   "rate_wpm": 195,
+   "noise": true
+  }
+ ]
+}

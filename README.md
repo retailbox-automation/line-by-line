@@ -20,7 +20,15 @@ PayPal Orders v2 with `intent: AUTHORIZE`, Payments v2 authorizations (capture w
 
 ## How it uses AI
 
-_Filled in after the model benchmark (day 4)._
+The module in `src/agent/` turns what a mechanic dictates into lines of the shop's price list (code, urgency, a sentence for the customer); the screens do not call it yet. The model only names price-list codes: the price always comes from the list, and a code that is not in the list is dropped and counted as invented.
+
+What we measure: how often the lines of a note match what a service writer would add, on 32 synthetic notes (spoken by text-to-speech, labeled by us; see [eval/README.md](eval/README.md)). Without any model, keyword matching on the price list gets 16/32 notes exactly right on the note text and 12/32 after local speech recognition. A model has to beat that.
+
+```bash
+npm run eval -- --replay
+```
+
+No key and no network: it replays recorded speech recognition and prints the numbers.
 
 ## Feedback for PayPal
 

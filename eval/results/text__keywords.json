@@ -1,0 +1,382 @@
+{
+  "stt": "text",
+  "llm": "keywords",
+  "notes": 32,
+  "exact": 16,
+  "precision": 0.8182,
+  "recall": 0.5455,
+  "invented": 0,
+  "urgency": {
+    "ok": 18,
+    "n": 18
+  },
+  "wer": null,
+  "latencyMs": {
+    "p50": 0,
+    "p95": 0
+  },
+  "rows": [
+    {
+      "id": "F01",
+      "ok": true,
+      "expected": [
+        "BRK-PAD-F"
+      ],
+      "got": [
+        "BRK-PAD-F"
+      ],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "F02",
+      "ok": true,
+      "expected": [
+        "BRK-ROT-F"
+      ],
+      "got": [
+        "BRK-ROT-F"
+      ],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "F03",
+      "ok": false,
+      "expected": [
+        "FLT-CABIN"
+      ],
+      "got": [],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "F04",
+      "ok": true,
+      "expected": [
+        "BELT-SERP"
+      ],
+      "got": [
+        "BELT-SERP"
+      ],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "F05",
+      "ok": true,
+      "expected": [
+        "BAT-REPL"
+      ],
+      "got": [
+        "BAT-REPL"
+      ],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "F06",
+      "ok": false,
+      "expected": [
+        "COOL-FLUSH"
+      ],
+      "got": [],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "F07",
+      "ok": false,
+      "expected": [
+        "BRK-PAD-R",
+        "BRK-ROT-R"
+      ],
+      "got": [],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "F08",
+      "ok": true,
+      "expected": [
+        "ALIGN-4",
+        "STEER-TIE"
+      ],
+      "got": [
+        "ALIGN-4",
+        "STEER-TIE"
+      ],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "F09",
+      "ok": true,
+      "expected": [
+        "FLT-ENGINE"
+      ],
+      "got": [
+        "FLT-ENGINE"
+      ],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "F10",
+      "ok": true,
+      "expected": [
+        "TIRE-REPL-1"
+      ],
+      "got": [
+        "TIRE-REPL-1"
+      ],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "F11",
+      "ok": false,
+      "expected": [
+        "TIRE-PATCH"
+      ],
+      "got": [
+        "TIRE-PATCH",
+        "TIRE-REPL-1"
+      ],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "F12",
+      "ok": true,
+      "expected": [
+        "GASKET-VC"
+      ],
+      "got": [
+        "GASKET-VC"
+      ],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "F13",
+      "ok": true,
+      "expected": [
+        "SUSP-STRUT-F"
+      ],
+      "got": [
+        "SUSP-STRUT-F"
+      ],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "F14",
+      "ok": false,
+      "expected": [
+        "BRK-FLUID"
+      ],
+      "got": [],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "F15",
+      "ok": true,
+      "expected": [
+        "WIPER-F"
+      ],
+      "got": [
+        "WIPER-F"
+      ],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "F16",
+      "ok": false,
+      "expected": [
+        "BULB-HEAD"
+      ],
+      "got": [],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "F17",
+      "ok": false,
+      "expected": [
+        "WHEEL-BEAR-F"
+      ],
+      "got": [],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "F18",
+      "ok": false,
+      "expected": [
+        "AC-RECHARGE"
+      ],
+      "got": [],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "F19",
+      "ok": false,
+      "expected": [
+        "CV-AXLE"
+      ],
+      "got": [],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "F20",
+      "ok": true,
+      "expected": [],
+      "got": [],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "F21",
+      "ok": false,
+      "expected": [],
+      "got": [
+        "TIRE-REPL-1"
+      ],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "F22",
+      "ok": false,
+      "expected": [
+        "DIAG-CEL"
+      ],
+      "got": [],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "F23",
+      "ok": true,
+      "expected": [
+        "SUSP-LINK"
+      ],
+      "got": [
+        "SUSP-LINK"
+      ],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "F24",
+      "ok": false,
+      "expected": [
+        "SPARK-4"
+      ],
+      "got": [
+        "TIRE-PATCH"
+      ],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "F25",
+      "ok": true,
+      "expected": [
+        "THERMO"
+      ],
+      "got": [
+        "THERMO"
+      ],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "F26",
+      "ok": true,
+      "expected": [
+        "WATER-PUMP"
+      ],
+      "got": [
+        "WATER-PUMP"
+      ],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "F27",
+      "ok": true,
+      "expected": [
+        "MOTOR-MOUNT"
+      ],
+      "got": [
+        "MOTOR-MOUNT"
+      ],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "F28",
+      "ok": false,
+      "expected": [
+        "TIRE-ROT"
+      ],
+      "got": [
+        "TIRE-REPL-1"
+      ],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "F29",
+      "ok": false,
+      "expected": [
+        "TRANS-FLUID"
+      ],
+      "got": [],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "F30",
+      "ok": false,
+      "expected": [
+        "BRK-PAD-F",
+        "BRK-ROT-F"
+      ],
+      "got": [
+        "BRK-PAD-F"
+      ],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "F31",
+      "ok": false,
+      "expected": [
+        "BULB-BRAKE"
+      ],
+      "got": [],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "F32",
+      "ok": true,
+      "expected": [
+        "BELT-TENS"
+      ],
+      "got": [
+        "BELT-TENS"
+      ],
+      "invented": 0,
+      "ms": 0
+    }
+  ],
+  "summary": "keywords on the note text: 16/32 exact notes, precision 0.818, recall 0.545, 0 invented codes, urgency 18/18"
+}
