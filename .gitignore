@@ -17,3 +17,4 @@ coverage/
 __pycache__/
 *.pyc
 .next/
+e2e-out/
