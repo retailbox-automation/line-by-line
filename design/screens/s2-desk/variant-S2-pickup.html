@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en" translate="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1440">
+<title>Line by Line — Service desk · Order #1042 · Pickup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* оболочка */
+  --topbar:#122b50; --topbar-pill:#62728b; --topbar-icon:#fafbfc; --topbar-div:#3c5274; --notif:#0bc56b;
+  --side-bg:#f2f4f8; --side-icon:#415574; --side-slot:#c8cfda; --home-bg:#226cee; --home-icon:#fbfcfe;
+  --page:#fefefe; --page-bottom:#fbfcfd; --white:#ffffff;
+  /* текст */
+  --ink-title:#0c1832; --ink-head:#0f2856; --ink-body:#172246; --ink-muted:#687692; --ink-label:#1f3352; --ink-value:#0b1532;
+  --ink-hour:#8792a4; --ink-lift:#0d1638; --ink-sched:#0b1640; --ink-note:#24324f; --ink-faint:#8792a4;
+  /* линии и слоты */
+  --line:#e3e8ee; --line-soft:#e6eaf0; --grid:#e5eaef; --sep:#d6dce4; --slot:#d7dbe3; --slot-head:#cfd5de; --slot-fl:#d3d9e1;
+  --row-alt:#f5f7f8; --thead:#f4f6f9; --car:#415675; --dots:#5f6f88;
+  /* статусы */
+  --ok-bg:#cbfad9; --ok-ink:#0f5a1a; --no-bg:#fedddf; --no-ink:#a8141a;
+  --pp-dark:#0b2470; --pp-light:#098ddb;
+  --plaque:#defcea; --plaque-ink:#0a6519; --shield:#0b6a26; --over:#c0141c;
+  /* расписание */
+  --blk-blue:#bedcfe; --blk-blue-bar:#82abdb; --blk-blue-car:#0c3269;
+  --blk-green:#c3f8cf; --blk-green-bar:#8cc2b0; --blk-green-car:#05600d;
+  --blk-red:#fedbdc; --blk-red-bar:#ec9ca1; --blk-red-car:#b30a0b;
+  --blk-grey:#e8eaef; --blk-grey-bar:#bec5d0; --badge-bg:#ffffff; --badge-ink:#0c3269;
+  /* Pickup (S2B) */
+  --pk-title:#0a1636; --pk-label:#0d1838; --pk-amount:#7d8aa0; --pk-auth:#8a96a8;
+  --pk-slot-a:#e2e7ed; --pk-slot-b:#e9edf2; --pk-slot-r1:#ccd4df; --pk-slot-r2:#d5dce5; --pk-slot-r3:#e5e9ef; --pk-slot-p2:#dee3eb; --pk-slot-p3:#dce2ea;
+  --pk-vdiv:#eff2f7; --pk-hdiv:#ebeff3;
+  --pk-bar:#18304d; --pk-bar-ink:#f5f6f8; --pk-hatch:#96d5ad; --pk-hatch-bg:#c9ead5; --pk-released:#237a48;
+  --pk-dash:#94a4b8; --pk-dash-fill:#fafbfc; --pk-notbilled:#8090a8;
+  --pk-panel:#f8f9fb; --pk-panel-line:#e9edf3; --pk-check:#20774a; --pk-match:#2a3652; --pk-total-l:#6f7d8f; --pk-total:#157a42; --pk-fees:#5d6a80;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{background:var(--page-bottom)}
+body{width:1440px;height:798px;overflow:hidden;font-family:Inter,system-ui,sans-serif;color:var(--ink-body);background:var(--page);-webkit-font-smoothing:antialiased}
+.nw{white-space:nowrap}
+svg{display:block;flex:none}
+
+/* каркас: шапка + (сайдбар | основная область); расписание — во второй строке поверх обеих колонок */
+.screen{display:grid;grid-template-columns:165px 1275px;grid-template-rows:77px 721px;width:1440px;height:798px}
+
+/* ── шапка ── */
+.topbar{grid-column:1/-1;grid-row:1;background:var(--topbar);display:flex;align-items:flex-start}
+.topbar .logo{margin:21.1px 0 0 42.2px;width:50px;height:40px;color:var(--topbar-icon)}
+.tb-pill{height:13.4px;margin-top:35.5px;border-radius:7px;background:var(--topbar-pill);flex:none}
+.tb-right{margin-left:auto;padding-right:32.2px;display:flex;align-items:flex-start}
+.tb-search{margin-top:28.2px;width:26.5px;height:27.6px;color:var(--topbar-icon)}
+.tb-bell{margin:21.2px 0 0 36.8px;width:35.3px;height:38.6px;color:var(--topbar-icon)}
+.tb-bell .dot{fill:var(--notif)}
+.tb-div{margin:21.1px 0 0 22.6px;width:1px;height:38.9px;background:var(--topbar-div);flex:none}
+.tb-avatar{margin:17.8px 0 0 23.1px;width:46.6px;height:45.5px;display:block;flex:none}
+.tb-name{margin:34.4px 0 0 14.4px;width:83.3px;height:13.3px;border-radius:7px;background:var(--topbar-pill);flex:none}
+
+/* ── сайдбар ── */
+.sidebar{grid-column:1;grid-row:2;background:var(--side-bg);display:flex;align-items:flex-start}
+.side-icons{width:81px;display:flex;flex-direction:column;align-items:center}
+.side-home{margin-top:22.9px;width:58.8px;height:56.6px;border-radius:11px;background:var(--home-bg);display:flex;align-items:center;justify-content:center;color:var(--home-icon)}
+.side-ic{height:40px;display:flex;align-items:center;justify-content:center;color:var(--side-icon)}
+.side-labels{margin-left:10px;width:51.1px;display:flex;flex-direction:column}
+.side-slot{height:12.2px;border-radius:6px;background:var(--side-slot)}
+
+
+/* ── основная область «Pickup» (геометрия S2B × 1.1049) ── */
+.pk{grid-column:2;grid-row:2;background:var(--page);display:grid;grid-template-columns:799.9px 340.3px;grid-template-rows:180px 1fr;column-gap:52px;padding-left:50.8px;align-items:start}
+.pk-head{grid-column:1/-1;display:flex;align-items:flex-start;height:180px;margin-left:-50.8px}
+.pk-titleblock{margin-left:48.5px;width:700px;flex:none;display:flex;flex-direction:column;margin-top:35.8px}
+.pk-title{height:64px;line-height:64px;font-weight:800;font-size:57px;letter-spacing:-.45px;color:var(--pk-title);white-space:nowrap}
+.pk-slot{border-radius:9px;flex:none}
+.pk-vdiv{margin:45.7px 0 0 24.9px;width:2.2px;height:88.4px;background:var(--pk-vdiv);flex:none}
+.pk-car{margin:53.5px 0 0 33.2px;width:166.8px;height:67.4px;display:block;flex:none}
+.pk-carslots{margin:55.7px 0 0 27.6px;display:flex;flex-direction:column;gap:11px}
+.pk-carslots .pk-slot{height:15.5px}
+.pk-lines{grid-column:1;grid-row:2;display:flex;flex-direction:column}
+.pk-hdiv{width:797.7px;background:var(--pk-hdiv);flex:none}
+.pk-cap{height:32px;display:flex;align-items:baseline;white-space:nowrap}
+.pk-cap .lbl{line-height:32px;margin-left:-.5px;font-weight:700;font-size:27.3px;color:var(--pk-label)}
+.pk-cap .amt{line-height:32px;margin-left:25.5px;font-weight:500;font-size:22.4px;letter-spacing:-.1px;color:var(--pk-amount)}
+.pk-cap .auth{line-height:32px;margin-left:auto;margin-right:1.1px;font-weight:500;font-size:13.5px;color:var(--pk-auth)}
+.pk-bar{display:flex;overflow:hidden;flex:none}
+.pk-bar .charged{background:var(--pk-bar);display:flex;align-items:center;justify-content:center;font-weight:600;font-size:21.3px;color:var(--pk-bar-ink);white-space:nowrap}
+.released-hatch{flex:1;background:repeating-linear-gradient(135deg,var(--pk-hatch) 0 3.76px,var(--pk-hatch-bg) 3.76px 11.63px,var(--pk-hatch) 11.63px 12.27px)}
+.pk-released{align-self:flex-end;margin:9.5px 2.3px 0 0;height:24px;line-height:24px;font-weight:600;font-size:20.3px;color:var(--pk-released);white-space:nowrap}
+.pk-notbilled{position:relative;margin-top:15px;width:799.9px;height:66.3px;display:flex;align-items:center;justify-content:center}
+.pk-notbilled svg{position:absolute;inset:0;width:100%;height:100%}
+.pk-notbilled span{position:relative;margin-right:2.2px;font-weight:500;font-size:21.9px;color:var(--pk-notbilled);white-space:nowrap}
+.pk-panel{grid-column:2;grid-row:2;height:517.9px;border:1.5px solid var(--pk-panel-line);border-radius:10px;background:var(--pk-panel);padding:25.6px 0 0 30px;display:flex;flex-direction:column}
+.pk-panel h2{line-height:32.1px;font-weight:700;font-size:25.4px;color:var(--pk-label);white-space:nowrap}
+.pk-check{height:40px;display:flex;align-items:center;white-space:nowrap}
+.pk-check svg{margin-left:3.1px;width:37.6px;height:37.6px}
+.pk-check span{margin-left:19.7px;font-weight:500;font-size:15.5px;color:var(--pk-match)}
+.ck-dot{fill:var(--pk-check)} .ck-mark{stroke:var(--white)}
+.pk-pdiv{margin:34.1px 0 0 3.1px;width:275.1px;height:2px;background:var(--pk-hdiv);flex:none}
+.pk-total-l{margin:22.7px 0 0 1.4px;height:28px;line-height:28px;font-weight:600;font-size:24px;letter-spacing:-.25px;color:var(--pk-total-l);white-space:nowrap}
+.pk-total{margin:8.4px 0 0 3.7px;height:48px;line-height:48px;font-weight:700;font-size:41.5px;letter-spacing:-.6px;color:var(--pk-total);white-space:nowrap}
+.pk-fees{margin:21.7px 0 0 3px;height:18px;line-height:18px;font-weight:500;font-size:15px;color:var(--pk-fees);white-space:nowrap}
+</style>
+</head>
+<body>
+<!-- спрайт иконок (inline SVG) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <!-- машина анфас, высокая (гараж, сайдбар) -->
+    <symbol id="car-tall" viewBox="0 0 42 33"><path fill="currentColor" fill-rule="evenodd" d="M9.5 1.6Q10.3 0 12.2 0H29.8Q31.7 0 32.5 1.6L37 11Q42 12 42 17V25Q42 27 40 27H2Q0 27 0 25V17Q0 12 5 11ZM12.6 4H29.4L32.5 11H9.5ZM4.6 18.8a3.7 2.5 0 1 0 7.4 0a3.7 2.5 0 1 0 -7.4 0ZM30 18.8a3.7 2.5 0 1 0 7.4 0a3.7 2.5 0 1 0 -7.4 0ZM3 26H11.4V29.8Q11.4 33 8.2 33H6.2Q3 33 3 29.8ZM30.6 26H39V29.8Q39 33 35.8 33H33.8Q30.6 33 30.6 29.8Z"/></symbol>
+    <!-- зелёный круг с галочкой -->
+    <symbol id="check-dot" viewBox="0 0 34 34"><circle class="ck-dot" cx="17" cy="17" r="17"/><path class="ck-mark" d="M9.6 16.9L14.6 21.6L23.8 12.2" fill="none" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  </defs>
+</svg>
+
+<div class="screen">
+  <!-- ═════ шапка ═════ -->
+  <header class="topbar">
+    <svg class="logo" viewBox="0 0 45 36" aria-label="Garage"><path fill="currentColor" d="M22.5 0.2L45 9.6V12.4H43.4V36H38.6V13.9H6.4V36H1.6V12.4H0V9.6Z"/><use href="#car-tall" x="10" y="16.2" width="25" height="19" preserveAspectRatio="none"/></svg>
+    <div class="tb-pill" style="margin-left:38.8px;width:72.2px" data-slot="nav-1"></div>
+    <div class="tb-pill" style="margin-left:30px;width:103.2px" data-slot="nav-2"></div>
+    <div class="tb-pill" style="margin-left:30px;width:65.5px" data-slot="nav-3"></div>
+    <div class="tb-right">
+      <svg class="tb-search" viewBox="0 0 22 23" aria-label="Search"><circle cx="9.4" cy="9.4" r="7.6" fill="none" stroke="currentColor" stroke-width="2.8"/><path d="M15.1 15.3L20.4 20.8" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
+      <svg class="tb-bell" viewBox="0 0 32 35" aria-label="Notifications"><path fill="currentColor" d="M12 7.2C7.2 7.2 5 10.8 5 15.4V21.2L1.4 25.8V28.2H22.6V25.8L19 21.2V15.4C19 10.8 16.8 7.2 12 7.2Z"/><circle cx="12" cy="6.4" r="1.9" fill="currentColor"/><path fill="currentColor" d="M9 29.6H15A3 3 0 0 1 9 29.6Z"/><circle class="dot" cx="24.6" cy="7" r="6.6"/></svg>
+      <span class="tb-div"></span>
+      <img class="tb-avatar" src="assets-variant-S2/avatar.png" alt="" data-field="user-avatar">
+      <div class="tb-name" data-slot="user-name"></div>
+    </div>
+  </header>
+
+  <!-- ═════ сайдбар ═════ -->
+  <aside class="sidebar">
+    <nav class="side-icons" aria-label="Main">
+      <div class="side-home"><svg viewBox="0 0 23 22" width="25.5" height="24.4"><path fill="currentColor" d="M11.5 0.2L23 10.6H19.6V22H14V15H9V22H3.4V10.6H0Z"/></svg></div>
+      <div class="side-ic" style="margin-top:12.8px"><svg viewBox="0 0 21 25" width="23.3" height="27.8"><rect x="0.5" y="2.6" width="20" height="22" rx="3" fill="currentColor"/><rect x="5.6" y="0.2" width="9.8" height="5.6" rx="1.6" fill="currentColor"/><path d="M5 10.2H16M5 14.2H16M5 18.2H16M5 21.6H13" stroke="var(--side-bg)" stroke-width="1.7"/></svg></div>
+      <div class="side-ic" style="margin-top:23.3px"><svg viewBox="0 0 42 33" width="31.1" height="23.3" preserveAspectRatio="none"><use href="#car-tall"/></svg></div>
+      <div class="side-ic" style="margin-top:20.5px"><svg viewBox="0 0 26 20" width="28.9" height="22.2"><circle cx="19.2" cy="5" r="3.9" fill="currentColor"/><path fill="currentColor" d="M14.2 11.6C15.5 10.9 17.2 10.6 19.2 10.6C23.2 10.6 26 12.8 26 16V20H17.4V16.6C17.4 14.4 16.2 12.6 14.2 11.6Z"/><circle cx="8.2" cy="4.8" r="4.6" fill="currentColor"/><path fill="currentColor" d="M0 20V16.6C0 12.9 3.6 10.6 8.2 10.6C12.8 10.6 16.4 12.9 16.4 16.6V20Z"/></svg></div>
+      <div class="side-ic" style="margin-top:22.7px"><svg viewBox="0 0 24 23" width="26.6" height="25.5"><rect x="0" y="13" width="6" height="10" rx="1.6" fill="currentColor"/><rect x="9" y="6.6" width="6" height="16.4" rx="1.6" fill="currentColor"/><rect x="18" y="0" width="6" height="23" rx="1.6" fill="currentColor"/></svg></div>
+      <div class="side-ic" style="margin-top:23.9px"><svg viewBox="0 0 25 24" width="27.8" height="26.6"><g fill="currentColor" transform="translate(12.5 12)"><rect x="-2.6" y="-12" width="5.2" height="6" rx="1"/><rect x="-2.6" y="-12" width="5.2" height="6" rx="1" transform="rotate(45)"/><rect x="-2.6" y="-12" width="5.2" height="6" rx="1" transform="rotate(90)"/><rect x="-2.6" y="-12" width="5.2" height="6" rx="1" transform="rotate(135)"/><rect x="-2.6" y="-12" width="5.2" height="6" rx="1" transform="rotate(180)"/><rect x="-2.6" y="-12" width="5.2" height="6" rx="1" transform="rotate(225)"/><rect x="-2.6" y="-12" width="5.2" height="6" rx="1" transform="rotate(270)"/><rect x="-2.6" y="-12" width="5.2" height="6" rx="1" transform="rotate(315)"/><circle r="8.6"/></g><circle cx="12.5" cy="12" r="3.6" fill="var(--side-bg)"/></svg></div>
+    </nav>
+    <div class="side-labels">
+      <div class="side-slot" style="margin-top:45.7px" data-slot="side-home"></div>
+      <div class="side-slot" style="margin-top:46.1px" data-slot="side-orders"></div>
+      <div class="side-slot" style="margin-top:45.5px" data-slot="side-vehicles"></div>
+      <div class="side-slot" style="margin-top:44.4px" data-slot="side-customers"></div>
+      <div class="side-slot" style="margin-top:46.7px" data-slot="side-reports"></div>
+      <div class="side-slot" style="margin-top:46.1px" data-slot="side-settings"></div>
+    </div>
+  </aside>
+
+  <!-- ═════ основная область: состояние «Pickup» (по S2B, масштаб 1.1049 в оставшейся ширине) ═════ -->
+  <main class="pk">
+    <div class="pk-head">
+      <div class="pk-titleblock">
+        <h1 class="pk-title">Order <span data-field="order-id">#1042</span> · Pickup</h1>
+        <div class="pk-slot" style="margin:16.7px 0 0 2.3px;width:375.7px;height:16.6px;background:var(--pk-slot-a)" data-slot="pickup-sub-1"></div>
+        <div class="pk-slot" style="margin:4.4px 0 0 2.3px;width:202.2px;height:7.7px;background:var(--pk-slot-b)" data-slot="pickup-sub-2"></div>
+      </div>
+      <span class="pk-vdiv"></span>
+      <img class="pk-car" src="assets-variant-S2/pickup-car.png" alt="" data-field="vehicle-image">
+      <div class="pk-carslots">
+        <div class="pk-slot" style="width:154.7px;background:var(--pk-slot-r1)" data-slot="vehicle-1"></div>
+        <div class="pk-slot" style="width:114.9px;background:var(--pk-slot-r2)" data-slot="vehicle-2"></div>
+        <div class="pk-slot" style="width:70.7px;background:var(--pk-slot-r3)" data-slot="vehicle-3"></div>
+      </div>
+    </div>
+
+    <!-- три полосы денег: каждая строка — своя авторизация PayPal -->
+    <div class="pk-lines">
+      <span class="pk-hdiv" style="margin-top:1.1px;height:1px"></span>
+
+      <div class="pk-cap" style="margin-top:25px"><span class="lbl" data-field="line-desc-1">Estimate</span><span class="amt" data-field="line-amount-1">$412.00</span><span class="auth" data-field="line-auth-1">PayPal authorization 1</span></div>
+      <div class="pk-bar" style="margin-top:11.6px;height:56.4px;width:798.8px;border-radius:13.5px" data-field="line-capture-1">
+        <div class="charged" style="width:640.8px;padding-left:7.6px"><span data-field="captured-1">charged $398.00</span></div>
+        <div class="released-hatch"></div>
+      </div>
+      <div class="pk-released" data-field="released-1">released $14.00</div>
+
+      <span class="pk-hdiv" style="margin-top:18.5px;height:2px"></span>
+      <div class="pk-cap" style="margin-top:25.5px"><span class="lbl" data-field="line-desc-2">Front brake rotors</span><span class="amt" data-field="line-amount-2">$186.00</span><span class="auth" data-field="line-auth-2">PayPal authorization 2</span></div>
+      <div class="pk-bar" style="margin:11.7px 0 0 1.1px;height:56.2px;width:796.6px;border-radius:12px" data-field="line-capture-2">
+        <div class="charged" style="flex:1;padding:0 0 1.5px 4.4px"><span data-field="captured-2">charged $186.00</span></div>
+      </div>
+
+      <span class="pk-hdiv" style="margin-top:38.2px;height:1px"></span>
+      <div class="pk-cap" style="margin-top:24.4px"><span class="lbl" data-field="line-desc-3">Cabin air filter</span><span class="amt" data-field="line-amount-3">$39.00</span><span class="auth" data-field="line-auth-3">no PayPal order</span></div>
+      <div class="pk-notbilled" data-field="line-capture-3">
+        <svg viewBox="0 0 799.9 66.3" preserveAspectRatio="none" aria-hidden="true"><rect x="0.9" y="0.9" width="798.1" height="64.5" rx="13" fill="var(--pk-dash-fill)" stroke="var(--pk-dash)" stroke-width="2" stroke-dasharray="8.8 4.9" stroke-dashoffset="2.9"/></svg>
+        <span>not billed</span>
+      </div>
+    </div>
+
+    <!-- панель сверки счёта -->
+    <section class="pk-panel" aria-label="Invoice matches approved lines">
+      <h2>Invoice matches<br>approved lines</h2>
+      <div class="pk-check" style="margin-top:25.1px"><svg viewBox="0 0 34 34"><use href="#check-dot"/></svg><span data-field="match-1">Estimate work · $398.00</span></div>
+      <div class="pk-check" style="margin-top:13.6px"><svg viewBox="0 0 34 34"><use href="#check-dot"/></svg><span data-field="match-2">Front brake rotors · $186.00</span></div>
+      <div class="pk-check" style="margin-top:13.6px"><svg viewBox="0 0 34 34"><use href="#check-dot"/></svg><span data-field="match-3">Cabin air filter · not billed</span></div>
+      <span class="pk-pdiv"></span>
+      <div class="pk-total-l">Total</div>
+      <div class="pk-total" data-field="invoice-total">$584.00</div>
+      <div class="pk-fees" data-field="paypal-fees">PayPal fees $14.38 + $6.98</div>
+      <div class="pk-slot" style="margin:3.2px 0 0 4.2px;width:91.7px;height:11.6px;background:var(--pk-slot-p2)" data-slot="invoice-meta-1"></div>
+      <div class="pk-slot" style="margin:7.1px 0 0 4.2px;width:198.9px;height:14.9px;background:var(--pk-slot-p3)" data-slot="invoice-meta-2"></div>
+    </section>
+  </main>
+</div>
+</body>
+</html>
