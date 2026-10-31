@@ -82,8 +82,9 @@ PAYER_ACTION_REQUIRED ──customer cancels──▶ CANCELLED
 PAYER_ACTION_REQUIRED, link older than 3 h ──refresh──▶ supersededBy = <new order id>   (same lines, new link)
 ```
 
-The approval page uses `user_action: PAY_NOW`, so PayPal shows exactly the line amount. With `CONTINUE` PayPal shows
-the payer an "up to" amount above the hold, which our customer never agreed to.
+The approval page uses `user_action: CONTINUE` (button "Review Order"). On the sandbox mobile page the customer sees
+each line's name, description and exact amount; there is no "up to" amount (checked 2026-10-31 against `PAY_NOW`, whose
+button reads "Pay", which misdescribes a hold).
 
 ### Authorization (`authorizations[]`)
 
@@ -413,4 +414,4 @@ approval link → (a person approves in the browser as the sandbox buyer; the sc
 pickup with the estimate done for $398 (capture `final_capture:false` + void) and the rotors in full (capture, no
 void); live check of each hold. `--probe-capture-limit` puts $0.01 captures on a $5.00 hold until PayPal refuses one
 (at most 30) and voids the rest. `--reauthorize <authId>…` reauthorizes existing holds for the same amount and reads
-the new ids. `--user-action CONTINUE` switches the approval page for a comparison. Output: `e2e-out/` (git-ignored).
+the new ids. `--user-action PAY_NOW` switches the approval page for a comparison. Output: `e2e-out/` (git-ignored).

@@ -23,7 +23,7 @@ describe("estimate -> decision -> return -> pickup (fake PayPal, PGlite)", () =>
     const body = JSON.parse(created.at(-1)!.body!);
     expect(body.purchase_units[0].items).toEqual([{ name: "Front brake rotors", quantity: "1", unit_amount: { currency_code: "USD", value: "186.00" }, category: "PHYSICAL_GOODS" }]);
     expect(body.purchase_units[0].amount).toEqual({ currency_code: "USD", value: "186.00", breakdown: { item_total: { currency_code: "USD", value: "186.00" } } });
-    expect(body.payment_source.paypal.experience_context).toMatchObject({ user_action: "PAY_NOW", shipping_preference: "NO_SHIPPING", brand_name: "Line by Line demo shop" });
+    expect(body.payment_source.paypal.experience_context).toMatchObject({ user_action: "CONTINUE", shipping_preference: "NO_SHIPPING", brand_name: "Line by Line demo shop" });
 
     env.fake.approve(d.order!.id);
     const { authorization: rotorAuth } = await onApproved(env.deps, d.order!.id);

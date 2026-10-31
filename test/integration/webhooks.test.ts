@@ -118,6 +118,22 @@ describe("webhook route: verification and dedup", () => {
     expect((await eventRow(t.db, "WH-EVT-5"))!.processed_at!.getTime()).toBe(row!.processed_at!.getTime());
   });
 
+  it("a dispute event (shared sandbox app with another entry) -> 200, ignored, no side effects", async () => {
+    const t = await makeAppEnv();
+    await withCapture(t);
+    const before = await businessTables(t.db);
+    const callsBefore = t.fake.calls.length;
+    for (const [id, type] of [["WH-EVT-90", "CUSTOMER.DISPUTE.CREATED"], ["WH-EVT-91", "CUSTOMER.DISPUTE.UPDATED"], ["WH-EVT-92", "CUSTOMER.DISPUTE.RESOLVED"]] as const) {
+      const r = await deliver(t, event(id, type, { dispute_id: "PP-D-90", reason: "MERCHANDISE_OR_SERVICE_NOT_RECEIVED" }));
+      expect(r).toMatchObject({ status: 200, json: { received: true, duplicate: false } });
+    }
+    await t.webhooks.idle();
+    for (const id of ["WH-EVT-90", "WH-EVT-91", "WH-EVT-92"]) expect((await eventRow(t.db, id))!.outcome).toMatch(/^ignored: CUSTOMER\.DISPUTE\.[A-Z]+ is not handled$/);
+    expect(await businessTables(t.db)).toBe(before);
+    // The only PayPal traffic is the three signature checks.
+    expect(t.fake.calls.slice(callsBefore).map((c) => c.path)).toEqual([VERIFY, VERIFY, VERIFY]);
+  });
+
   it("an event refused once (bad signature) is accepted when a verified copy comes", async () => {
     const t = await makeAppEnv();
     const { authorization } = await approvedEstimate(t);

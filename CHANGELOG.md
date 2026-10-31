@@ -17,6 +17,6 @@
   is billed on one hold only.
 - Webhooks: an event counts as handled only once it was processed. A processing that failed for a passing reason is
   retried on a redelivery and by a sweep (at start and every 5 minutes), at most 12 attempts.
-- Change from the original plan: approval orders use `user_action: PAY_NOW` instead of `CONTINUE`. With `CONTINUE`
-  PayPal shows the payer an "up to" amount above the hold, while our customer approves exactly the listed lines. The
-  option stays available (`--user-action CONTINUE` in the sandbox script) for a side-by-side check.
+- Approval orders use `user_action: CONTINUE`, as planned. A live side-by-side on the sandbox mobile approval page
+  (2026-10-31) showed the line name, description and exact amount in both modes and no "up to" amount; `PAY_NOW` only
+  relabels the button "Pay". `--user-action PAY_NOW` in the sandbox script keeps the comparison possible.

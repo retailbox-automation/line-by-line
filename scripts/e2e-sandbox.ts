@@ -4,7 +4,7 @@
 //   npm run e2e:sandbox -- --probe-capture-limit          $5.00 hold, $0.01 captures until the first error (max 30)
 //   npm run e2e:sandbox -- --reauthorize <authId>...     reauthorize existing holds for the same amount, read the new ids
 //
-// Options: --timeout-min N (wait for approval, default 20), --user-action PAY_NOW|CONTINUE (default PAY_NOW),
+// Options: --timeout-min N (wait for approval, default 20), --user-action PAY_NOW|CONTINUE (default CONTINUE),
 // --attempt N (reauthorize PayPal-Request-Id attempt, default 1).
 // Env: PAYPAL_SANDBOX_CLIENT_ID, PAYPAL_SANDBOX_CLIENT_SECRET; optional DATABASE_URL (else in-memory PGlite, or
 // PGLITE_DIR), PUBLIC_BASE_URL (return/cancel pages; default https://example.com/line-by-line-e2e), BRAND_NAME.
@@ -28,7 +28,7 @@ const { values, positionals } = parseArgs({
     "probe-capture-limit": { type: "boolean", default: false },
     reauthorize: { type: "boolean", default: false },
     "timeout-min": { type: "string", default: "20" },
-    "user-action": { type: "string", default: "PAY_NOW" },
+    "user-action": { type: "string", default: "CONTINUE" },
     attempt: { type: "string", default: "1" },
   },
 });

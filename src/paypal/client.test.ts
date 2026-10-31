@@ -225,7 +225,7 @@ describe("call journal", () => {
 describe("operations", () => {
   const order = (n = 1) => ({ requestId: `lbl:order-add:ro_1.abc:${n}`, referenceId: "ro_1", customId: `lbl:order-add:ro_1.abc:${n}`, description: "Added work: rotors", items: [{ name: "Front brake rotors", unitCents: 18600, category: "PHYSICAL_GOODS" as const }, { name: "Shop supplies", unitCents: 1250, category: "PHYSICAL_GOODS" as const }], returnUrl: "https://lbl.example.test/r", cancelUrl: "https://lbl.example.test/c" });
 
-  it("creates an AUTHORIZE order with items, item_total, NO_SHIPPING and PAY_NOW by default", async () => {
+  it("creates an AUTHORIZE order with items, item_total, NO_SHIPPING and CONTINUE by default", async () => {
     const s = stub(() => json(200, { id: "O1", status: "PAYER_ACTION_REQUIRED", links: [{ rel: "payer-action", href: "https://www.sandbox.paypal.com/checkoutnow?token=O1" }] }));
     await expect(s.pp.createAuthorizeOrder(order())).resolves.toMatchObject({ id: "O1", approveUrl: "https://www.sandbox.paypal.com/checkoutnow?token=O1" });
     await s.pp.createAuthorizeOrder({ ...order(2), userAction: "CONTINUE" });
@@ -245,7 +245,7 @@ describe("operations", () => {
           ],
         },
       ],
-      payment_source: { paypal: { experience_context: { user_action: "PAY_NOW", shipping_preference: "NO_SHIPPING", brand_name: "Line by Line demo shop", return_url: "https://lbl.example.test/r", cancel_url: "https://lbl.example.test/c" } } },
+      payment_source: { paypal: { experience_context: { user_action: "CONTINUE", shipping_preference: "NO_SHIPPING", brand_name: "Line by Line demo shop", return_url: "https://lbl.example.test/r", cancel_url: "https://lbl.example.test/c" } } },
     });
     expect(JSON.parse(posts[1]!.body!).payment_source.paypal.experience_context.user_action).toBe("CONTINUE");
     expect(posts[0]!.headers).toMatchObject({ Prefer: "return=representation", "PayPal-Request-Id": "lbl:order-add:ro_1.abc:1", "Content-Type": "application/json" });

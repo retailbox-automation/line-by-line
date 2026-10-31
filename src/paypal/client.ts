@@ -62,8 +62,9 @@ export interface CreateAuthorizeOrderInput {
   returnUrl: string;
   cancelUrl: string;
   /**
-   * PAY_NOW by default: with CONTINUE PayPal shows the payer an "up to" amount above the hold, and our customer
-   * approves exactly the lines (deviation from PLAYBOOK 3.1, kept as a parameter for a live comparison).
+   * CONTINUE by default (button "Review Order"). Compared live on the sandbox mobile approval page on 2026-10-31
+   * (orders 8T156436WD862622X and 8CP24276UU357154W, $186): both modes list the item, its description and the exact
+   * amount, and neither shows an "up to" amount; PAY_NOW only labels the button "Pay", which misdescribes a hold.
    */
   userAction?: UserAction;
 }
@@ -294,7 +295,7 @@ export function createPayPalClient(opts: PayPalClientOptions): PayPalClient {
         return { name: text(it.name, 127, `items[${n}].name`), quantity: "1", unit_amount: usd(it.unitCents), category: it.category };
       });
       assertCents(total, "order total");
-      const userAction = i.userAction ?? "PAY_NOW";
+      const userAction = i.userAction ?? "CONTINUE";
       if (userAction !== "PAY_NOW" && userAction !== "CONTINUE") throw new GuardError("bad userAction");
       const body = {
         intent: "AUTHORIZE",
