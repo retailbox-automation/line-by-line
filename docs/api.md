@@ -16,8 +16,21 @@ checked by `test/integration/http.test.ts` and `test/integration/webhooks.test.t
   Path ids must match `[A-Za-z0-9_-]{1,64}` (otherwise `400`).
 - **No payer data** in any response, redirect or table: no name, e-mail, address or payer id from PayPal. The
   `approverName` of a consent is what the customer typed on our page, not PayPal data.
-- **No login yet.** The routes are open apart from the reauthorize job. The UI is expected on the same origin (no CORS
-  headers are sent).
+- **Access.** The UI is expected on the same origin (no CORS headers are sent). Who may call what:
+
+  | Caller | Sends | May call |
+  |---|---|---|
+  | Desk and mechanic screens | `Authorization: Bearer <DESK_TOKEN>` | every route below except the job and the webhook |
+  | Customer page `/c/:roId` | `Authorization: Bearer <k>`, where `k` is the query parameter of the customer link | for **its own** repair order only: `GET /api/ro/:id`, `POST /api/ro/:id/estimate/approval`, `POST /api/ro/:id/decisions`, `POST /api/orders/:orderId/refresh`; never `channel: "desk"` (`403 FORBIDDEN`) |
+  | PayPal (browser redirect) | nothing | `GET /api/paypal/return`, `GET /api/paypal/cancel` |
+  | PayPal (webhook) | its signature | `POST /api/webhooks/paypal` |
+  | Scheduler | `Authorization: Bearer <JOB_TOKEN>` | `POST /api/jobs/reauthorize` |
+
+  The desk gets the customer link as `customerUrl` (`PUBLIC_BASE_URL/c/<roId>?k=<token>`) in `POST /api/ro` and
+  `GET /api/ro/:id`; show it as the QR code or send it. The token is derived from `DESK_TOKEN` and the repair order id
+  (nothing stored; a new `DESK_TOKEN` invalidates every link). The bare repair order id opens nothing. PayPal's return
+  redirect does **not** carry the token: the customer page keeps `k` from the link it was opened with (for example in
+  `sessionStorage`) and sends it again after the redirect.
 
 ### Errors
 
@@ -33,7 +46,8 @@ something useful, for example the list of validation issues or the PayPal issue)
 | 502 | `PAYPAL` | PayPal refused or did not answer. `details`: `outcome`, `issue`, `httpStatus`, `debugId`, `text` | show "PayPal did not confirm", let the desk retry |
 | 413 | `TOO_LARGE` | Body over 256 KB | |
 | 415 | `UNSUPPORTED_MEDIA_TYPE` | Body not sent as `application/json` | |
-| 401 | `UNAUTHORIZED` | Reauthorize job without a valid bearer token | |
+| 401 | `UNAUTHORIZED` | No or wrong bearer token for this route (desk token, this repair order's customer token, or `JOB_TOKEN`); `WWW-Authenticate: Bearer` | ask for the link or sign in again |
+| 403 | `FORBIDDEN` | The customer page tried to record a decision with `channel: "desk"` | |
 | 503 | `JOB_DISABLED` | Reauthorize job called, but `JOB_TOKEN` is not set on the server | |
 | 503 | `UNAVAILABLE` | `/healthz`: the database does not answer | |
 | 500 | `INTERNAL` | A bug; the server log has the stack | |
@@ -116,11 +130,13 @@ CREATED ──day 4+, PayPal wallet only──▶ reauthorize: new row with pare
 - A line: `title` 1–127, `description` up to 2000 (default `""`), `priceCents` whole number 1 to 1,000,000,
   `urgency` `safety` | `soon` | `can_wait` | `null` (default), `source` `desk` | `mechanic`.
 
-`201` with the full state, the same shape as `GET /api/ro/:id`. Errors: `400 VALIDATION`.
+Desk only. `201` with the full state, the same shape as `GET /api/ro/:id`, plus `customerUrl`. Errors: `400 VALIDATION`,
+`401 UNAUTHORIZED`.
 
 ### `GET /api/ro/:id` — everything a screen needs
 
-From our database, no PayPal call. `200`:
+Desk, or this repair order's customer page. From our database, no PayPal call. `200` (the desk also gets
+`"customerUrl": "https://…/c/ro_…?k=…"`):
 
 ```json
 {
@@ -168,11 +184,12 @@ From our database, no PayPal call. `200`:
   estimate by more than $41.20 (559.909). New work: a separate approval." In this app every new line asks for the
   customer's approval anyway (`newLineNeedsConsent: true`); the tolerance only explains the badge.
 
-Errors: `404 NOT_FOUND`, `400 VALIDATION` (malformed id).
+Errors: `404 NOT_FOUND`, `400 VALIDATION` (malformed id), `401 UNAUTHORIZED`.
 
 ### `POST /api/ro/:id/estimate/approval` — approval link for the estimate
 
-Body (the consent record, sent when the customer taps "I approve" on our page, before PayPal):
+Desk, or this repair order's customer page. Body (the consent record, sent when the customer taps "I approve" on our
+page, before PayPal):
 
 ```json
 { "approverName": "Dana Demo", "channel": "qr_page", "esignConsent": true, "disclosureVersion": "FL-559.905-2026-10-31" }
@@ -194,16 +211,18 @@ Body (the consent record, sent when the customer taps "I approve" on our page, b
 ```
 
 Send the customer to `approveUrl`. An existing link older than 3 hours is replaced by a new order first.
-Errors: `400 VALIDATION`, `404 NOT_FOUND`, `409 CONFLICT` (already approved, picked up, a line already decided),
-`409 IN_PROGRESS`, `502 PAYPAL`.
+Errors: `400 VALIDATION`, `401 UNAUTHORIZED`, `403 FORBIDDEN` (customer page with `channel: "desk"`), `404 NOT_FOUND`,
+`409 CONFLICT` (already approved, picked up, a line already decided), `409 IN_PROGRESS`, `502 PAYPAL`.
 
 ### `POST /api/ro/:id/lines` — a new line from the mechanic or the desk
 
-Body: one line, as in `POST /api/ro` (`title`, `priceCents`, `source`, optional `description`, `urgency`).
+Desk only. Body: one line, as in `POST /api/ro` (`title`, `priceCents`, `source`, optional `description`, `urgency`).
 `201 {"line": {…, "kind": "added", "status": "proposed"}}`.
-Errors: `400 VALIDATION`, `404 NOT_FOUND`, `409 CONFLICT` (repair order already picked up).
+Errors: `400 VALIDATION`, `401 UNAUTHORIZED`, `404 NOT_FOUND`, `409 CONFLICT` (repair order already picked up).
 
 ### `POST /api/ro/:id/decisions` — the customer decides on added lines
+
+Desk, or this repair order's customer page (which may not send `channel: "desk"`).
 
 ```json
 { "approve": ["ln_rotors"], "decline": ["ln_filter"], "approverName": "Dana Demo", "channel": "qr_page", "esignConsent": true }
@@ -224,17 +243,20 @@ Errors: `400 VALIDATION`, `404 NOT_FOUND`, `409 CONFLICT` (repair order already 
 
 Declines are saved before the PayPal order is created. If the answer is `502 PAYPAL` (or the connection drops), resend
 **only the `approve` list**: sending a declined line again is `409 CONFLICT` ("already declined").
-Errors: `400 VALIDATION` (also for an estimate line), `404 NOT_FOUND` (line not on this repair order),
-`409 CONFLICT`, `409 IN_PROGRESS`, `502 PAYPAL`.
+Errors: `400 VALIDATION` (also for an estimate line), `401 UNAUTHORIZED`, `403 FORBIDDEN`, `404 NOT_FOUND` (line not
+on this repair order), `409 CONFLICT`, `409 IN_PROGRESS`, `502 PAYPAL`.
 
 ### `POST /api/orders/:orderId/refresh` — re-create an expired approval link
 
-No body. If the link is younger than 3 hours (or PayPal already shows it approved) nothing changes:
-`{"order": {…}, "refreshed": false, "approveUrl": "…"}`. Otherwise a new order with the same lines is created
-(`attempt + 1`), the old one gets `supersededBy`, the consents move to the new order:
-`{"order": {…new…}, "refreshed": true, "approveUrl": "…new…"}`. Calling it before showing a link is cheap (no PayPal
-call while the link is fresh).
-Errors: `404 NOT_FOUND`, `409 CONFLICT` (already authorized, cancelled, replaced, picked up), `502 PAYPAL`.
+Desk, or the customer page of the order's repair order. No body. If the link is younger than 3 hours (or PayPal
+already shows it approved) nothing changes: `{"order": {…}, "refreshed": false, "approveUrl": "…"}`. Otherwise a new
+order with the same lines is created (`attempt + 1`), the old one gets `supersededBy`, the consents move to the new
+order: `{"order": {…new…}, "refreshed": true, "approveUrl": "…new…"}`. If the customer finishes approving the old link
+while the new order is being created, the old order wins: the answer is `refreshed: false` with the old order, and the
+new order is recorded with `supersededBy` = the old id (never used). Calling it before showing a link is cheap (no
+PayPal call while the link is fresh).
+Errors: `401 UNAUTHORIZED`, `404 NOT_FOUND`, `409 CONFLICT` (already authorized, cancelled, replaced, picked up),
+`502 PAYPAL`.
 
 ### `GET /api/paypal/return?token=<orderId>` and `GET /api/paypal/cancel?token=<orderId>`
 
@@ -253,6 +275,11 @@ The page always re-reads `GET /api/ro/:id`; the query only picks the message. Th
 ignored and never stored. A repeated return is harmless (one authorization). Errors before the redirect (JSON):
 `400 VALIDATION` (no or malformed `token`), `404 NOT_FOUND` (not our order).
 
+The cancel link carries only the order id, so before cancelling the server asks PayPal for the order. It is **not**
+cancelled (`paypal=error&code=CONFLICT`) when PayPal shows it `APPROVED` or `COMPLETED`, or while our authorize for it
+is running or done; the return redirect or the `CHECKOUT.ORDER.APPROVED` webhook then turns the approval into a hold.
+If PayPal does not answer, nothing is cancelled (`code=PAYPAL`).
+
 ### `POST /api/ro/:id/pickup` — capture what was done, release the rest
 
 ```json
@@ -266,6 +293,14 @@ ignored and never stored. A repeated return is harmless (one authorization). Err
 - An approved line not listed counts as not performed (0). Lines that were never approved go to `notBilled`.
 - The first pickup freezes the numbers and marks the repair order `picked_up`. Repeating it (double click, crash) with
   the **same** numbers only finishes steps that did not complete; different numbers are `409 CONFLICT`.
+- Two pickups at the same moment: a capture is made only if the hold still holds what the plan was made from;
+  the other request reports `in_progress` for that hold and never captures again.
+- While PayPal is authorizing an approval of this repair order (the customer approved new work at the same moment),
+  pickup answers `409 IN_PROGRESS`: try again in a few seconds, and the new hold is settled too. If that authorize
+  never finished (`409 CONFLICT`, "did not finish"), open the order's return link again, then pick up.
+- Every authorized order of the repair order is settled. A line is billed on one hold only (the earliest); should a
+  second hold carry the same line, it bills nothing for it and the warning says so.
+- Desk only.
 
 `200`:
 
@@ -290,16 +325,17 @@ ignored and never stored. A repeated return is harmless (one authorization). Err
 ```
 
 `outcome` per hold: `done`; `nothing_to_do` (already settled; `reason` says why); `needs_attention` (`reason` for the
-desk, nothing more happens to that hold); `in_progress` (another request is doing it; retry in a few seconds);
+desk, nothing more happens to that hold; also when PayPal refuses a capture because the hold is already captured or
+voided, since no capture of ours was recorded); `in_progress` (another request is doing it; retry in a few seconds);
 `retry` (PayPal gave no definite answer; send the same pickup again, it reuses the same PayPal-Request-Id and cannot
 capture twice). `live` is the status from a live GET after the steps. `stopped` is set if pickup stopped early
 (a capture refused for exceeding the hold, which our guard should make impossible).
-Errors: `400 VALIDATION`, `404 NOT_FOUND`, `409 CONFLICT`.
+Errors: `400 VALIDATION`, `401 UNAUTHORIZED`, `404 NOT_FOUND`, `409 CONFLICT`, `409 IN_PROGRESS`.
 
 ### `GET /api/authorizations/:id` — live check
 
-Live GET of the authorization and its order at PayPal, compared with our records. Statuses are taken from PayPal;
-amounts are never rewritten and no money moves.
+Desk only. Live GET of the authorization and its order at PayPal, compared with our records. Statuses are taken from
+PayPal; amounts are never rewritten and no money moves.
 
 ```json
 { "ok": true, "diffs": [],
@@ -308,7 +344,7 @@ amounts are never rewritten and no money moves.
 ```
 
 A difference looks like `{"field": "captured_cents", "db": 0, "paypal": 39800}`.
-Errors: `404 NOT_FOUND`, `502 PAYPAL`.
+Errors: `401 UNAUTHORIZED`, `404 NOT_FOUND`, `502 PAYPAL`.
 
 ### `POST /api/jobs/reauthorize` — the scheduled job
 
@@ -334,8 +370,16 @@ For PayPal only. The raw body is sent byte for byte to `verify-webhook-signature
 | body not JSON, no `id` or `event_type` | `400 BAD_WEBHOOK` | nothing |
 | PayPal headers missing or verification not `SUCCESS` | `400 BAD_SIGNATURE` | event row with `verified=false`; nothing else changes |
 | PayPal did not answer the verification | `502 PAYPAL` | nothing (PayPal delivers again) |
-| event id already accepted | `200 {"received": true, "duplicate": true}` | nothing |
-| verified | `200 {"received": true, "duplicate": false}` at once; processed in the background | event row, then `processed_at` and `outcome` |
+| event id already processed, or being processed right now | `200 {"received": true, "duplicate": true}` | nothing |
+| verified (new, or open for a retry) | `200 {"received": true, "duplicate": false}` at once; processed in the background | event row, then `processed_at` and `outcome` |
+
+An event counts as handled only once it was processed. If processing fails for a reason that may pass (PayPal 5xx
+or no answer, the return redirect authorizing the same order at that moment, our database), the row keeps
+`processed_at = null` with `outcome = "retry: …"`; a processing cut off by a crash shows as no outcome for more than
+5 minutes. Such an event is processed again by a redelivery with the same id and by a sweep the server runs at start
+and every 5 minutes (PayPal itself does not deliver again after a 200). After 12 attempts the outcome is
+`"gave up after 12 attempts: …"`. The sweep rebuilds events from the stored type and resource id; refund and reversal
+events need their body and are retried only on a redelivery.
 
 What processing does:
 
@@ -352,6 +396,8 @@ PayPal says delivery is usually within 30 minutes but can take up to 3 hours, so
 
 1. `GET /api/ro/:id` → show the lines; before the first approval show the FL 559.905(2) disclosure and ask for the
    electronic-records consent.
+0. The desk creates the repair order and shows `customerUrl` as a QR code; the page keeps `k` from it and sends
+   `Authorization: Bearer <k>` on every call.
 2. Estimate: `POST /api/ro/:id/estimate/approval` → open `approveUrl`.
 3. PayPal sends the browser to `/api/paypal/return` → the server authorizes → `303` to `/c/:roId?paypal=approved…` →
    step 1 again.

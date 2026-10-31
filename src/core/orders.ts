@@ -136,11 +136,21 @@ async function placeOrder(
       }),
     async (q, o: ParsedOrder, requestId) => {
       const now = deps.now().toISOString();
+      // A refresh: the customer may have approved the old link while the new one was being created. The old order
+      // is locked first (as in onApproved's claim, so the two serialize). If its authorization was claimed, or it is
+      // no longer waiting, the old order stays and the new one is recorded as replaced by it: never used, no hold.
+      let oldWon = false;
+      if (a.supersedes) {
+        const old = await loadOrder(q, a.supersedes, true);
+        const authorizing = await q.query(`SELECT 1 FROM ops WHERE op = 'authorize' AND entity_id = $1 AND state IN ('started', 'done') LIMIT 1`, [old.id]);
+        oldWon = old.supersededBy !== null || ["APPROVED", "COMPLETED", "CANCELLED"].includes(old.status) || authorizing.rows.length > 0;
+      }
       await q.query(
-        `INSERT INTO paypal_orders (id, ro_id, purpose, line_ids, amount_cents, status, approve_url, request_id, attempt, created_at)
-         VALUES ($1, $2, $3, $4::jsonb, $5, $6, $7, $8, $9, $10::timestamptz) ON CONFLICT (id) DO NOTHING`,
-        [o.id, a.roId, a.purpose, JSON.stringify(lineIds), amountCents, o.status, o.approveUrl, requestId, a.claimed.attempt, now],
+        `INSERT INTO paypal_orders (id, ro_id, purpose, line_ids, amount_cents, status, approve_url, request_id, attempt, superseded_by, created_at)
+         VALUES ($1, $2, $3, $4::jsonb, $5, $6, $7, $8, $9, $10, $11::timestamptz) ON CONFLICT (id) DO NOTHING`,
+        [o.id, a.roId, a.purpose, JSON.stringify(lineIds), amountCents, o.status, o.approveUrl, requestId, a.claimed.attempt, oldWon ? a.supersedes : null, now],
       );
+      if (oldWon) return;
       await q.query(`UPDATE lines SET status = 'sent' WHERE ro_id = $1 AND id IN ${LINES_PARAM} AND status = 'proposed'`, [a.roId, JSON.stringify(lineIds)]);
       if (a.consent) {
         const c = a.consent;
@@ -303,6 +313,8 @@ export async function refreshApproval(deps: CoreDeps, orderId: string): Promise<
     return { cur, lines, intent, claimed };
   });
   const order = await placeOrder(deps, { roId: prep.cur.roId, purpose: prep.cur.purpose, lines: prep.lines, claimed: prep.claimed, intent: prep.intent, supersedes: prep.cur.id });
+  // The old link was approved (or cancelled) while the new order was being created: the old one stays.
+  if (order.supersededBy) return { order: await loadOrder(deps.db, prep.cur.id), refreshed: false };
   return { order, refreshed: true };
 }
 
@@ -312,13 +324,9 @@ export async function refreshApproval(deps: CoreDeps, orderId: string): Promise<
  */
 export async function onApproved(deps: CoreDeps, orderId: string): Promise<{ order: PaypalOrder; authorization: Authorization; replayed: boolean }> {
   const order = await loadOrder(deps.db, orderId);
-  if (order.supersededBy) throw new CoreError("CONFLICT", `order ${orderId} was replaced by ${order.supersededBy}; the customer approves the new link`, { orderId, supersededBy: order.supersededBy });
-  if (order.status === "CANCELLED") throw new CoreError("CONFLICT", `order ${orderId} was cancelled`, { orderId });
+  assertAuthorizable(order);
   const existing = await findRootAuthorization(deps.db, orderId);
   if (existing) return { order, authorization: existing, replayed: true };
-  // A link approved after the car was picked up must not become a hold nobody will capture or void.
-  const ro = await loadRepairOrder(deps.db, order.roId);
-  if (ro.status !== "open") throw new CoreError("CONFLICT", `repair order ${ro.id} is already picked up; this approval is not authorized`, { orderId, roId: ro.id });
 
   await runOp(
     deps,
@@ -346,6 +354,14 @@ export async function onApproved(deps: CoreDeps, orderId: string): Promise<{ ord
       await q.query(`UPDATE lines SET status = 'approved' WHERE ro_id = $1 AND id IN ${LINES_PARAM} AND status IN ('proposed', 'sent')`, [cur.roId, JSON.stringify(cur.lineIds)]);
       await q.query(`UPDATE consents SET paypal_authorization_id = $2 WHERE paypal_order_id = $1 AND decision = 'approved'`, [orderId, auth.id]);
     },
+    async (q) => {
+      // Claimed under the repair order and order locks, so pickup, cancel and refresh cannot slip in between this
+      // check and the hold: pickup refuses while this operation is started, cancel and refresh see it and stay out.
+      // A link approved after the car was picked up must not become a hold nobody will capture or void.
+      const ro = await loadRepairOrder(q, order.roId, true);
+      if (ro.status !== "open") throw new CoreError("CONFLICT", `repair order ${ro.id} is already picked up; this approval is not authorized`, { orderId, roId: ro.id });
+      assertAuthorizable(await loadOrder(q, orderId, true));
+    },
   ).catch((e: unknown) => {
     throw wrapPayPal(e, `authorizing order ${orderId}`);
   });
@@ -354,14 +370,43 @@ export async function onApproved(deps: CoreDeps, orderId: string): Promise<{ ord
   return { order: await loadOrder(deps.db, orderId), authorization, replayed: false };
 }
 
-/** The payer cancelled on PayPal: the order is CANCELLED and its lines wait for a new decision (`sent`). */
+function assertAuthorizable(o: PaypalOrder): void {
+  if (o.supersededBy) throw new CoreError("CONFLICT", `order ${o.id} was replaced by ${o.supersededBy}; the customer approves the new link`, { orderId: o.id, supersededBy: o.supersededBy });
+  if (o.status === "CANCELLED") throw new CoreError("CONFLICT", `order ${o.id} was cancelled`, { orderId: o.id });
+}
+
+function assertNotApproved(o: PaypalOrder): void {
+  if (o.status === "COMPLETED" || o.status === "APPROVED") throw new CoreError("CONFLICT", `order ${o.id} is already ${o.status === "COMPLETED" ? "authorized" : "approved at PayPal"}`, { orderId: o.id });
+}
+
+/**
+ * The payer cancelled on PayPal: the order is CANCELLED and its lines wait for a new decision (`sent`). The cancel
+ * link carries only the order id, so it is checked first: PayPal must not show the order approved, and no authorize
+ * for it may be running or done. Otherwise the customer's approval would be thrown away, or a second order for the
+ * same lines would become a second hold.
+ */
 export async function onCancelled(deps: CoreDeps, orderId: string): Promise<PaypalOrder> {
+  const order = await loadOrder(deps.db, orderId);
+  assertNotApproved(order);
+  if (order.supersededBy || order.status === "CANCELLED") return order;
+  try {
+    const live = await deps.paypal.getOrder(orderId);
+    if (live.status === "APPROVED" || live.status === "COMPLETED") {
+      throw new CoreError("CONFLICT", `the payer approved order ${orderId} at PayPal (${live.status}); it is not cancelled`, { orderId, paypalStatus: live.status });
+    }
+  } catch (e) {
+    if (e instanceof CoreError) throw e;
+    // An order PayPal no longer knows (404) can never be approved: cancelling it is safe. Anything else: no verdict.
+    if (!(e instanceof PayPalError && e.httpStatus === 404)) throw wrapPayPal(e, `reading order ${orderId}`);
+  }
   return deps.db.tx(async (q) => {
-    const order = await loadOrder(q, orderId, true);
-    if (order.status === "COMPLETED") throw new CoreError("CONFLICT", `order ${orderId} is already authorized`, { orderId });
-    if (order.supersededBy || order.status === "CANCELLED") return order;
+    const cur = await loadOrder(q, orderId, true);
+    assertNotApproved(cur);
+    if (cur.supersededBy || cur.status === "CANCELLED") return cur;
+    const authorizing = (await q.query<{ state: string }>(`SELECT state FROM ops WHERE op = 'authorize' AND entity_id = $1 AND state IN ('started', 'done') LIMIT 1`, [orderId])).rows[0];
+    if (authorizing) throw new CoreError("CONFLICT", `order ${orderId} is ${authorizing.state === "done" ? "authorized" : "being authorized"}; it is not cancelled`, { orderId });
     await q.query(`UPDATE paypal_orders SET status = 'CANCELLED' WHERE id = $1`, [orderId]);
-    await q.query(`UPDATE lines SET status = 'sent' WHERE ro_id = $1 AND id IN ${LINES_PARAM} AND status IN ('proposed', 'sent')`, [order.roId, JSON.stringify(order.lineIds)]);
+    await q.query(`UPDATE lines SET status = 'sent' WHERE ro_id = $1 AND id IN ${LINES_PARAM} AND status IN ('proposed', 'sent')`, [cur.roId, JSON.stringify(cur.lineIds)]);
     return loadOrder(q, orderId);
   });
 }

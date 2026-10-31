@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { createApp } from "../../src/http/app.js";
+import { createApp, customerToken } from "../../src/http/app.js";
 import { createWebhookReceiver } from "../../src/webhooks/paypal.js";
 import { PAYER, PAYER_MARKERS } from "../fake-paypal.js";
-import { call, CONSENT, JOB_TOKEN, makeAppEnv, PUBLIC_BASE, type AppEnv, type Reply } from "../helpers.js";
+import { call, CONSENT, desk, DESK_TOKEN, JOB_TOKEN, makeAppEnv, PUBLIC_BASE, type AppEnv, type Reply } from "../helpers.js";
 
 const DAY = 24 * 60 * 60 * 1000;
 
@@ -15,7 +15,7 @@ const NEW_RO = {
 };
 
 async function newRo(t: AppEnv) {
-  const r = await call(t.app, "POST", "/api/ro", NEW_RO);
+  const r = await desk(t.app, "POST", "/api/ro", NEW_RO);
   expect(r.status).toBe(201);
   return { roId: r.json.repairOrder.id as string, lineIds: (r.json.lines as { id: string }[]).map((l) => l.id), body: r.json };
 }
@@ -23,11 +23,11 @@ async function newRo(t: AppEnv) {
 /** Estimate approved over HTTP (approval link, PayPal approval in the fake, return redirect). */
 async function approvedRo(t: AppEnv) {
   const ro = await newRo(t);
-  const a = await call(t.app, "POST", `/api/ro/${ro.roId}/estimate/approval`, CONSENT);
+  const a = await desk(t.app, "POST", `/api/ro/${ro.roId}/estimate/approval`, CONSENT);
   t.fake.approve(a.json.order.id);
   const back = await call(t.app, "GET", `/api/paypal/return?token=${a.json.order.id}`);
   expect(back.status).toBe(303);
-  const state = await call(t.app, "GET", `/api/ro/${ro.roId}`);
+  const state = await desk(t.app, "GET", `/api/ro/${ro.roId}`);
   return { ...ro, orderId: a.json.order.id as string, authId: state.json.authorizations[0].id as string };
 }
 
@@ -43,7 +43,7 @@ describe("HTTP API: the demo story", () => {
     const t = await makeAppEnv();
     const replies: Reply[] = [];
     const go = async (method: string, path: string, body?: unknown) => {
-      const r = await call(t.app, method, path, body);
+      const r = path.startsWith("/api/paypal/") ? await call(t.app, method, path, body) : await desk(t.app, method, path, body);
       replies.push(r);
       return r;
     };
@@ -135,67 +135,67 @@ describe("HTTP API: each route, success and error", () => {
     expect(await call(t.app, "GET", "/healthz")).toMatchObject({ status: 200, json: { ok: true } });
     vi.spyOn(console, "error").mockImplementation(() => undefined);
     const broken = { ...t.deps, db: { ...t.db, query: async () => Promise.reject(new Error("connection refused")) } };
-    const app = createApp({ deps: broken, publicBaseUrl: PUBLIC_BASE, jobToken: JOB_TOKEN, webhooks: createWebhookReceiver(broken, undefined) });
+    const app = createApp({ deps: broken, publicBaseUrl: PUBLIC_BASE, deskToken: DESK_TOKEN, jobToken: JOB_TOKEN, webhooks: createWebhookReceiver(broken, undefined) });
     expectError(await call(app, "GET", "/healthz"), 503, "UNAVAILABLE");
   });
 
   it("POST /api/ro: validation, bad JSON, wrong media type", async () => {
     const t = await makeAppEnv();
-    const empty = await call(t.app, "POST", "/api/ro", { customerLabel: "X", estimateLines: [] });
+    const empty = await desk(t.app, "POST", "/api/ro", { customerLabel: "X", estimateLines: [] });
     expectError(empty, 400, "VALIDATION");
     expect(empty.json.details.issues[0].path).toBe("estimateLines");
-    expectError(await call(t.app, "POST", "/api/ro", { ...NEW_RO, estimateLines: [{ title: "Pads", priceCents: 12.5, source: "desk" }] }), 400, "VALIDATION");
-    expectError(await call(t.app, "POST", "/api/ro", "{oops", { "content-type": "application/json" }), 400, "VALIDATION");
-    expectError(await call(t.app, "POST", "/api/ro", JSON.stringify(NEW_RO), { "content-type": "text/plain" }), 415, "UNSUPPORTED_MEDIA_TYPE");
-    expectError(await call(t.app, "POST", "/api/ro", JSON.stringify(NEW_RO)), 415, "UNSUPPORTED_MEDIA_TYPE");
+    expectError(await desk(t.app, "POST", "/api/ro", { ...NEW_RO, estimateLines: [{ title: "Pads", priceCents: 12.5, source: "desk" }] }), 400, "VALIDATION");
+    expectError(await desk(t.app, "POST", "/api/ro", "{oops", { "content-type": "application/json" }), 400, "VALIDATION");
+    expectError(await desk(t.app, "POST", "/api/ro", JSON.stringify(NEW_RO), { "content-type": "text/plain" }), 415, "UNSUPPORTED_MEDIA_TYPE");
+    expectError(await desk(t.app, "POST", "/api/ro", JSON.stringify(NEW_RO)), 415, "UNSUPPORTED_MEDIA_TYPE");
   });
 
   it("GET /api/ro/:id: 404 for an unknown id, 400 for a malformed one", async () => {
     const t = await makeAppEnv();
-    expectError(await call(t.app, "GET", "/api/ro/ro_doesnotexist"), 404, "NOT_FOUND");
-    expectError(await call(t.app, "GET", "/api/ro/bad%20id%21"), 400, "VALIDATION");
+    expectError(await desk(t.app, "GET", "/api/ro/ro_doesnotexist"), 404, "NOT_FOUND");
+    expectError(await desk(t.app, "GET", "/api/ro/bad%20id%21"), 400, "VALIDATION");
   });
 
   it("POST /api/ro/:id/estimate/approval: phone approval needs e-records consent; unknown repair order", async () => {
     const t = await makeAppEnv();
     const { roId } = await newRo(t);
-    expectError(await call(t.app, "POST", `/api/ro/${roId}/estimate/approval`, { ...CONSENT, esignConsent: false }), 400, "VALIDATION");
-    expectError(await call(t.app, "POST", `/api/ro/ro_missing/estimate/approval`, CONSENT), 404, "NOT_FOUND");
+    expectError(await desk(t.app, "POST", `/api/ro/${roId}/estimate/approval`, { ...CONSENT, esignConsent: false }), 400, "VALIDATION");
+    expectError(await desk(t.app, "POST", `/api/ro/ro_missing/estimate/approval`, CONSENT), 404, "NOT_FOUND");
     expect(t.fake.posts("/v2/checkout/orders")).toHaveLength(0);
   });
 
   it("POST /api/ro/:id/lines: zero price refused; no new lines after pickup", async () => {
     const t = await makeAppEnv();
     const { roId, lineIds } = await approvedRo(t);
-    expectError(await call(t.app, "POST", `/api/ro/${roId}/lines`, { title: "Wipers", priceCents: 0, source: "desk" }), 400, "VALIDATION");
-    await call(t.app, "POST", `/api/ro/${roId}/pickup`, { performed: lineIds.map((lineId) => ({ lineId, performedCents: 100 })) });
-    expectError(await call(t.app, "POST", `/api/ro/${roId}/lines`, { title: "Wipers", priceCents: 2500, source: "desk" }), 409, "CONFLICT");
+    expectError(await desk(t.app, "POST", `/api/ro/${roId}/lines`, { title: "Wipers", priceCents: 0, source: "desk" }), 400, "VALIDATION");
+    await desk(t.app, "POST", `/api/ro/${roId}/pickup`, { performed: lineIds.map((lineId) => ({ lineId, performedCents: 100 })) });
+    expectError(await desk(t.app, "POST", `/api/ro/${roId}/lines`, { title: "Wipers", priceCents: 2500, source: "desk" }), 409, "CONFLICT");
   });
 
   it("POST /api/ro/:id/decisions: a second decision on the same line is refused; estimate lines are not decided here", async () => {
     const t = await makeAppEnv();
     const { roId, lineIds } = await approvedRo(t);
-    const line = await call(t.app, "POST", `/api/ro/${roId}/lines`, { title: "Cabin air filter", priceCents: 3900, source: "mechanic" });
-    expect((await call(t.app, "POST", `/api/ro/${roId}/decisions`, { decline: [line.json.line.id], ...CONSENT })).json).toEqual({ declined: [line.json.line.id], order: null, approveUrl: null });
-    expectError(await call(t.app, "POST", `/api/ro/${roId}/decisions`, { approve: [line.json.line.id], ...CONSENT }), 409, "CONFLICT");
-    expectError(await call(t.app, "POST", `/api/ro/${roId}/decisions`, { approve: [lineIds[0]], ...CONSENT }), 400, "VALIDATION");
-    expectError(await call(t.app, "POST", `/api/ro/${roId}/decisions`, { ...CONSENT }), 400, "VALIDATION");
+    const line = await desk(t.app, "POST", `/api/ro/${roId}/lines`, { title: "Cabin air filter", priceCents: 3900, source: "mechanic" });
+    expect((await desk(t.app, "POST", `/api/ro/${roId}/decisions`, { decline: [line.json.line.id], ...CONSENT })).json).toEqual({ declined: [line.json.line.id], order: null, approveUrl: null });
+    expectError(await desk(t.app, "POST", `/api/ro/${roId}/decisions`, { approve: [line.json.line.id], ...CONSENT }), 409, "CONFLICT");
+    expectError(await desk(t.app, "POST", `/api/ro/${roId}/decisions`, { approve: [lineIds[0]], ...CONSENT }), 400, "VALIDATION");
+    expectError(await desk(t.app, "POST", `/api/ro/${roId}/decisions`, { ...CONSENT }), 400, "VALIDATION");
   });
 
   it("POST /api/orders/:orderId/refresh: fresh link kept, expired link replaced, unknown order 404", async () => {
     const t = await makeAppEnv();
     const { roId } = await newRo(t);
-    const a = await call(t.app, "POST", `/api/ro/${roId}/estimate/approval`, CONSENT);
-    const fresh = await call(t.app, "POST", `/api/orders/${a.json.order.id}/refresh`);
+    const a = await desk(t.app, "POST", `/api/ro/${roId}/estimate/approval`, CONSENT);
+    const fresh = await desk(t.app, "POST", `/api/orders/${a.json.order.id}/refresh`);
     expect(fresh).toMatchObject({ status: 200, json: { refreshed: false, order: { id: a.json.order.id } } });
     t.clock.advance(3 * 60 * 60 * 1000 + 1000);
-    const renewed = await call(t.app, "POST", `/api/orders/${a.json.order.id}/refresh`);
+    const renewed = await desk(t.app, "POST", `/api/orders/${a.json.order.id}/refresh`);
     expect(renewed.json.refreshed).toBe(true);
     expect(renewed.json.order.id).not.toBe(a.json.order.id);
     expect(renewed.json.approveUrl).toContain(renewed.json.order.id);
-    const old = (await call(t.app, "GET", `/api/ro/${roId}`)).json.orders.find((o: { id: string }) => o.id === a.json.order.id);
+    const old = (await desk(t.app, "GET", `/api/ro/${roId}`)).json.orders.find((o: { id: string }) => o.id === a.json.order.id);
     expect(old.supersededBy).toBe(renewed.json.order.id);
-    expectError(await call(t.app, "POST", `/api/orders/NOTOURS123/refresh`), 404, "NOT_FOUND");
+    expectError(await desk(t.app, "POST", `/api/orders/NOTOURS123/refresh`), 404, "NOT_FOUND");
   });
 
   it("GET /api/paypal/return: missing token 400, unknown order 404, PayPal refusal and a running authorize redirect with a status", async () => {
@@ -204,7 +204,7 @@ describe("HTTP API: each route, success and error", () => {
     expectError(await call(t.app, "GET", "/api/paypal/return"), 400, "VALIDATION");
     expectError(await call(t.app, "GET", "/api/paypal/return?token=NOTOURS123"), 404, "NOT_FOUND");
     const { roId } = await newRo(t);
-    const a = await call(t.app, "POST", `/api/ro/${roId}/estimate/approval`, CONSENT);
+    const a = await desk(t.app, "POST", `/api/ro/${roId}/estimate/approval`, CONSENT);
     const orderId = a.json.order.id as string;
     // Not approved at PayPal: authorize is refused (ORDER_NOT_APPROVED).
     const refused = await call(t.app, "GET", `/api/paypal/return?token=${orderId}`);
@@ -228,12 +228,12 @@ describe("HTTP API: each route, success and error", () => {
     const t = await makeAppEnv();
     expectError(await call(t.app, "GET", "/api/paypal/cancel"), 400, "VALIDATION");
     const { roId, orderId } = await approvedRo(t);
-    const line = await call(t.app, "POST", `/api/ro/${roId}/lines`, { title: "Front brake rotors", priceCents: 18600, source: "mechanic" });
-    const d = await call(t.app, "POST", `/api/ro/${roId}/decisions`, { approve: [line.json.line.id], ...CONSENT });
+    const line = await desk(t.app, "POST", `/api/ro/${roId}/lines`, { title: "Front brake rotors", priceCents: 18600, source: "mechanic" });
+    const d = await desk(t.app, "POST", `/api/ro/${roId}/decisions`, { approve: [line.json.line.id], ...CONSENT });
     const r = await call(t.app, "GET", `/api/paypal/cancel?token=${d.json.order.id}`);
     expect(r.status).toBe(303);
     expect(r.headers.get("location")).toBe(`${PUBLIC_BASE}/c/${roId}?paypal=cancelled&order=${d.json.order.id}`);
-    const state = (await call(t.app, "GET", `/api/ro/${roId}`)).json;
+    const state = (await desk(t.app, "GET", `/api/ro/${roId}`)).json;
     expect(state.lines.find((l: { id: string }) => l.id === line.json.line.id).status).toBe("sent");
     expect(state.orders.find((o: { id: string }) => o.id === d.json.order.id).status).toBe("CANCELLED");
     const late = await call(t.app, "GET", `/api/paypal/cancel?token=${orderId}`);
@@ -243,19 +243,19 @@ describe("HTTP API: each route, success and error", () => {
   it("POST /api/ro/:id/pickup: unknown line 404, bad bodies 400", async () => {
     const t = await makeAppEnv();
     const { roId, lineIds } = await approvedRo(t);
-    expectError(await call(t.app, "POST", `/api/ro/${roId}/pickup`, { performed: [{ lineId: "ln_nope", performedCents: 100 }] }), 404, "NOT_FOUND");
-    expectError(await call(t.app, "POST", `/api/ro/${roId}/pickup`, {}), 400, "VALIDATION");
-    expectError(await call(t.app, "POST", `/api/ro/${roId}/pickup`, { performed: [{ lineId: lineIds[0], performedCents: -1 }] }), 400, "VALIDATION");
-    expectError(await call(t.app, "POST", `/api/ro/${roId}/pickup`, [{ lineId: lineIds[0], performedCents: 100 }]), 400, "VALIDATION");
+    expectError(await desk(t.app, "POST", `/api/ro/${roId}/pickup`, { performed: [{ lineId: "ln_nope", performedCents: 100 }] }), 404, "NOT_FOUND");
+    expectError(await desk(t.app, "POST", `/api/ro/${roId}/pickup`, {}), 400, "VALIDATION");
+    expectError(await desk(t.app, "POST", `/api/ro/${roId}/pickup`, { performed: [{ lineId: lineIds[0], performedCents: -1 }] }), 400, "VALIDATION");
+    expectError(await desk(t.app, "POST", `/api/ro/${roId}/pickup`, [{ lineId: lineIds[0], performedCents: 100 }]), 400, "VALIDATION");
     expect(t.fake.posts("/capture")).toHaveLength(0);
   });
 
   it("GET /api/authorizations/:id: unknown 404; PayPal not answering 502", async () => {
     const t = await makeAppEnv();
     const { authId } = await approvedRo(t);
-    expectError(await call(t.app, "GET", `/api/authorizations/NOTOURS123`), 404, "NOT_FOUND");
+    expectError(await desk(t.app, "GET", `/api/authorizations/NOTOURS123`), 404, "NOT_FOUND");
     t.fake.script((c) => c.method === "GET" && c.path.startsWith("/v2/payments/authorizations/"), { kind: "network" }, 4);
-    const r = await call(t.app, "GET", `/api/authorizations/${authId}`);
+    const r = await desk(t.app, "GET", `/api/authorizations/${authId}`);
     expectError(r, 502, "PAYPAL");
   });
 
@@ -282,6 +282,93 @@ describe("HTTP API: each route, success and error", () => {
     const t = await makeAppEnv();
     expectError(await call(t.app, "GET", "/api/nothing-here"), 404, "NOT_FOUND");
     const big = JSON.stringify({ customerLabel: "x".repeat(300 * 1024), estimateLines: [] });
-    expectError(await call(t.app, "POST", "/api/ro", big, { "content-type": "application/json" }), 413, "TOO_LARGE");
+    expectError(await desk(t.app, "POST", "/api/ro", big, { "content-type": "application/json" }), 413, "TOO_LARGE");
+  });
+});
+
+describe("HTTP API: access (desk token, customer link token)", () => {
+  const bearer = (token: string) => ({ authorization: `Bearer ${token}` });
+
+  it("money and desk routes refuse a caller without the desk token; nothing moves", async () => {
+    const t = await makeAppEnv();
+    const { roId, lineIds, authId } = await approvedRo(t);
+    const customer = bearer(customerToken(DESK_TOKEN, roId));
+    const performed = { performed: lineIds.map((lineId) => ({ lineId, performedCents: 26800 })) };
+    for (const headers of [{}, bearer("wrong-token-0123456789"), customer]) {
+      const p = await call(t.app, "POST", `/api/ro/${roId}/pickup`, performed, headers);
+      expectError(p, 401, "UNAUTHORIZED");
+      expect(p.headers.get("www-authenticate")).toBe("Bearer");
+      expectError(await call(t.app, "POST", `/api/ro/${roId}/lines`, { title: "Wipers", priceCents: 2500, source: "desk" }, headers), 401, "UNAUTHORIZED");
+      expectError(await call(t.app, "GET", `/api/authorizations/${authId}`, undefined, headers), 401, "UNAUTHORIZED");
+      expectError(await call(t.app, "POST", "/api/ro", NEW_RO, headers), 401, "UNAUTHORIZED");
+    }
+    expect(t.fake.posts("/capture")).toHaveLength(0);
+    expect(t.fake.posts("/void")).toHaveLength(0);
+    const state = await desk(t.app, "GET", `/api/ro/${roId}`);
+    expect(state.json.repairOrder.status).toBe("open");
+    expect(state.json.lines).toHaveLength(2);
+  });
+
+  it("the desk gets the customer link; the bare repair order id opens nothing", async () => {
+    const t = await makeAppEnv();
+    const created = await desk(t.app, "POST", "/api/ro", NEW_RO);
+    const roId = created.json.repairOrder.id as string;
+    const k = customerToken(DESK_TOKEN, roId);
+    expect(k).toMatch(/^[0-9a-f]{32}$/);
+    expect(created.json.customerUrl).toBe(`${PUBLIC_BASE}/c/${roId}?k=${k}`);
+    expect((await desk(t.app, "GET", `/api/ro/${roId}`)).json.customerUrl).toBe(created.json.customerUrl);
+    expectError(await call(t.app, "GET", `/api/ro/${roId}`), 401, "UNAUTHORIZED");
+    expectError(await call(t.app, "GET", `/api/ro/${roId}`, undefined, bearer(roId)), 401, "UNAUTHORIZED");
+    // The customer page reads its own repair order, without the link (it already has it).
+    const asCustomer = await call(t.app, "GET", `/api/ro/${roId}`, undefined, bearer(k));
+    expect(asCustomer.status).toBe(200);
+    expect(asCustomer.json.customerUrl).toBeUndefined();
+    // Another repair order's token opens nothing here.
+    const other = (await desk(t.app, "POST", "/api/ro", NEW_RO)).json.repairOrder.id as string;
+    expectError(await call(t.app, "GET", `/api/ro/${roId}`, undefined, bearer(customerToken(DESK_TOKEN, other))), 401, "UNAUTHORIZED");
+    // A different DESK_TOKEN gives different customer tokens.
+    expect(customerToken(`${DESK_TOKEN}-rotated`, roId)).not.toBe(k);
+  });
+
+  it("the customer page approves and declines as the customer, never as the desk", async () => {
+    const t = await makeAppEnv();
+    const { roId } = await newRo(t);
+    const customer = bearer(customerToken(DESK_TOKEN, roId));
+    expectError(await call(t.app, "POST", `/api/ro/${roId}/estimate/approval`, CONSENT), 401, "UNAUTHORIZED");
+    expectError(await call(t.app, "POST", `/api/ro/${roId}/estimate/approval`, { ...CONSENT, channel: "desk", esignConsent: false }, customer), 403, "FORBIDDEN");
+    const a = await call(t.app, "POST", `/api/ro/${roId}/estimate/approval`, CONSENT, customer);
+    expect(a.status).toBe(201);
+    t.fake.approve(a.json.order.id);
+    expect((await call(t.app, "GET", `/api/paypal/return?token=${a.json.order.id}`)).status).toBe(303); // PayPal's redirect: no token
+
+    const filter = await desk(t.app, "POST", `/api/ro/${roId}/lines`, { title: "Cabin air filter", priceCents: 3900, source: "mechanic" });
+    const lineId = filter.json.line.id as string;
+    expectError(await call(t.app, "POST", `/api/ro/${roId}/decisions`, { decline: [lineId], ...CONSENT }), 401, "UNAUTHORIZED");
+    expectError(await call(t.app, "POST", `/api/ro/${roId}/decisions`, { decline: [lineId], approverName: "Desk", channel: "desk", esignConsent: false }, customer), 403, "FORBIDDEN");
+    const d = await call(t.app, "POST", `/api/ro/${roId}/decisions`, { decline: [lineId], ...CONSENT }, customer);
+    expect(d).toMatchObject({ status: 200, json: { declined: [lineId], order: null } });
+    const consents = (await desk(t.app, "GET", `/api/ro/${roId}`)).json.consents as { lineId: string; channel: string }[];
+    expect(consents.filter((c) => c.lineId === lineId)).toEqual([expect.objectContaining({ channel: "qr_page" })]);
+    // The desk may record a decision made at the desk.
+    const rotor = await desk(t.app, "POST", `/api/ro/${roId}/lines`, { title: "Front brake rotors", priceCents: 18600, source: "mechanic" });
+    expect((await desk(t.app, "POST", `/api/ro/${roId}/decisions`, { approve: [rotor.json.line.id], approverName: "Dana Demo", channel: "desk", esignConsent: false })).status).toBe(200);
+  });
+
+  it("refreshing a link: desk or that repair order's customer token", async () => {
+    const t = await makeAppEnv();
+    const { roId } = await newRo(t);
+    const { roId: otherRo } = await newRo(t);
+    const a = await desk(t.app, "POST", `/api/ro/${roId}/estimate/approval`, CONSENT);
+    const orderId = a.json.order.id as string;
+    expectError(await call(t.app, "POST", `/api/orders/${orderId}/refresh`), 401, "UNAUTHORIZED");
+    expectError(await call(t.app, "POST", `/api/orders/${orderId}/refresh`, undefined, bearer(customerToken(DESK_TOKEN, otherRo))), 401, "UNAUTHORIZED");
+    const ok = await call(t.app, "POST", `/api/orders/${orderId}/refresh`, undefined, bearer(customerToken(DESK_TOKEN, roId)));
+    expect(ok).toMatchObject({ status: 200, json: { refreshed: false, order: { id: orderId } } });
+  });
+
+  it("createApp refuses to start without a desk token", async () => {
+    const t = await makeAppEnv();
+    expect(() => createApp({ deps: t.deps, publicBaseUrl: PUBLIC_BASE, deskToken: "", webhooks: t.webhooks })).toThrow(/deskToken/);
+    expect(() => createApp({ deps: t.deps, publicBaseUrl: PUBLIC_BASE, deskToken: "short", webhooks: t.webhooks })).toThrow(/deskToken/);
   });
 });

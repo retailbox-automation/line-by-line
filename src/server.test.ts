@@ -5,6 +5,7 @@ const BASE_ENV = {
   PAYPAL_SANDBOX_CLIENT_ID: "test-client-id",
   PAYPAL_SANDBOX_CLIENT_SECRET: "test-client-secret-value",
   PUBLIC_BASE_URL: "https://lbl.example.test/",
+  DESK_TOKEN: "test-desk-token-value-0123",
 };
 
 afterEach(() => vi.restoreAllMocks());
@@ -18,6 +19,7 @@ describe("loadConfig", () => {
       paypalClientSecret: "test-client-secret-value",
       brandName: DEFAULT_BRAND_NAME,
       webhookId: undefined,
+      deskToken: "test-desk-token-value-0123",
       jobToken: undefined,
       databaseUrl: undefined,
       pgliteDir: undefined,
@@ -35,7 +37,7 @@ describe("loadConfig", () => {
     const secret = "short-token-value";
     let message = "";
     try {
-      loadConfig({ PUBLIC_BASE_URL: "ftp://lbl.example.test", PORT: "80a", JOB_TOKEN: secret.slice(0, 10) });
+      loadConfig({ PUBLIC_BASE_URL: "ftp://lbl.example.test", PORT: "80a", JOB_TOKEN: secret.slice(0, 10), DESK_TOKEN: secret.slice(0, 12) });
     } catch (e) {
       message = (e as Error).message;
     }
@@ -44,10 +46,12 @@ describe("loadConfig", () => {
     expect(message).toContain("PUBLIC_BASE_URL is not a usable http(s) URL");
     expect(message).toContain("PORT must be");
     expect(message).toContain("JOB_TOKEN must be at least 16 characters");
+    expect(message).toContain("DESK_TOKEN must be at least 16 characters");
     expect(message).not.toContain(secret.slice(0, 10));
     expect(() => loadConfig({ ...BASE_ENV, PUBLIC_BASE_URL: "https://lbl.example.test/?x=1" })).toThrow(/PUBLIC_BASE_URL/);
     expect(() => loadConfig({ ...BASE_ENV, PORT: "70000" })).toThrow(/PORT/);
     expect(() => loadConfig({ ...BASE_ENV, PUBLIC_BASE_URL: undefined })).toThrow(/PUBLIC_BASE_URL is not set/);
+    expect(() => loadConfig({ ...BASE_ENV, DESK_TOKEN: undefined })).toThrow(/DESK_TOKEN is not set/);
   });
 });
 
@@ -61,8 +65,9 @@ describe("startServer", () => {
       const health = await fetch(`http://127.0.0.1:${server.port}/healthz`);
       expect(health.status).toBe(200);
       expect(await health.json()).toEqual({ ok: true });
-      const ro = await fetch(`http://127.0.0.1:${server.port}/api/ro/ro_none`);
+      const ro = await fetch(`http://127.0.0.1:${server.port}/api/ro/ro_none`, { headers: { authorization: `Bearer ${BASE_ENV.DESK_TOKEN}` } });
       expect(ro.status).toBe(404); // the schema exists: migrations ran on start
+      expect((await fetch(`http://127.0.0.1:${server.port}/api/ro/ro_none`)).status).toBe(401);
       const wh = await fetch(`http://127.0.0.1:${server.port}/api/webhooks/paypal`, { method: "POST", headers: { "content-type": "application/json" }, body: "{}" });
       expect(wh.status).toBe(503);
     } finally {

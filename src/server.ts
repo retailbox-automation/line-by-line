@@ -14,7 +14,9 @@ import { createWebhookReceiver } from "./webhooks/paypal.js";
 
 export const DEFAULT_PORT = 8080;
 export const DEFAULT_BRAND_NAME = "Line by Line";
-const MIN_JOB_TOKEN_LENGTH = 16;
+const MIN_TOKEN_LENGTH = 16;
+/** How often the server re-runs webhook events whose processing failed for a passing reason. */
+export const WEBHOOK_RETRY_EVERY_MS = 5 * 60 * 1000;
 
 export interface ServerConfig {
   port: number;
@@ -24,6 +26,8 @@ export interface ServerConfig {
   paypalClientSecret: string;
   brandName: string;
   webhookId: string | undefined;
+  /** Bearer token of the desk and mechanic screens; also the key of the customer page links. */
+  deskToken: string;
   jobToken: string | undefined;
   databaseUrl: string | undefined;
   pgliteDir: string | undefined;
@@ -63,8 +67,12 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
     if (!/^\d+$/.test(rawPort) || !Number.isInteger(port) || port < 1 || port > 65535) problems.push("PORT must be a whole number from 1 to 65535");
   }
 
+  const deskToken = opt(env.DESK_TOKEN);
+  if (!deskToken) problems.push("DESK_TOKEN is not set");
+  else if (deskToken.length < MIN_TOKEN_LENGTH) problems.push(`DESK_TOKEN must be at least ${MIN_TOKEN_LENGTH} characters`);
+
   const jobToken = opt(env.JOB_TOKEN);
-  if (jobToken !== undefined && jobToken.length < MIN_JOB_TOKEN_LENGTH) problems.push(`JOB_TOKEN must be at least ${MIN_JOB_TOKEN_LENGTH} characters`);
+  if (jobToken !== undefined && jobToken.length < MIN_TOKEN_LENGTH) problems.push(`JOB_TOKEN must be at least ${MIN_TOKEN_LENGTH} characters`);
 
   const brandName = opt(env.BRAND_NAME) ?? DEFAULT_BRAND_NAME;
   if (brandName.length > 127) problems.push("BRAND_NAME must be at most 127 characters");
@@ -77,6 +85,7 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
     paypalClientSecret: clientSecret!,
     brandName,
     webhookId: opt(env.PAYPAL_WEBHOOK_ID),
+    deskToken: deskToken!,
     jobToken,
     databaseUrl: opt(env.DATABASE_URL),
     pgliteDir: opt(env.PGLITE_DIR),
@@ -111,7 +120,7 @@ export async function startServer(config: ServerConfig): Promise<RunningServer> 
     config: { returnUrl: `${config.publicBaseUrl}/api/paypal/return`, cancelUrl: `${config.publicBaseUrl}/api/paypal/cancel` },
   };
   const webhooks = createWebhookReceiver(deps, config.webhookId);
-  const app = createApp({ deps, publicBaseUrl: config.publicBaseUrl, jobToken: config.jobToken, webhooks });
+  const app = createApp({ deps, publicBaseUrl: config.publicBaseUrl, deskToken: config.deskToken, jobToken: config.jobToken, webhooks });
 
   const server: ServerType = await new Promise((ok, fail) => {
     const s = serve({ fetch: app.fetch, port: config.port }, () => ok(s));
@@ -122,12 +131,34 @@ export async function startServer(config: ServerConfig): Promise<RunningServer> 
     `line-by-line listening on port ${port} (database: ${config.databaseUrl ? "postgres" : "pglite"}, webhooks: ${config.webhookId ? "on" : "off"}, reauthorize job: ${config.jobToken ? "on" : "off"})`,
   );
 
+  // PayPal does not deliver an event again after our 200: events whose processing failed are retried here.
+  // One sweep at a time; close() waits for the last one.
+  let sweeping: Promise<void> = Promise.resolve();
+  const retryWebhooks = () => {
+    sweeping = sweeping
+      .then(() => webhooks.retryPending())
+      .then(
+        (n) => {
+          if (n) console.log(`webhooks: retried ${n} event(s)`);
+        },
+        (e: unknown) => console.error(`webhooks: retry sweep failed: ${(e as Error).message}`),
+      );
+  };
+  let retryTimer: NodeJS.Timeout | null = null;
+  if (config.webhookId) {
+    retryWebhooks();
+    retryTimer = setInterval(retryWebhooks, WEBHOOK_RETRY_EVERY_MS);
+    retryTimer.unref();
+  }
+
   let closing: Promise<void> | null = null;
   return {
     port,
     close() {
       closing ??= (async () => {
+        if (retryTimer) clearInterval(retryTimer);
         await new Promise<void>((ok) => server.close(() => ok()));
+        await sweeping;
         await webhooks.idle();
         await db.close();
       })();

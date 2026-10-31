@@ -5,7 +5,7 @@ import type { Queryable } from "../db/db.js";
 import { MoneyError } from "../money.js";
 import { classify, describeError, GuardError, isDefiniteFailure } from "../paypal/errors.js";
 import type { ParsedAuthorization, ParsedCapture } from "../paypal/parse.js";
-import type { CoreDeps } from "./deps.js";
+import { opStaleMs, type CoreDeps } from "./deps.js";
 import { CoreError } from "./errors.js";
 import { runOp } from "./ops.js";
 import { billable, MoneyGuardError, planPickup, type PlanStep } from "./plan.js";
@@ -59,6 +59,8 @@ interface Work {
   root: Authorization | null;
   effective: Authorization | null;
   lines: Line[];
+  /** Lines of this order already billed on an earlier order (a line held twice): this hold does not bill them. */
+  billedElsewhere: { lineId: string; paypalOrderId: string }[];
 }
 
 async function setAttention(q: Queryable, authorizationId: string, reason: string): Promise<void> {
@@ -87,6 +89,24 @@ async function preparePickup(deps: CoreDeps, roId: string, performed: z.output<t
     const notBilled = performed.filter((p) => !billed.has(byId.get(p.lineId)!.status)).map((p) => ({ lineId: p.lineId, reason: NOT_BILLED }));
 
     if (ro.status === "open") {
+      // An authorize still running for one of this repair order's orders would become a hold after pickup that
+      // nobody captures or voids. onApproved claims its operation under this same repair order lock.
+      const authorizing = (
+        await q.query<{ entity_id: string; result: { unknownOutcome?: boolean } | null; updated_ms: number }>(
+          `SELECT entity_id, result, (extract(epoch FROM updated_at) * 1000)::float8 AS updated_ms FROM ops
+            WHERE op = 'authorize' AND state = 'started' AND entity_id IN (SELECT id FROM paypal_orders WHERE ro_id = $1)`,
+          [roId],
+        )
+      ).rows;
+      if (authorizing.length) {
+        const orders = authorizing.map((r) => r.entity_id);
+        const now = deps.now().getTime();
+        const abandoned = authorizing.some((r) => r.result?.unknownOutcome === true || now - Number(r.updated_ms) >= opStaleMs(deps));
+        if (abandoned) {
+          throw new CoreError("CONFLICT", `the PayPal authorization of order ${orders.join(", ")} did not finish; open its return link again to finish it, then pick up`, { roId, orders });
+        }
+        throw new CoreError("IN_PROGRESS", `PayPal is authorizing order ${orders.join(", ")} of this repair order right now; pick up again in a few seconds`, { roId, orders });
+      }
       for (const l of lines.filter((x) => x.status === "approved")) {
         const cents = given.get(l.id) ?? 0;
         await q.query(`UPDATE lines SET status = $2, performed_cents = $3 WHERE id = $1`, [l.id, cents > 0 ? "performed" : "not_performed", cents]);
@@ -99,16 +119,33 @@ async function preparePickup(deps: CoreDeps, roId: string, performed: z.output<t
 
     const fresh = (await q.query<Line>(`SELECT ${LINE_COLS} FROM lines WHERE ro_id = $1`, [roId])).rows;
     const freshById = new Map(fresh.map((l) => [l.id, l]));
-    const orders = (await q.query<PaypalOrder>(`SELECT ${ORDER_COLS} FROM paypal_orders WHERE ro_id = $1 AND status = 'COMPLETED' AND superseded_by IS NULL ORDER BY created_at, id`, [roId])).rows;
+    // Every authorized order is settled, replaced or not: a hold is never left behind because its order row says
+    // superseded.
+    const orders = (await q.query<PaypalOrder>(`SELECT ${ORDER_COLS} FROM paypal_orders WHERE ro_id = $1 AND status = 'COMPLETED' ORDER BY created_at, id`, [roId])).rows;
     const auths = (await q.query<Authorization>(`SELECT ${AUTH_COLS} FROM authorizations WHERE ro_id = $1`, [roId])).rows;
     const authById = new Map(auths.map((a) => [a.id, a]));
+    // A line is billed on one hold only: the earliest authorized order that carries it. A later hold on the same
+    // line (it should not exist) bills nothing for it, so its share is released.
+    const billedOn = new Map<string, string>();
     const work: Work[] = orders.map((order) => {
       const root = auths.find((a) => a.paypalOrderId === order.id && a.parentId === null) ?? null;
       let effective = root;
       // Follow reauthorizations to the newest id: that is the one we capture.
       for (let i = 0; effective?.reauthorizedTo && i < 30; i++) effective = authById.get(effective.reauthorizedTo) ?? effective;
-      const orderLines = order.lineIds.map((id) => freshById.get(id)).filter((l): l is Line => !!l && (l.status === "performed" || l.status === "not_performed"));
-      return { order, root, effective, lines: orderLines };
+      const orderLines: Line[] = [];
+      const billedElsewhere: Work["billedElsewhere"] = [];
+      for (const id of order.lineIds) {
+        const l = freshById.get(id);
+        if (!l || (l.status !== "performed" && l.status !== "not_performed")) continue;
+        const first = billedOn.get(id);
+        if (first) {
+          billedElsewhere.push({ lineId: id, paypalOrderId: first });
+          continue;
+        }
+        billedOn.set(id, order.id);
+        orderLines.push(l);
+      }
+      return { order, root, effective, lines: orderLines, billedElsewhere };
     });
     return { work, notBilled };
   });
@@ -146,6 +183,7 @@ async function settle(deps: CoreDeps, w: Work, approvedCents: number, billableCe
     warnings: [],
     live: {},
   };
+  for (const d of w.billedElsewhere) res.warnings.push(`line ${d.lineId} is also held by order ${d.paypalOrderId} and is billed there, not on this hold`);
   if (!root || !eff) {
     res.outcome = "needs_attention";
     res.reason = `order ${w.order.id} is COMPLETED but no authorization is recorded`;
@@ -189,7 +227,7 @@ async function settle(deps: CoreDeps, w: Work, approvedCents: number, billableCe
         // verified live: pending — capture on a reauthorized (child) id; checked by the lane in the sandbox e2e.
         const { requestId, result: c } = await runOp<ParsedCapture>(
           deps,
-          { op: "capture", entityId: eff.id, intent: { cents: step.cents, finalCapture: step.finalCapture } },
+          { op: "capture", entityId: eff.id, intent: { cents: step.cents, finalCapture: step.finalCapture, capturedBefore: already } },
           (rid) => deps.paypal.captureAuthorization({ authorizationId: eff.id, requestId: rid, cents: step.cents, finalCapture: step.finalCapture }),
           async (q, cap, rid) => {
             const amount = cap.amountCents ?? step.cents;
@@ -200,6 +238,19 @@ async function settle(deps: CoreDeps, w: Work, approvedCents: number, billableCe
             );
             if (ins.rows.length && COUNTED.has(cap.status)) {
               await q.query(`UPDATE authorizations SET captured_cents = captured_cents + $2, status = $3 WHERE id = $1`, [eff.id, amount, step.finalCapture ? "CAPTURED" : "PARTIALLY_CAPTURED"]);
+            }
+          },
+          async (q) => {
+            // The plan was made from the snapshot of preparePickup. A pickup running at the same time may have captured
+            // since then (its capture and our captured_cents are written in one transaction). Under the row lock the
+            // money state must still be the snapshot; otherwise this would be a second capture of the same amount.
+            const cur = (await q.query<{ captured_cents: number; needs_attention: string | null }>(`SELECT captured_cents, needs_attention FROM authorizations WHERE id = $1 FOR UPDATE`, [eff.id])).rows[0];
+            if (!cur || cur.captured_cents !== already || cur.needs_attention) {
+              throw new CoreError("CONFLICT", `authorization ${eff.id} changed while this pickup was running (captured ${already} -> ${cur?.captured_cents ?? "?"} cents); reload the state`, {
+                authorizationId: eff.id,
+                capturedBeforeCents: already,
+                capturedNowCents: cur?.captured_cents ?? null,
+              });
             }
           },
         );
@@ -240,8 +291,14 @@ async function settle(deps: CoreDeps, w: Work, approvedCents: number, billableCe
         res.reason = `guard bug, MAX_CAPTURE_AMOUNT_EXCEEDED on ${target}: ${describeError(e)}`;
         await setAttention(deps.db, eff.id, res.reason);
         stop = res.reason;
+      } else if ((outcome === "PREVIOUSLY_CAPTURED" || outcome === "PREVIOUSLY_VOIDED") && step.kind === "capture") {
+        // PayPal refused our capture because the hold is already captured or voided: no capture of ours is recorded,
+        // so this is never "done". The live status is written below; the desk compares the money with the live check.
+        res.outcome = "needs_attention";
+        res.reason = `capture refused, ${outcome} on ${target}: ${describeError(e)}; no capture was recorded, run the live check`;
+        await setAttention(deps.db, eff.id, res.reason);
       } else if (outcome === "PREVIOUSLY_CAPTURED" || outcome === "PREVIOUSLY_VOIDED") {
-        // Already in that state at PayPal: read the live status (below) and do not fail.
+        // The void found the hold already settled at PayPal: read the live status (below) and do not fail.
         res.warnings.push(`${outcome} on ${target}; recorded the live status`);
       } else if (isDefiniteFailure(e) || e instanceof GuardError || e instanceof MoneyError || e instanceof MoneyGuardError) {
         res.outcome = "needs_attention";

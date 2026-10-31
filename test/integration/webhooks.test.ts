@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { addLine, createEstimateOrder, decide, getRepairOrder, pickup } from "../../src/core/index.js";
 import type { Db } from "../../src/db/db.js";
+import { MAX_WEBHOOK_ATTEMPTS, WEBHOOK_STALE_MS } from "../../src/webhooks/paypal.js";
 import { approvedEstimate, call, CONSENT, estimateRo, makeAppEnv, PUBLIC_BASE, WEBHOOK_ID, type AppEnv } from "../helpers.js";
 
 const HEADERS = {
@@ -246,5 +247,104 @@ describe("webhook processing (second layer)", () => {
     await deliver(t, event("WH-EVT-40", "PAYMENT.CAPTURE.REVERSED", { id: captureId, status: "REVERSED" }));
     await t.webhooks.idle();
     expect((await getRepairOrder(t.deps, ro.id)).captures[0]!.status).toBe("REVERSED");
+  });
+});
+
+describe("webhook retries: an event is done only once it was processed", () => {
+  /** An estimate order the payer approved, whose return redirect never reached us. */
+  async function approvedWithoutReturn(t: AppEnv) {
+    const { ro } = await estimateRo(t);
+    const { order } = await createEstimateOrder(t.deps, ro.id, CONSENT);
+    t.fake.approve(order.id);
+    return { ro, order };
+  }
+
+  it("PayPal 503 while authorizing: kept open; a redelivery processes it and the hold is recorded", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const t = await makeAppEnv();
+    const { ro, order } = await approvedWithoutReturn(t);
+    t.fake.script((c) => c.method === "POST" && c.path.endsWith("/authorize"), { kind: "respond", status: 503, body: { name: "SERVICE_UNAVAILABLE" } }, 4);
+    const raw = event("WH-EVT-50", "CHECKOUT.ORDER.APPROVED", { id: order.id, status: "APPROVED" });
+    expect((await deliver(t, raw)).json).toEqual({ received: true, duplicate: false });
+    await t.webhooks.idle();
+    expect(await eventRow(t.db, "WH-EVT-50")).toMatchObject({ verified: true, processed_at: null, outcome: expect.stringMatching(/^retry: not authorized yet: PAYPAL .*503/) });
+
+    const again = await deliver(t, raw);
+    expect(again.json).toEqual({ received: true, duplicate: false });
+    await t.webhooks.idle();
+    const row = await eventRow(t.db, "WH-EVT-50");
+    const auth = (await getRepairOrder(t.deps, ro.id)).authorizations[0]!;
+    expect(auth.amountCents).toBe(41200);
+    expect(row).toMatchObject({ outcome: `authorized ${auth.id}` });
+    expect(row!.processed_at).not.toBeNull();
+    // Done now: a third copy is a duplicate.
+    expect((await deliver(t, raw)).json).toEqual({ received: true, duplicate: true });
+  });
+
+  it("the return redirect is authorizing at the same moment (IN_PROGRESS): kept open, the sweep finishes it", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const t = await makeAppEnv();
+    const { order } = await approvedWithoutReturn(t);
+    const at = t.clock.now().toISOString();
+    await t.db.query(`INSERT INTO ops (request_id, op, entity_id, state, result, created_at, updated_at) VALUES ($1, 'authorize', $2, 'started', $3::jsonb, $4, $4)`, [
+      `lbl:authorize:${order.id}:1`,
+      order.id,
+      JSON.stringify({ intent: { orderId: order.id } }),
+      at,
+    ]);
+    await deliver(t, event("WH-EVT-51", "CHECKOUT.ORDER.APPROVED", { id: order.id }));
+    await t.webhooks.idle();
+    expect((await eventRow(t.db, "WH-EVT-51"))!.outcome).toMatch(/^retry: not authorized yet: IN_PROGRESS/);
+    // That redirect died: after the stale time its operation may be taken over, and the sweep authorizes.
+    t.clock.advance(WEBHOOK_STALE_MS);
+    expect(await t.webhooks.retryPending()).toBe(1);
+    await t.webhooks.idle();
+    expect((await eventRow(t.db, "WH-EVT-51"))!.outcome).toMatch(/^authorized /);
+    expect(await t.webhooks.retryPending()).toBe(0);
+  });
+
+  it("processing cut off after the 200 (process died): a fresh claim is a duplicate, a stale one is taken over", async () => {
+    const t = await makeAppEnv();
+    const { order } = await approvedWithoutReturn(t);
+    const raw = event("WH-EVT-52", "CHECKOUT.ORDER.APPROVED", { id: order.id });
+    const at = t.clock.now().toISOString();
+    await t.db.query(`INSERT INTO webhook_events (id, event_type, resource_id, verified, received_at, claimed_at, attempts) VALUES ($1, 'CHECKOUT.ORDER.APPROVED', $2, true, $3, $3, 1)`, [
+      "WH-EVT-52",
+      order.id,
+      at,
+    ]);
+    expect((await deliver(t, raw)).json).toEqual({ received: true, duplicate: true }); // may still be running
+    expect(t.fake.posts(VERIFY)).toHaveLength(0);
+    t.clock.advance(WEBHOOK_STALE_MS);
+    expect((await deliver(t, raw)).json).toEqual({ received: true, duplicate: false });
+    await t.webhooks.idle();
+    expect(await eventRow(t.db, "WH-EVT-52")).toMatchObject({ outcome: expect.stringMatching(/^authorized /) });
+    expect(t.fake.posts(`/v2/checkout/orders/${order.id}/authorize`)).toHaveLength(1);
+  });
+
+  it("gives up after the attempt cap; a definite refusal is not retried at all", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const t = await makeAppEnv();
+    const { order } = await approvedWithoutReturn(t);
+    t.fake.script((c) => c.method === "POST" && c.path.endsWith("/authorize"), { kind: "respond", status: 503, body: { name: "SERVICE_UNAVAILABLE" } }, 1000);
+    await deliver(t, event("WH-EVT-53", "CHECKOUT.ORDER.APPROVED", { id: order.id }));
+    await t.webhooks.idle();
+    for (let i = 1; i < MAX_WEBHOOK_ATTEMPTS; i++) {
+      expect(await t.webhooks.retryPending()).toBe(1);
+      await t.webhooks.idle();
+    }
+    const row = await eventRow(t.db, "WH-EVT-53");
+    expect(row!.outcome).toMatch(new RegExp(`^gave up after ${MAX_WEBHOOK_ATTEMPTS} attempts: not authorized yet: PAYPAL`));
+    expect(row!.processed_at).not.toBeNull();
+    expect(await t.webhooks.retryPending()).toBe(0);
+
+    const other = await makeAppEnv();
+    const { order: notApproved } = await approvedWithoutReturn(other);
+    other.fake.orders.get(notApproved.id)!.status = "PAYER_ACTION_REQUIRED";
+    await deliver(other, event("WH-EVT-54", "CHECKOUT.ORDER.APPROVED", { id: notApproved.id }));
+    await other.webhooks.idle();
+    expect(await eventRow(other.db, "WH-EVT-54")).toMatchObject({ outcome: expect.stringMatching(/^not authorized: PAYPAL .*ORDER_NOT_APPROVED/) });
+    expect((await eventRow(other.db, "WH-EVT-54"))!.processed_at).not.toBeNull();
+    expect(await other.webhooks.retryPending()).toBe(0);
   });
 });

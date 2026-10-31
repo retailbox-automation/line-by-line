@@ -99,6 +99,9 @@ export async function dumpTables(db: Db): Promise<string> {
 
 export const PUBLIC_BASE = "https://lbl.example.test";
 export const JOB_TOKEN = "test-job-token-0123456789";
+export const DESK_TOKEN = "test-desk-token-0123456789";
+/** The header the desk and mechanic screens send. */
+export const DESK = { authorization: `Bearer ${DESK_TOKEN}` };
 export const WEBHOOK_ID = "WH-TEST-PLACEHOLDER";
 
 export interface AppEnv extends Env {
@@ -110,7 +113,7 @@ export interface AppEnv extends Env {
 export async function makeAppEnv(o: { webhookId?: string | null; jobToken?: string | null } = {}): Promise<AppEnv> {
   const env = await makeEnv();
   const webhooks = createWebhookReceiver(env.deps, o.webhookId === null ? undefined : (o.webhookId ?? WEBHOOK_ID));
-  const app = createApp({ deps: env.deps, publicBaseUrl: PUBLIC_BASE, jobToken: o.jobToken === null ? undefined : (o.jobToken ?? JOB_TOKEN), webhooks });
+  const app = createApp({ deps: env.deps, publicBaseUrl: PUBLIC_BASE, deskToken: DESK_TOKEN, jobToken: o.jobToken === null ? undefined : (o.jobToken ?? JOB_TOKEN), webhooks });
   return { ...env, app, webhooks };
 }
 
@@ -142,4 +145,9 @@ export async function call(app: Hono, method: string, path: string, body?: unkno
     json = null;
   }
   return { status: res.status, json, text, headers: res.headers };
+}
+
+/** `call` as the desk (DESK_TOKEN). */
+export function desk(app: Hono, method: string, path: string, body?: unknown, headers: Record<string, string> = {}): Promise<Reply> {
+  return call(app, method, path, body, { ...DESK, ...headers });
 }

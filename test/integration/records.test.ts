@@ -8,7 +8,7 @@ import { approvedEstimate, CONSENT, estimateRo, makeEnv } from "../helpers.js";
 describe("migrations", () => {
   it("apply once and are idempotent", async () => {
     const db = wrapPglite(new PGlite());
-    expect(await migrate(db)).toEqual(["001"]);
+    expect(await migrate(db)).toEqual(["001", "002"]);
     expect(await migrate(db)).toEqual([]);
     const t = await db.query<{ table_name: string }>(`SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name`);
     expect(t.rows.map((r) => r.table_name)).toEqual(["authorizations", "captures", "consents", "lines", "ops", "paypal_calls", "paypal_orders", "repair_orders", "schema_migrations", "webhook_events"]);

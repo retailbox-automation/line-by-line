@@ -167,14 +167,23 @@ export async function executeOp<T>(
   return result;
 }
 
-/** claim (own transaction) + execute. */
+/**
+ * claim (own transaction) + execute. `precheck` runs in the claim transaction before the id is claimed: it takes
+ * the row locks and re-checks, on fresh rows, that the operation still applies (throw a CoreError to refuse). The
+ * attempt number moves on once an operation is done, so a caller working from an old snapshot would otherwise get
+ * a new PayPal-Request-Id and repeat the money call.
+ */
 export async function runOp<T>(
   deps: CoreDeps,
   spec: OpSpec,
   call: (requestId: string) => Promise<T>,
   persist: (q: Queryable, result: T, requestId: string) => Promise<void>,
+  precheck?: (q: Queryable) => Promise<void>,
 ): Promise<{ requestId: string; result: T }> {
-  const claimed = await deps.db.tx((q) => claimOp(q, spec, deps.now(), opStaleMs(deps)));
+  const claimed = await deps.db.tx(async (q) => {
+    if (precheck) await precheck(q);
+    return claimOp(q, spec, deps.now(), opStaleMs(deps));
+  });
   const result = await executeOp(deps, claimed, spec.intent, call, persist);
   return { requestId: claimed.requestId, result };
 }

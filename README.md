@@ -40,6 +40,7 @@ npm run build && npm start    # API on PORT (default 8080), migrations run on st
 |---|---|---|
 | `PAYPAL_SANDBOX_CLIENT_ID`, `PAYPAL_SANDBOX_CLIENT_SECRET` | yes | a PayPal sandbox REST app (live keys are refused) |
 | `PUBLIC_BASE_URL` | yes | the public address of the app; PayPal sends the customer back to it |
+| `DESK_TOKEN` | yes | bearer token of the desk and mechanic screens, at least 16 characters; customer links are derived from it |
 | `DATABASE_URL` | for a real run | Postgres; without it a local in-process database is used (`PGLITE_DIR` keeps it on disk) |
 | `PAYPAL_WEBHOOK_ID` | for webhooks | the webhook route answers 503 without it |
 | `JOB_TOKEN` | for the reauthorize job | bearer token of `POST /api/jobs/reauthorize`, at least 16 characters |

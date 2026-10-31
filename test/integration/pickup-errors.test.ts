@@ -51,13 +51,18 @@ describe("pickup error classes", () => {
     expect((await getRepairOrder(env.deps, ro.id)).authorizations[0]!.status).toBe("VOIDED");
   });
 
-  it("PREVIOUSLY_CAPTURED on capture: reads the live status and does not fail", async () => {
+  it("PREVIOUSLY_CAPTURED on capture: reads the live status, does not throw, and is never reported as done", async () => {
     const env = await makeEnv();
     const { ro, lines, authorization } = await approvedEstimate(env);
     env.fake.auths.get(authorization.id)!.status = "CAPTURED";
     const r = await pickup(env.deps, ro.id, partial(lines));
-    expect(r.authorizations[0]).toMatchObject({ outcome: "done", live: { [authorization.id]: "CAPTURED" } });
+    // No capture of ours was recorded, so "done" would be a lie on the screens.
+    expect(r.authorizations[0]).toMatchObject({ outcome: "needs_attention", live: { [authorization.id]: "CAPTURED" }, executed: [] });
+    expect(r.authorizations[0]!.reason).toMatch(/PREVIOUSLY_CAPTURED.*no capture was recorded/);
     expect(env.fake.posts(`/authorizations/${authorization.id}/void`)).toHaveLength(0);
+    const state = await getRepairOrder(env.deps, ro.id);
+    expect(state.captures).toEqual([]);
+    expect(state.authorizations[0]).toMatchObject({ status: "CAPTURED", capturedCents: 0, needsAttention: expect.stringContaining("PREVIOUSLY_CAPTURED") });
   });
 
   it("another definite refusal: needs_attention with the PayPal text", async () => {
