@@ -224,7 +224,8 @@ async function settle(deps: CoreDeps, w: Work, approvedCents: number, billableCe
     try {
       if (step.kind === "capture") {
         // Capture goes to the CURRENT id: after a reauthorization that is the new one.
-        // verified live: pending — capture on a reauthorized (child) id; checked by the lane in the sandbox e2e.
+        // verified live 2026-11-02 (platform-findings 16): a partial capture on the reauthorized (child) id is COMPLETED
+        // and names the child as its authorization.
         const { requestId, result: c } = await runOp<ParsedCapture>(
           deps,
           { op: "capture", entityId: eff.id, intent: { cents: step.cents, finalCapture: step.finalCapture, capturedBefore: already } },
@@ -264,7 +265,8 @@ async function settle(deps: CoreDeps, w: Work, approvedCents: number, billableCe
         }
       } else {
         // Void always goes to the ORIGINAL id: a reauthorization cannot be voided (finding 5, CANNOT_BE_VOIDED).
-        // verified live: pending — void of the parent after a reauthorization, and what it does to the child.
+        // verified live 2026-11-02 (platform-findings 17): after a partial capture on the child, the void of the parent
+        // leaves both the parent and the child VOIDED and the capture COMPLETED.
         const { requestId, result: v } = await runOp<ParsedAuthorization | null>(
           deps,
           { op: "void", entityId: root.id, intent: {} },
