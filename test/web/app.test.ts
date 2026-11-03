@@ -415,7 +415,7 @@ describe("web/app.js: the Florida statement the customer checked (Fla. Stat. 559
 
   it("SIGNED and DATE are in capital letters of at least 12-point type (16px), like the statement", () => {
     const css = readFileSync(join(WEB_DIR, "app.css"), "utf8");
-    for (const cls of ["fl-caps", "lbl-field", "lbl-date"]) {
+    for (const cls of ["fl-caps", "fl-limit", "lbl-field", "lbl-date"]) {
       const rule = new RegExp(`\\.${cls} \\{[^}]*font: \\d+ (\\d+(?:\\.\\d+)?)px`).exec(css);
       expect(Number(rule?.[1]), cls).toBeGreaterThanOrEqual(16);
     }
