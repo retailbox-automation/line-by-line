@@ -400,6 +400,19 @@ describe("web/app.js: the Florida statement the customer checked (Fla. Stat. 559
     expect(() => web.flChoiceOf!("maybe", "")).toThrow(/unknown/);
   });
 
+  it("customerConsent carries the checked statement with the first approval only, and asks for what is missing", () => {
+    const first = { needsDisclosure: true, estimateRequired: true, approverName: "" };
+    const form = { flValue: "limit", flLimit: "450", esign: true, name: " Ana Driver " };
+    expect(web.customerConsent!(first, form)).toEqual({ approverName: "Ana Driver", channel: "link", esignConsent: true, flChoice: "limit", flLimitCents: 45000 });
+    expect(web.customerConsent!(first, { ...form, flValue: "written" })).toEqual({ approverName: "Ana Driver", channel: "link", esignConsent: true, flChoice: "written" });
+    expect(() => web.customerConsent!(first, { ...form, flValue: null })).toThrow(/Florida statements/);
+    expect(() => web.customerConsent!(first, { ...form, esign: false })).toThrow(/electronic records/);
+    expect(() => web.customerConsent!(first, { ...form, name: "  " })).toThrow(/name/);
+    // under $150 the statement is shown but not required; later decisions send no choice
+    expect(web.customerConsent!({ ...first, estimateRequired: false }, { ...form, flValue: null })).toEqual({ approverName: "Ana Driver", channel: "link", esignConsent: true });
+    expect(web.customerConsent!({ needsDisclosure: false, estimateRequired: true, approverName: "Ana Driver" }, { ...form, name: "" })).toEqual({ approverName: "Ana Driver", channel: "link", esignConsent: true });
+  });
+
   it("SIGNED and DATE are in capital letters of at least 12-point type (16px), like the statement", () => {
     const css = readFileSync(join(WEB_DIR, "app.css"), "utf8");
     for (const cls of ["fl-caps", "lbl-field", "lbl-date"]) {

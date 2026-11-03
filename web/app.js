@@ -40,6 +40,23 @@ export function flChoiceOf(value, limitText) {
   return { flChoice: "limit", flLimitCents: cents };
 }
 
+/**
+ * The consent the customer page sends with an approval or a decision. While the page shows the Florida statement
+ * (first approval) it carries the checked statement, and the e-records box must be ticked. `form` is what the page
+ * read from its inputs. Throws ApiError CONSENT with the line the screen shows.
+ */
+export function customerConsent(view, form) {
+  let fl = null;
+  if (view.needsDisclosure) {
+    if (view.estimateRequired && !form.flValue) throw new ApiError(0, "CONSENT", "check one of the Florida statements first");
+    fl = flChoiceOf(form.flValue, form.flLimit);
+    if (!form.esign) throw new ApiError(0, "CONSENT", "agree to electronic records first (the box above)");
+  }
+  const approverName = String(view.needsDisclosure ? form.name : view.approverName || form.name).trim();
+  if (!approverName) throw new ApiError(0, "CONSENT", "type your name to sign");
+  return { approverName, channel: "link", esignConsent: true, ...(fl ?? {}) };
+}
+
 /** The short order number the screens show: the last 6 characters of the repair order id. */
 export function shortId(roId) {
   return String(roId).replace(/^ro_/, "").slice(-6).toUpperCase();
@@ -1009,18 +1026,13 @@ function initCustomer() {
   let view = null;
   const groups = $("#line-groups");
   const nameInput = $("#approver-name");
-  const consent = () => {
-    let fl = null;
-    if (view.needsDisclosure) {
-      const checked = document.querySelector('input[name="fl-choice"]:checked');
-      if (view.estimateRequired && !checked) throw new ApiError(0, "CONSENT", "check one of the Florida statements first");
-      fl = flChoiceOf(checked?.value ?? null, $(".fl-limit")?.value);
-      if (!$("#esign-consent").checked) throw new ApiError(0, "CONSENT", "agree to electronic records first (the box above)");
-    }
-    const approverName = (view.needsDisclosure ? nameInput.value : view.approverName || nameInput.value).trim();
-    if (!approverName) throw new ApiError(0, "CONSENT", "type your name to sign");
-    return { approverName, channel: "link", esignConsent: true, ...(fl ?? {}) };
-  };
+  const consent = () =>
+    customerConsent(view, {
+      flValue: document.querySelector('input[name="fl-choice"]:checked')?.value ?? null,
+      flLimit: $(".fl-limit")?.value ?? "",
+      esign: $("#esign-consent").checked,
+      name: nameInput.value,
+    });
   const render = () => {
     document.title = view.title;
     applyFields(document, view.fields);
