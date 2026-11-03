@@ -27,6 +27,19 @@ export function parseDollars(text) {
   return Number(m[1]) * 100 + Number((m[2] ?? "").padEnd(2, "0"));
 }
 
+/**
+ * The Florida statement the customer checked (Fla. Stat. 559.905(2)) as the consent record takes it; the "limit"
+ * statement needs the dollar amount typed into it. null when nothing is checked.
+ */
+export function flChoiceOf(value, limitText) {
+  if (!value) return null;
+  if (value === "written" || value === "none") return { flChoice: value };
+  if (value !== "limit") throw new ApiError(0, "CONSENT", "unknown Florida statement");
+  const cents = parseDollars(limitText ?? "");
+  if (!cents) throw new ApiError(0, "CONSENT", "type the dollar amount in the statement you checked");
+  return { flChoice: "limit", flLimitCents: cents };
+}
+
 /** The short order number the screens show: the last 6 characters of the repair order id. */
 export function shortId(roId) {
   return String(roId).replace(/^ro_/, "").slice(-6).toUpperCase();
@@ -997,13 +1010,16 @@ function initCustomer() {
   const groups = $("#line-groups");
   const nameInput = $("#approver-name");
   const consent = () => {
+    let fl = null;
     if (view.needsDisclosure) {
-      if (view.estimateRequired && !document.querySelector('input[name="fl-choice"]:checked')) throw new ApiError(0, "CONSENT", "check one of the Florida statements first");
+      const checked = document.querySelector('input[name="fl-choice"]:checked');
+      if (view.estimateRequired && !checked) throw new ApiError(0, "CONSENT", "check one of the Florida statements first");
+      fl = flChoiceOf(checked?.value ?? null, $(".fl-limit")?.value);
       if (!$("#esign-consent").checked) throw new ApiError(0, "CONSENT", "agree to electronic records first (the box above)");
     }
     const approverName = (view.needsDisclosure ? nameInput.value : view.approverName || nameInput.value).trim();
     if (!approverName) throw new ApiError(0, "CONSENT", "type your name to sign");
-    return { approverName, channel: "link", esignConsent: true };
+    return { approverName, channel: "link", esignConsent: true, ...(fl ?? {}) };
   };
   const render = () => {
     document.title = view.title;

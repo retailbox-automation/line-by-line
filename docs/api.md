@@ -170,7 +170,8 @@ Desk, or this repair order's customer page. From our database, no PayPal call. `
   "consents": [
     { "id": "cn_…", "roId": "ro_…", "lineId": "ln_…", "decision": "approved", "decidedAt": "…", "channel": "qr_page", "approverName": "Dana Demo",
       "esignConsent": true, "disclosureVersion": "FL-559.905-2026-10-31", "amountCents": 26800, "amount": "268.00",
-      "newTotalCents": 41200, "newTotal": "412.00", "paypalOrderId": "5O190127TN364715T", "paypalAuthorizationId": "0VF52814937998046" }
+      "newTotalCents": 41200, "newTotal": "412.00", "paypalOrderId": "5O190127TN364715T", "paypalAuthorizationId": "0VF52814937998046",
+      "flChoice": "written", "flLimitCents": null }
   ],
   "orders": [
     { "id": "5O190127TN364715T", "roId": "ro_…", "purpose": "estimate", "lineIds": ["ln_…", "ln_…"], "amountCents": 41200, "amount": "412.00",
@@ -220,6 +221,13 @@ page, before PayPal):
 - `channel`: `qr_page` | `link` | `desk`. On the phone (`qr_page`, `link`) `esignConsent` must be `true`: the customer
   first agrees to electronic records (UETA, FL 668.50(5)(b)). At the desk it may be `false`.
 - `disclosureVersion` is optional; default is the version the server ships.
+- `flChoice` (optional): which statement of Fla. Stat. 559.905(2) the customer checked: `written` (I request a written
+  estimate), `limit` (no written estimate as long as the repair costs do not exceed an amount) or `none`. With `limit`,
+  `flLimitCents` (a positive whole number of cents, the amount the customer wrote) is required; with anything else it
+  is refused (`400 VALIDATION`). The customer page sends them with the first approval, where it shows the statement;
+  the desk and later decisions send none, and the record keeps `null`. `POST /api/ro/:id/decisions` takes the same two
+  fields. Every consent record in `GET /api/ro/:id` carries `flChoice` and `flLimitCents` (`null` for records made
+  before 2026-11-03).
 
 `201` (new order) or `200` (the live order already exists and is returned):
 

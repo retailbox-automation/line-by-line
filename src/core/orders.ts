@@ -20,13 +20,18 @@ const consentFields = {
   channel: z.enum(["qr_page", "link", "desk"]),
   esignConsent: z.boolean(),
   disclosureVersion: z.string().trim().min(1).max(64).optional(),
+  // Fla. Stat. 559.905(2): the statement the customer checked; flLimitCents only with "limit" (the dollar cap they wrote).
+  flChoice: z.enum(["written", "limit", "none"]).optional(),
+  flLimitCents: z.number().int().positive().max(100_000_000).optional(),
 };
 
 // UETA (FL 668.50(5)(b)): an electronic approval counts only after the customer agreed to electronic records.
 const esignRule = (v: { esignConsent: boolean; channel: string }) => v.esignConsent || v.channel === "desk";
 const esignMessage = { message: "an approval on the phone needs the e-records consent first (esignConsent: true)", path: ["esignConsent"] };
+const flRule = (v: { flChoice?: string | undefined; flLimitCents?: number | undefined }) => (v.flChoice === "limit") === (v.flLimitCents !== undefined);
+const flMessage = { message: 'flLimitCents goes with flChoice "limit" and only with it', path: ["flLimitCents"] };
 
-export const ConsentInputSchema = z.object(consentFields).refine(esignRule, esignMessage);
+export const ConsentInputSchema = z.object(consentFields).refine(esignRule, esignMessage).refine(flRule, flMessage);
 export type ConsentInput = z.input<typeof ConsentInputSchema>;
 
 export const DecideInputSchema = z
@@ -37,7 +42,8 @@ export const DecideInputSchema = z
   })
   .refine((v) => v.approve.length + v.decline.length > 0, { message: "approve or decline at least one line" })
   .refine((v) => new Set([...v.approve, ...v.decline]).size === v.approve.length + v.decline.length, { message: "a line id appears twice" })
-  .refine(esignRule, esignMessage);
+  .refine(esignRule, esignMessage)
+  .refine(flRule, flMessage);
 export type DecideInput = z.input<typeof DecideInputSchema>;
 
 interface ConsentRecord {
@@ -45,6 +51,8 @@ interface ConsentRecord {
   channel: "qr_page" | "link" | "desk";
   esignConsent: boolean;
   disclosureVersion: string;
+  flChoice: "written" | "limit" | "none" | null;
+  flLimitCents: number | null;
   newTotalCents: number;
   decidedAt: Date;
 }
@@ -157,9 +165,9 @@ async function placeOrder(
         for (const l of a.lines) {
           await q.query(
             `INSERT INTO consents (id, ro_id, line_id, decision, decided_at, channel, approver_name, esign_consent, disclosure_version,
-                                   amount_cents, new_total_cents, paypal_order_id)
-             VALUES ($1, $2, $3, 'approved', $4::timestamptz, $5, $6, $7, $8, $9, $10, $11)`,
-            [newId("cn"), a.roId, l.id, c.decidedAt.toISOString(), c.channel, c.approverName, c.esignConsent, c.disclosureVersion, l.priceCents, c.newTotalCents, o.id],
+                                   amount_cents, new_total_cents, paypal_order_id, fl_choice, fl_limit_cents)
+             VALUES ($1, $2, $3, 'approved', $4::timestamptz, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
+            [newId("cn"), a.roId, l.id, c.decidedAt.toISOString(), c.channel, c.approverName, c.esignConsent, c.disclosureVersion, l.priceCents, c.newTotalCents, o.id, c.flChoice, c.flLimitCents],
           );
         }
       }
@@ -174,12 +182,18 @@ async function placeOrder(
   return loadOrder(deps.db, order.id);
 }
 
-function consentRecord(input: { approverName: string; channel: "qr_page" | "link" | "desk"; esignConsent: boolean; disclosureVersion?: string | undefined }, newTotalCents: number, decidedAt: Date): ConsentRecord {
+function consentRecord(
+  input: { approverName: string; channel: "qr_page" | "link" | "desk"; esignConsent: boolean; disclosureVersion?: string | undefined; flChoice?: "written" | "limit" | "none" | undefined; flLimitCents?: number | undefined },
+  newTotalCents: number,
+  decidedAt: Date,
+): ConsentRecord {
   return {
     approverName: input.approverName,
     channel: input.channel,
     esignConsent: input.esignConsent,
     disclosureVersion: input.disclosureVersion ?? DISCLOSURE_VERSION,
+    flChoice: input.flChoice ?? null,
+    flLimitCents: input.flLimitCents ?? null,
     newTotalCents,
     decidedAt,
   };
@@ -258,9 +272,10 @@ export async function decide(deps: CoreDeps, roId: string, input: DecideInput): 
     for (const l of declineLines) {
       await q.query(`UPDATE lines SET status = 'declined' WHERE id = $1`, [l.id]);
       await q.query(
-        `INSERT INTO consents (id, ro_id, line_id, decision, decided_at, channel, approver_name, esign_consent, disclosure_version, amount_cents, new_total_cents)
-         VALUES ($1, $2, $3, 'declined', $4::timestamptz, $5, $6, $7, $8, $9, $10)`,
-        [newId("cn"), roId, l.id, now.toISOString(), record.channel, record.approverName, record.esignConsent, record.disclosureVersion, l.priceCents, newTotal],
+        `INSERT INTO consents (id, ro_id, line_id, decision, decided_at, channel, approver_name, esign_consent, disclosure_version, amount_cents, new_total_cents,
+                              fl_choice, fl_limit_cents)
+         VALUES ($1, $2, $3, 'declined', $4::timestamptz, $5, $6, $7, $8, $9, $10, $11, $12)`,
+        [newId("cn"), roId, l.id, now.toISOString(), record.channel, record.approverName, record.esignConsent, record.disclosureVersion, l.priceCents, newTotal, record.flChoice, record.flLimitCents],
       );
     }
     const declined = declineLines.map((l) => l.id);

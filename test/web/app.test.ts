@@ -388,3 +388,26 @@ describe("web/app.js: QR code", () => {
     expect(web.qrPath!(m)).toBe("M4 4h1v1h-1zM5 5h1v1h-1z");
   });
 });
+
+describe("web/app.js: the Florida statement the customer checked (Fla. Stat. 559.905(2))", () => {
+  it("flChoiceOf sends the checked statement; the limit statement needs its dollar amount", () => {
+    expect(web.flChoiceOf!(null, "")).toBeNull();
+    expect(web.flChoiceOf!("written", "")).toEqual({ flChoice: "written" });
+    expect(web.flChoiceOf!("none", "999")).toEqual({ flChoice: "none" });
+    expect(web.flChoiceOf!("limit", "$450")).toEqual({ flChoice: "limit", flLimitCents: 45000 });
+    expect(web.flChoiceOf!("limit", "450.5")).toEqual({ flChoice: "limit", flLimitCents: 45050 });
+    for (const empty of ["", "0", "abc", "-5"]) expect(() => web.flChoiceOf!("limit", empty)).toThrow(/dollar amount/);
+    expect(() => web.flChoiceOf!("maybe", "")).toThrow(/unknown/);
+  });
+
+  it("SIGNED and DATE are in capital letters of at least 12-point type (16px), like the statement", () => {
+    const css = readFileSync(join(WEB_DIR, "app.css"), "utf8");
+    for (const cls of ["fl-caps", "lbl-field", "lbl-date"]) {
+      const rule = new RegExp(`\\.${cls} \\{[^}]*font: \\d+ (\\d+(?:\\.\\d+)?)px`).exec(css);
+      expect(Number(rule?.[1]), cls).toBeGreaterThanOrEqual(16);
+    }
+    const s1 = readFileSync(join(WEB_DIR, "s1.html"), "utf8");
+    expect(s1).toMatch(/class="lbl-field">SIGNED /);
+    expect(s1).toMatch(/class="lbl-date">DATE /);
+  });
+});

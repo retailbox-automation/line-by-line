@@ -50,6 +50,9 @@ export interface Consent {
   newTotalCents: number;
   paypalOrderId: string | null;
   paypalAuthorizationId: string | null;
+  /** Fla. Stat. 559.905(2): the statement the customer checked (null: not asked, older record, desk). */
+  flChoice: "written" | "limit" | "none" | null;
+  flLimitCents: number | null;
 }
 
 export interface PaypalOrder {
@@ -102,7 +105,7 @@ export const LINE_COLS = `id, ro_id AS "roId", kind, title, description, price_c
 export const CONSENT_COLS = `id, ro_id AS "roId", line_id AS "lineId", decision, decided_at AS "decidedAt", channel,
   approver_name AS "approverName", esign_consent AS "esignConsent", disclosure_version AS "disclosureVersion",
   amount_cents AS "amountCents", new_total_cents AS "newTotalCents", paypal_order_id AS "paypalOrderId",
-  paypal_authorization_id AS "paypalAuthorizationId"`;
+  paypal_authorization_id AS "paypalAuthorizationId", fl_choice AS "flChoice", fl_limit_cents AS "flLimitCents"`;
 export const ORDER_COLS = `id, ro_id AS "roId", purpose, line_ids AS "lineIds", amount_cents AS "amountCents", status,
   approve_url AS "approveUrl", request_id AS "requestId", attempt, superseded_by AS "supersededBy", created_at AS "createdAt"`;
 export const AUTH_COLS = `id, paypal_order_id AS "paypalOrderId", ro_id AS "roId", parent_id AS "parentId",
