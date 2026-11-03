@@ -1,0 +1,12 @@
+node_modules
+dist
+e2e-out
+coverage
+.env
+.env.*
+!.env.example
+test
+docs
+design
+*.log
+.git
