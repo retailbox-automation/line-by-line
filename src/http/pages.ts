@@ -87,7 +87,9 @@ export function mountPages(app: Hono, o: PagesOptions): void {
   const s2 = read("s2.html");
   const marker = 'data-mode="desk"';
   if (!s2.includes(marker)) throw new Error(`web/s2.html: the body has no ${marker}`);
-  const html = { start: s2.replace(marker, 'data-mode="start"'), s2, pickup: read("s2-pickup.html"), s1: read("s1.html"), s3: read("s3.html") };
+  const judge = read("judge.html");
+  if (!judge.includes('data-screen="judge"')) throw new Error('web/judge.html: the body has no data-screen="judge"');
+  const html = { start: s2.replace(marker, 'data-mode="start"'), s2, pickup: read("s2-pickup.html"), s1: read("s1.html"), s3: read("s3.html"), judge };
 
   const send = (c: Context, body: string, status: 200 | PageStatus = 200) => {
     c.header("Cache-Control", "no-store");
@@ -116,6 +118,10 @@ export function mountPages(app: Hono, o: PagesOptions): void {
   };
 
   app.get("/", (c) => send(c, html.start));
+
+  // The judge page holds no data either: web/judge.js opens a judge session (only when the browser has none) and reads
+  // the pool through /api/judge/*.
+  app.get("/judge", (c) => send(c, html.judge));
 
   app.get("/desk/:roId", (c) =>
     guarded(c, "desk", async (roId) => {

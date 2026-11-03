@@ -75,6 +75,38 @@ describe("pages: GET /", () => {
   });
 });
 
+describe("pages: GET /judge", () => {
+  it("is the judge page with its own script, and reads or creates nothing on the server (the script opens the session)", async () => {
+    const t = await makeAppEnv();
+    const before = await dumpTables(t.db);
+    const calls = t.fake.calls.length;
+    const r = await call(t.app, "GET", "/judge");
+    expectPage(r, 200, "judge");
+    expect(r.text).toContain('<script type="module" src="/web/judge.js"></script>');
+    expect(r.text).toContain("I UNDERSTAND THAT, UNDER STATE LAW, I AM ENTITLED TO A WRITTEN ESTIMATE IF MY FINAL BILL WILL EXCEED $150.");
+    expect(r.headers.get("set-cookie")).toBeNull();
+    expect(await dumpTables(t.db)).toBe(before);
+    expect(await judgeSessions(t)).toBe(0);
+    expect(t.fake.calls.length).toBe(calls);
+  });
+
+  it("every hook web/judge.js looks for is in web/judge.html; sample data is hidden until the script fills it", () => {
+    const js = readFileSync(join(WEB_DIR, "judge.js"), "utf8");
+    const html = readFileSync(join(WEB_DIR, "judge.html"), "utf8");
+    const hooks = new Set([...js.matchAll(/\[data-judge="([a-z0-9-]+)"\]/g)].map((m) => m[1]!));
+    for (const name of ["step-toggle", "step-panel", "approve", "pool", "pool-row", "reauthorize", "result", "empty", "error", "live-get", "live-id", "live-result", "bar-old", "bar-new"])
+      expect(hooks.has(name) || js.includes(`"${name}"`), name).toBe(true);
+    for (const name of hooks) expect(html, name).toContain(`data-judge="${name}"`);
+    for (const name of ["step-1", "step-2", "step-3", "step-4", "link-mechanic", "link-customer", "link-desk"]) expect(html, name).toContain(`data-judge="${name}"`);
+    for (const id of ["approver-name", "consent-date", "esign-consent"]) expect(html, id).toContain(`id="${id}"`);
+    for (const f of ["session-left", "step1-status", "old-id", "new-id", "result-amount", "result-status", "start-date", "end-date", "new-start-date", "result-note", "amount", "age", "status"])
+      expect(html, f).toContain(`data-field="${f}"`);
+    expect(html).toContain('<div class="result" data-judge="result" hidden>');
+    expect([...html.matchAll(/data-judge="pool-row"/g)]).toHaveLength(1);
+    expect(html).toContain('data-judge="pool-row" hidden>');
+  });
+});
+
 describe("pages: desk and mechanic (judge session cookie)", () => {
   it("open for the session that created the repair order; picked up (or ?view=pickup) is the pickup screen", async () => {
     const t = await makeAppEnv();
@@ -180,7 +212,7 @@ describe("pages: static files and secrets", () => {
     expect("headers.authorization = `Bearer ${k}`;").not.toMatch(BEARER_LITERAL);
 
     const files = webFiles();
-    expect(files.map((f) => f.path.slice(WEB_DIR.length)).sort()).toEqual(["app.css", "app.js", "judge.js", "s1.html", "s2-pickup.html", "s2.html", "s3.html"]);
+    expect(files.map((f) => f.path.slice(WEB_DIR.length)).sort()).toEqual(["app.css", "app.js", "judge.html", "judge.js", "s1.html", "s2-pickup.html", "s2.html", "s3.html"]);
     for (const f of files) expectNoSecret(f.path, f.text);
 
     const t = await makeAppEnv();
@@ -198,6 +230,9 @@ describe("pages: static files and secrets", () => {
       [`/c/${roId}`, {}],
       ["/web/app.js", {}],
       ["/web/app.css", {}],
+      ["/judge", {}],
+      ["/judge", j.cookie],
+      ["/web/judge.js", {}],
     ] as [string, Record<string, string>][]) {
       answers.push([path, await call(t.app, "GET", path, undefined, headers)]);
     }
@@ -210,7 +245,8 @@ describe("pages: static files and secrets", () => {
   it("the HTML runs no inline script: one module script from /web/app.js, no inline handlers", () => {
     for (const f of webFiles().filter((x) => x.path.endsWith(".html"))) {
       const scripts = [...f.text.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/g)];
-      expect(scripts.map((m) => m[0]), f.path).toEqual(['<script type="module" src="/web/app.js"></script>']);
+      const own = f.path.endsWith("judge.html") ? "/web/judge.js" : "/web/app.js";
+      expect(scripts.map((m) => m[0]), f.path).toEqual([`<script type="module" src="${own}"></script>`]);
       expect(f.text, f.path).not.toMatch(/\son[a-z]+\s*=/i);
       expect(f.text, f.path).not.toMatch(/javascript:/i);
     }

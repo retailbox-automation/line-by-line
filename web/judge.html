@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="en" translate="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Line by Line — Judge mode</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400..800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#142858;
+  --page:#fbfbfc;
+  --card:#fefefe;
+  --white:#ffffff;
+  --ink:#080c26;
+  --ink-soft:#12142c;
+  --muted:#606372;
+  --note-ink:#444656;
+  --src-ink:#6b6e7c;
+  --line:#c2c5ce;
+  --line-soft:#d5d7dd;
+  --divider:#e4e6ea;
+  --notice-bg:#f3f4f6;
+  --notice-line:#c9ccd4;
+  --ring:#707583;
+  --bar-1:#b5b9c3;
+  --bar-2:#bec1ca;
+  --bar-old:#acb0bc;
+  --dot-grey:#b9bcc6;
+  --green:#0ca207;
+  --green-dot:#0aae0a;
+  --green-num:#04930b;
+  --green-bar:#27a92c;
+  --green-bg:#def9de;
+  --green-line:#96dd9c;
+  --paypal:#0150fc;
+  --paypal-mark-2:#b9cdfe;
+  --tick:#d9dbe1;
+  --note-bg:#ebecf0;
+  --error:#c8231b;
+  --none:transparent;
+}
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none !important}
+html,body{margin:0;padding:0}
+body{background:var(--page);color:var(--ink);font-family:Inter,system-ui,sans-serif;font-optical-sizing:auto;-webkit-font-smoothing:antialiased}
+button,input{font:inherit;color:inherit}
+p,h1,h2,ol,ul{margin:0;padding:0}
+ol,ul{list-style:none}
+.nw{white-space:nowrap}
+
+/* ---------- frame: exactly 1440 px wide ---------- */
+.app{width:1440px;margin:0 auto;background:var(--page)}
+
+/* ---------- header ---------- */
+.top{height:91.5px;background:var(--navy);display:flex;align-items:flex-start;padding:0 40.6px 0 47.2px}
+.brand{flex:none;width:347.2px;margin-top:15.9px;font-weight:750;font-size:54px;line-height:54px;letter-spacing:-0.26px;color:var(--white);white-space:nowrap}
+.tag{flex:none;margin-top:24.1px;width:366.2px;height:42.2px;border-radius:10px;background:var(--card);color:var(--ink);display:flex;align-items:center;justify-content:center;font-weight:680;font-size:23px;line-height:23px;letter-spacing:-0.37px;white-space:nowrap}
+.timer{margin-left:auto;margin-top:28.7px;font-weight:650;font-size:29px;line-height:29px;letter-spacing:-0.12px;color:var(--white);white-space:nowrap}
+
+/* ---------- two columns ---------- */
+.page{display:grid;grid-template-columns:541px minmax(0,1fr);min-height:753px}
+
+/* ---------- left: Your run ---------- */
+.run{border-right:1px solid var(--divider);padding:22.45px 17px 40px 24.7px}
+.col-title{font-weight:750;font-size:39.5px;line-height:39.5px;letter-spacing:-0.42px;margin-left:0.3px;white-space:nowrap}
+.steps{margin-top:23.45px;width:498.3px}
+.step{border:1px solid var(--line);border-radius:10px;background:var(--card);margin-top:13.4px}
+.step:first-child{margin-top:0}
+.step.is-open{border:0;background:var(--none)}
+.step.is-open + .step{margin-top:14.5px}
+.step-head{display:flex;align-items:center;width:100%;height:56px;padding:0 19.9px 6.8px 22.4px;border:0;background:var(--none);text-align:left;cursor:pointer;color:var(--ink)}
+.step-num{flex:none;width:24.9px;font-weight:700;font-size:25.25px;line-height:25.25px;white-space:nowrap}
+.step-name{flex:none;font-weight:700;font-size:25.25px;line-height:25.25px;letter-spacing:-0.58px;white-space:nowrap}
+.chev{flex:none;margin-left:auto;margin-top:6.8px;width:20px;height:11.6px;display:block}
+.step.is-open .step-head{height:55px;background:var(--navy);color:var(--white);border-radius:10px 10px 0 0;padding:0 20.9px 6.6px 20.5px}
+.step.is-open .step-num{width:28.3px;font-size:26.5px;line-height:26.5px}
+.step.is-open .step-name{font-size:26.5px;line-height:26.5px;letter-spacing:-0.49px}
+.step.is-open .chev{margin-top:2.1px}
+.step:not(.step-1).is-open .chev,.step-1:not(.is-open) .chev{transform:rotate(180deg)}
+.step.is-current{background:var(--green-bg);border-color:var(--green-line)}
+.step.is-current .step-num{color:var(--green-num);width:24.4px;margin-left:2px;font-size:27px;line-height:27px}
+.step.is-current .step-name{font-size:27px;line-height:27px;letter-spacing:-0.41px}
+.step-4 .step-num{width:28.1px;margin-left:-1.1px}
+.step-4 .step-name{font-size:26px;line-height:26px;letter-spacing:-0.89px}
+
+.step-panel{border:1px solid var(--line-soft);border-top:0;border-radius:0 0 10px 10px;background:var(--card);padding:15.3px 13.7px 21.1px 16.8px}
+.step:not(.is-open) .step-panel{margin:0 -1px -1px}
+
+/* Florida notice (Fla. Stat. 559.905(2)) */
+.fl-box{border:1px solid var(--notice-line);border-radius:8px;background:var(--notice-bg);padding:8.45px 14px 12px 7.9px}
+.fl-head{padding-left:12.2px;font-weight:700;font-size:20.25px;line-height:25.7px;letter-spacing:-0.02px;color:var(--ink)}
+.fl-text{margin-top:10px;padding-left:12.2px;font-weight:700;font-size:16px;line-height:21.5px;color:var(--ink)}
+.fl-opts{margin-top:12px}
+.fl-opt{display:flex;align-items:flex-start;margin-top:12px}
+.fl-opt:first-child{margin-top:0}
+.fl-opt input[type=radio]{flex:none;appearance:none;-webkit-appearance:none;margin:-2.1px 0 0 0;width:25.7px;height:25.7px;border:2.2px solid var(--ring);border-radius:50%;background:var(--card);cursor:pointer}
+.fl-opt input[type=radio]:checked{background:radial-gradient(circle,var(--ink) 0 5.5px,var(--card) 6px)}
+.fl-opt-text{margin-left:22.4px;font-weight:700;font-size:16px;line-height:21.5px;color:var(--ink)}
+.fl-opt-text label{cursor:pointer}
+.fl-limit{display:inline-block;width:5.2em;height:24px;margin:0 2px;padding:0 4px;border:0;border-bottom:2px solid var(--ring);background:var(--card);font-weight:700;font-size:16px;line-height:22px;vertical-align:baseline;color:var(--ink)}
+.fl-sign{margin-top:14px;padding-left:12.2px;display:flex;flex-wrap:wrap;align-items:baseline;column-gap:18px;row-gap:8px;font-weight:700;font-size:16px;line-height:21.5px;color:var(--ink)}
+.fl-sign label,.fl-sign .fl-date{white-space:nowrap}
+.fl-sign input{width:176px;height:26px;margin-left:8px;padding:0 6px;border:0;border-bottom:2px solid var(--ring);background:var(--card);font-weight:500;font-size:16px;color:var(--ink)}
+.fl-sign input::placeholder{color:var(--src-ink)}
+#consent-date{display:inline-block;min-width:96px;margin-left:8px;border-bottom:2px solid var(--ring);height:22px;vertical-align:baseline}
+.fl-src{margin-top:10px;padding-left:12.2px;font-weight:500;font-size:13px;line-height:16px;color:var(--src-ink)}
+
+.esign{display:flex;align-items:flex-start;margin-top:18px;padding-left:8.9px}
+.esign input{flex:none;appearance:none;-webkit-appearance:none;margin:0;width:27.8px;height:27.8px;border:2.1px solid var(--ring);border-radius:4px;background:var(--card);cursor:pointer}
+.esign input:checked{background:var(--ink);border-color:var(--ink)}
+.esign > span{margin-left:20.9px;margin-top:1.3px;font-weight:500;font-size:21.25px;line-height:25.2px;letter-spacing:-0.31px;color:var(--ink)}
+
+.pp-btn{display:flex;align-items:center;justify-content:center;width:100%;height:54.7px;margin-top:18px;padding:0 0 3.8px;border:0;border-radius:6px;background:var(--paypal);color:var(--white);font-weight:680;font-size:22px;line-height:22px;letter-spacing:-0.54px;white-space:nowrap;cursor:pointer}
+.pp-mark{flex:none;width:17px;height:20.4px;margin:3.8px 9px 0 0;display:block}
+.pp-mark-back{fill:var(--paypal-mark-2)}
+.pp-mark-front{fill:var(--white)}
+.step1-status{margin-top:12px;font-weight:600;font-size:16px;line-height:20px;color:var(--ink);white-space:nowrap}
+
+/* hidden panels of steps 2-4 */
+.links{display:flex;flex-wrap:wrap;gap:10px}
+.links a{display:inline-flex;align-items:center;height:44px;padding:0 16px;border:1px solid var(--line);border-radius:8px;background:var(--notice-bg);font-weight:600;font-size:17px;color:var(--ink);text-decoration:none;white-space:nowrap}
+.panel-line{font-weight:500;font-size:17px;line-height:24px;color:var(--ink)}
+.live{display:flex;gap:10px}
+.live input{flex:1 1 auto;min-width:0;height:46px;padding:0 12px;border:1px solid var(--line);border-radius:8px;background:var(--card);font-weight:500;font-size:16px}
+.live button{flex:none;height:46px;padding:0 18px;border:0;border-radius:8px;background:var(--navy);color:var(--white);font-weight:680;font-size:17px;white-space:nowrap;cursor:pointer}
+.live-result{margin-top:10px;font-weight:500;font-size:15px;line-height:21px;color:var(--note-ink);overflow-wrap:anywhere}
+
+/* ---------- right: pool + reauthorization ---------- */
+.reauth-col{position:relative;padding:18.85px 24.7px 19px 21.6px}
+.err{position:absolute;left:21.6px;right:24.7px;top:2px;font-weight:600;font-size:14px;line-height:17px;color:var(--error)}
+.col-title.held{font-size:38.5px;line-height:38.5px;letter-spacing:-0.5px;margin-left:-1.3px}
+.pool{margin-top:21.95px}
+.pool-row{display:flex;align-items:flex-start;height:85.3px;margin-top:12.9px;border:1px solid var(--line);border-radius:10px;background:var(--card)}
+.pool-row:first-child{margin-top:0}
+.dot{flex:none;width:23.7px;height:23.7px;margin:16.15px 0 0 19.55px;border-radius:50%;background:var(--dot-grey)}
+.pool-row.is-done .dot,.pool-row.is-go .dot{background:var(--green-dot)}
+.pool-row.is-wait .dot,.pool-row.is-muted .dot{background:var(--dot-grey)}
+.pool-body{margin-left:28.75px;min-width:0}
+.pool-line{margin-top:9.6px;height:27px;font-weight:680;font-size:27px;line-height:27px;letter-spacing:0;white-space:nowrap;color:var(--ink)}
+.pool-line .sep{margin:0 2.2px}
+.pool-line [data-field=amount]{letter-spacing:-0.25px}
+.pool-line [data-field=age]{letter-spacing:-0.4px}
+.pool-line [data-field=status]{margin-left:1.5px;letter-spacing:0.2px}
+.pool-row.is-done [data-field=status],.pool-row.is-go [data-field=status]{color:var(--green)}
+.pool-row.is-go [data-field=status]{letter-spacing:0.45px}
+.pool-row.is-wait [data-field=status],.pool-row.is-muted [data-field=status]{margin-left:0;color:var(--muted);font-weight:500;letter-spacing:-0.43px}
+.slot{display:block;margin-left:2.1px;height:15.4px;font-weight:500;font-size:12.5px;line-height:15.4px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.slot[data-slot=label]{margin-top:7.1px;width:356.9px}
+.slot[data-slot=window]{margin-top:1.5px;width:146.1px}
+.slot:empty::before{content:"";display:block;height:10.3px;margin-top:2.55px;border-radius:5.15px;background:var(--bar-1)}
+.slot[data-slot=window]:empty::before{background:var(--bar-2)}
+
+.reauth-btn{display:flex;align-items:center;justify-content:center;width:852.7px;height:68.3px;margin-top:22.1px;padding:0 0 3.2px 4px;border:0;border-radius:9px;background:var(--navy);color:var(--white);font-weight:700;font-size:32px;line-height:32px;letter-spacing:-0.22px;white-space:nowrap;cursor:pointer}
+
+.result{position:relative;height:265.9px;margin-top:16.7px;padding:15.8px 13.5px 0 24.4px;border:1px solid var(--line);border-radius:10px;background:var(--card)}
+.ids{display:flex;align-items:center;height:28px;font-weight:680;font-size:28px;line-height:28px;white-space:nowrap;color:var(--ink)}
+.ids [data-field=old-id]{letter-spacing:-0.43px}
+.ids [data-field=new-id]{letter-spacing:-0.25px}
+.amt [data-field=result-amount]{letter-spacing:-0.6px}
+.amt [data-field=result-status]{margin-left:2px;letter-spacing:0.3px}
+.arrow{flex:none;width:21.6px;height:16.5px;margin:0 9.2px 0 9.4px;display:block}
+.amt{margin-top:12.5px;margin-left:1.4px;height:26.25px;font-weight:680;font-size:26.25px;line-height:26.25px;letter-spacing:-0.09px;white-space:nowrap;color:var(--ink)}
+.tl{position:relative;margin-top:-1.5px;height:120px;margin-left:-24.4px}
+.tl-date{position:absolute;top:15.15px;font-weight:500;font-size:19.5px;line-height:19.5px;white-space:nowrap;color:var(--ink)}
+.tl-date.start{left:95.8px;letter-spacing:-0.16px}
+.tl-date.end{left:744.2px;letter-spacing:0.28px}
+.tl-lab{position:absolute;left:24.7px;font-weight:550;font-size:22.3px;line-height:22.3px;white-space:nowrap;color:var(--ink-soft)}
+.tl-lab.old{top:46.15px;letter-spacing:-0.09px}
+.tl-lab.new{top:82.65px;letter-spacing:-0.45px}
+.track{position:absolute;left:96.2px;width:714.9px;height:18px}
+.track.old{top:48.8px}
+.track.new{top:85.8px}
+.bar{position:absolute;top:0;height:18px;border-radius:9px}
+.bar.old{background:var(--bar-old)}
+.bar.new{background:var(--green-bar)}
+.bar .tl-date.start-new{top:-1.75px;right:calc(100% + 7.7px);letter-spacing:-0.11px}
+.tick{position:absolute;width:1px;background:var(--tick)}
+.tick.start{left:100.3px;top:39.3px;height:9.3px}
+.tick.end{left:807px;top:39.3px;height:45.8px}
+.note{position:absolute;left:15.3px;right:13.5px;top:207.3px;height:43.5px;padding:0 0 2.5px 18.6px;border-radius:7px;background:var(--note-bg);display:flex;align-items:center;font-weight:450;font-size:22.5px;line-height:22.5px;letter-spacing:0.04px;white-space:nowrap;color:var(--note-ink)}
+.empty-line{margin-top:16.7px;padding:16px 24.4px;border:1px solid var(--line);border-radius:10px;background:var(--card);font-weight:680;font-size:20px;line-height:26px;color:var(--ink)}
+
+/* ---------- 390 px and other narrow screens ---------- */
+@media (max-width:1439.98px){ .app{width:100%} }
+@media (max-width:760px){
+  .top{height:auto;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:14px 16px}
+  .brand{width:auto;margin:0;font-size:30px;line-height:36px;letter-spacing:-0.2px}
+  .tag{width:auto;height:30px;margin:0;padding:0 12px;border-radius:8px;font-size:14px;line-height:14px;letter-spacing:-0.1px}
+  .timer{margin:0;flex-basis:100%;font-size:16px;line-height:20px;letter-spacing:0}
+  .page{display:block;min-height:0}
+  .run{border-right:0;border-bottom:1px solid var(--divider);padding:20px 16px 24px}
+  .col-title{font-size:26px;line-height:32px;margin-left:0}
+  .steps{width:auto;margin-top:14px}
+  .step-head{height:52px;padding:0 16px 0 16px}
+  .step-num,.step.is-open .step-num,.step.is-current .step-num,.step-4 .step-num{width:24px;margin-left:0;font-size:19px;line-height:19px}
+  .step-name,.step.is-open .step-name,.step.is-current .step-name,.step-4 .step-name{font-size:17px;line-height:19px;letter-spacing:-0.2px}
+  .chev,.step.is-open .chev{margin-top:0;width:17px;height:9.9px}
+  .step.is-open .step-head{height:52px;padding:0 16px}
+  .step-panel{padding:14px 12px 16px}
+  .fl-box{padding:10px 10px 12px 8px}
+  .fl-head{padding-left:4px;font-size:16px;line-height:21px}
+  .fl-text,.fl-sign,.fl-src{padding-left:4px}
+  .fl-opt-text{margin-left:12px}
+  .fl-opt input[type=radio]{width:22px;height:22px;margin-top:0}
+  .esign{padding-left:4px}
+  .esign input{width:24px;height:24px}
+  .esign > span{margin-left:12px;font-size:16px;line-height:21px;letter-spacing:0}
+  .pp-btn{width:100%;height:auto;min-height:50px;padding:8px 12px;font-size:15.5px;line-height:20px;letter-spacing:-0.2px;white-space:normal;text-align:center}
+  .pp-mark{width:15px;height:18px;margin:0 8px 0 0}
+  .reauth-col{padding:20px 16px 28px}
+  .err{position:static;margin-bottom:8px;white-space:normal}
+  .col-title.held{font-size:24px;line-height:30px;margin-left:0;white-space:normal}
+  .pool{margin-top:12px}
+  .pool-row{height:auto;min-height:76px;padding-bottom:12px;margin-top:10px}
+  .dot{width:16px;height:16px;margin:15px 0 0 14px}
+  .pool-body{margin:0 14px 0 12px;flex:1 1 auto}
+  .pool-line{margin-top:10px;height:auto;font-size:16px;line-height:22px;white-space:normal}
+  .pool-line > span{white-space:nowrap}
+  .pool-line .sep{margin:0 1px}
+  .pool-row.is-wait [data-field=status],.pool-row.is-muted [data-field=status]{letter-spacing:-0.2px}
+  .slot{margin-left:0;font-size:12px}
+  .slot[data-slot=label]{margin-top:6px;width:min(356.9px,100%)}
+  .slot[data-slot=window]{width:41%}
+  .reauth-btn{width:100%;height:56px;margin-top:16px;font-size:18.5px;line-height:22px;letter-spacing:-0.1px;padding:0}
+  .result{height:auto;margin-top:14px;padding:14px 14px 14px}
+  .ids{flex-wrap:wrap;height:auto;row-gap:2px;font-size:17px;line-height:22px}
+  .arrow{width:15px;height:12px;margin:0 6px}
+  .amt{margin:8px 0 0;height:auto;font-size:17px;line-height:22px}
+  .tl{margin:12px 0 0;height:96px}
+  .tl-date{top:0;font-size:13px;line-height:16px}
+  .tl-date.start{left:46px;letter-spacing:0}
+  .tl-date.end{left:auto;right:0;letter-spacing:0}
+  .tl-lab{left:0;font-size:15px;line-height:18px}
+  .tl-lab.old{top:27px}
+  .tl-lab.new{top:60px}
+  .track{left:46px;width:calc(100% - 46px);height:14px}
+  .track.old{top:29px}
+  .track.new{top:62px}
+  .bar{height:14px;border-radius:7px}
+  .bar .tl-date.start-new{top:22px;right:auto;left:0}
+  .tick.start{left:49px;top:17px;height:12px}
+  .tick.end{left:auto;right:3px;top:17px;height:45px}
+  .note{position:static;height:auto;min-height:40px;padding:9px 12px;font-size:15px;line-height:20px;white-space:normal}
+}
+</style>
+</head>
+<body data-screen="judge">
+<div class="app">
+  <header class="top">
+    <h1 class="brand">Line by Line</h1>
+    <span class="tag">Judge mode · PayPal sandbox</span>
+    <p class="timer">Session ends in <span data-field="session-left">1:58:12</span></p>
+  </header>
+
+  <main class="page">
+    <!-- ===== left column: Your run ===== -->
+    <section class="run" aria-labelledby="run-title">
+      <h2 class="col-title" id="run-title">Your run</h2>
+      <ol class="steps">
+
+        <li class="step step-1 is-open" data-judge="step-1">
+          <button class="step-head" type="button" data-judge="step-toggle" aria-expanded="true" aria-controls="step-1-panel">
+            <span class="step-num">1</span><span class="step-name">Your own approval</span>
+            <svg class="chev" viewBox="0 0 20 11.6" aria-hidden="true"><polyline points="1.55,10.05 10,1.55 18.45,10.05" fill="none" stroke="currentColor" stroke-width="3.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <div class="step-panel" id="step-1-panel" data-judge="step-panel">
+            <div class="fl-box" role="group" aria-labelledby="fl-head">
+              <p class="fl-head" id="fl-head">PLEASE READ CAREFULLY, CHECK ONE OF THE STATEMENTS BELOW, AND SIGN:</p>
+              <p class="fl-text">I UNDERSTAND THAT, UNDER STATE LAW, I AM ENTITLED TO A WRITTEN ESTIMATE IF MY FINAL BILL WILL EXCEED $150.</p>
+              <div class="fl-opts">
+                <div class="fl-opt">
+                  <input type="radio" name="fl-choice" value="written" id="fl-written">
+                  <div class="fl-opt-text"><label for="fl-written">I REQUEST A WRITTEN ESTIMATE.</label></div>
+                </div>
+                <div class="fl-opt">
+                  <input type="radio" name="fl-choice" value="limit" id="fl-limit-choice">
+                  <div class="fl-opt-text"><label for="fl-limit-choice">I DO NOT REQUEST A WRITTEN ESTIMATE AS LONG AS THE REPAIR COSTS DO NOT EXCEED </label><span class="nw"><label for="fl-limit-choice">$</label><input class="fl-limit" type="text" inputmode="decimal" autocomplete="off" aria-label="Amount in dollars the repair costs may not exceed"><label for="fl-limit-choice">.</label></span><label for="fl-limit-choice"> THE SHOP MAY NOT EXCEED THIS AMOUNT WITHOUT MY WRITTEN OR ORAL APPROVAL.</label></div>
+                </div>
+                <div class="fl-opt">
+                  <input type="radio" name="fl-choice" value="none" id="fl-none">
+                  <div class="fl-opt-text"><label for="fl-none">I DO NOT REQUEST A WRITTEN ESTIMATE.</label></div>
+                </div>
+              </div>
+              <div class="fl-sign">
+                <label for="approver-name">SIGNED<input id="approver-name" type="text" placeholder="Your name" autocomplete="name"></label>
+                <span class="fl-date">DATE<span id="consent-date"></span></span>
+              </div>
+              <p class="fl-src">Fla. Stat. 559.905(2)</p>
+            </div>
+            <label class="esign" for="esign-consent">
+              <input type="checkbox" id="esign-consent">
+              <span>I agree to receive and sign this estimate and my approvals electronically <span class="nw">(Fla. Stat. 668.50).</span></span>
+            </label>
+            <button class="pp-btn" type="button" data-judge="approve">
+              <svg class="pp-mark" viewBox="0 0 20 24" aria-hidden="true">
+                <path class="pp-mark-back" d="M17.6 6.3c.2 1.4 0 2.6-.5 3.9-1.1 2.9-3.6 4.4-6.9 4.4h-.8c-.4 0-.8.3-.9.7l-.1.4-.9 5.6-.1.3c-.1.4-.4.7-.9.7H4.2c-.3 0-.6-.3-.5-.6l.2-1.3.9-5.8.1-.4c.1-.4.4-.7.9-.7h1.4c3.9 0 6.9-1.6 7.8-6.2.1-.4.1-.8.2-1.2.9.5 1.6 1.2 2.4 2.2z"/>
+                <path class="pp-mark-front" d="M15.2 1.6C14.3.6 12.6.1 10.4.1H4.1c-.4 0-.8.3-.9.8L.6 17.6c-.1.3.2.6.5.6H5l1-6.1-.1.2c.1-.4.5-.8.9-.8h1.9c3.7 0 6.6-1.5 7.4-5.9v-.4c.3-1.6 0-2.7-.9-3.6z"/>
+              </svg>
+              <span>Approve with your PayPal sandbox buyer</span>
+            </button>
+            <p class="step1-status" data-field="step1-status" hidden></p>
+          </div>
+        </li>
+
+        <li class="step step-2" data-judge="step-2">
+          <button class="step-head" type="button" data-judge="step-toggle" aria-expanded="false" aria-controls="step-2-panel">
+            <span class="step-num">2</span><span class="step-name">One line approved, one declined</span>
+            <svg class="chev" viewBox="0 0 20 11.6" aria-hidden="true"><polyline points="1.55,1.55 10,10.05 18.45,1.55" fill="none" stroke="currentColor" stroke-width="3.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <div class="step-panel" id="step-2-panel" data-judge="step-panel" hidden>
+            <div class="links">
+              <a href="#" data-judge="link-mechanic">Mechanic phone</a>
+              <a href="#" data-judge="link-customer">Customer phone</a>
+              <a href="#" data-judge="link-desk">Service desk</a>
+            </div>
+          </div>
+        </li>
+
+        <li class="step step-3 is-current" data-judge="step-3">
+          <button class="step-head" type="button" data-judge="step-toggle" aria-expanded="false" aria-controls="step-3-panel">
+            <span class="step-num">3</span><span class="step-name">A real reauthorization</span>
+            <svg class="chev" viewBox="0 0 20 11.6" aria-hidden="true"><polyline points="1.55,1.55 10,10.05 18.45,1.55" fill="none" stroke="currentColor" stroke-width="3.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <div class="step-panel" id="step-3-panel" data-judge="step-panel" hidden>
+            <p class="panel-line">Reauthorize below: PayPal allows it from day 4, once, for the same amount.</p>
+          </div>
+        </li>
+
+        <li class="step step-4" data-judge="step-4">
+          <button class="step-head" type="button" data-judge="step-toggle" aria-expanded="false" aria-controls="step-4-panel">
+            <span class="step-num">4</span><span class="step-name">Check any id</span>
+            <svg class="chev" viewBox="0 0 20 11.6" aria-hidden="true"><polyline points="1.55,1.55 10,10.05 18.45,1.55" fill="none" stroke="currentColor" stroke-width="3.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <div class="step-panel" id="step-4-panel" data-judge="step-panel" hidden>
+            <div class="live">
+              <input type="text" data-judge="live-id" placeholder="PayPal authorization id" aria-label="PayPal authorization id" autocomplete="off" spellcheck="false">
+              <button type="button" data-judge="live-get">Live GET</button>
+            </div>
+            <div class="live-result" data-judge="live-result"></div>
+          </div>
+        </li>
+
+      </ol>
+    </section>
+
+    <!-- ===== right column: pool of aged holds + reauthorization ===== -->
+    <section class="reauth-col" aria-labelledby="pool-title">
+      <p class="err" data-judge="error" role="alert" hidden></p>
+      <h2 class="col-title held" id="pool-title">Held payments older than 3 days</h2>
+
+      <ul class="pool" data-judge="pool">
+        <li class="pool-row is-done" data-judge="pool-row" hidden>
+          <span class="dot" aria-hidden="true"></span>
+          <div class="pool-body">
+            <p class="pool-line"><span data-field="amount">$142.50</span> <span class="sep">·</span> <span data-field="age">5 days</span> <span class="sep">·</span> <span data-field="status">Reauthorized</span></p>
+            <span class="slot" data-slot="label"></span>
+            <span class="slot" data-slot="window"></span>
+          </div>
+        </li>
+      </ul>
+
+      <button class="reauth-btn" type="button" data-judge="reauthorize">Reauthorize the next free hold</button>
+
+      <div class="result" data-judge="result" hidden>
+        <p class="ids"><span data-field="old-id">4RR33540BR8604004</span><svg class="arrow" viewBox="0 0 21.6 16.5" role="img" aria-label="to"><path d="M1.6 8.25H19.6M13.2 1.7l6.5 6.55-6.5 6.55" fill="none" stroke="currentColor" stroke-width="3.1" stroke-linecap="round" stroke-linejoin="round"/></svg><span data-field="new-id">0MM670868D710561J</span></p>
+        <p class="amt"><span data-field="result-amount">$142.50</span> · <span data-field="result-status">CREATED</span></p>
+        <div class="tl">
+          <span class="tick start" aria-hidden="true"></span>
+          <span class="tick end" aria-hidden="true"></span>
+          <span class="tl-date start" data-field="start-date">Oct 29</span>
+          <span class="tl-date end" data-field="end-date">Nov 27</span>
+          <span class="tl-lab old">Old</span>
+          <div class="track old"><span class="bar old" data-judge="bar-old" style="left:0%;width:100%"></span></div>
+          <span class="tl-lab new">New</span>
+          <div class="track new"><span class="bar new" data-judge="bar-new" style="left:17%;width:83%"><span class="tl-date start-new" data-field="new-start-date">Nov 2</span></span></div>
+        </div>
+        <p class="note" data-field="result-note">same end date · no new 29 days</p>
+      </div>
+      <p class="empty-line" data-judge="empty" hidden>No free hold right now. This is the hold reauthorized last:</p>
+    </section>
+  </main>
+</div>
+<script type="module" src="/web/judge.js"></script>
+</body>
+</html>

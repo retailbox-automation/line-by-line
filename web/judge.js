@@ -401,6 +401,7 @@ async function initJudge() {
     for (const n of pool.querySelectorAll('[data-judge="pool-row"]')) n.remove();
     for (const row of view.rows) {
       const n = rowTemplate.cloneNode(true);
+      n.hidden = false;
       n.classList.remove("is-done", "is-go", "is-wait", "is-muted");
       n.classList.add(`is-${row.tone}`);
       applyFields(n, { amount: row.amount, age: row.age, status: row.status });
@@ -408,7 +409,12 @@ async function initJudge() {
       if (row.reason) n.title = row.reason;
       pool.append(n);
     }
-    if (empty) empty.hidden = view.rows.length > 0;
+    if (empty) {
+      empty.hidden = view.rows.some((r) => r.available);
+      empty.textContent = latestReauthorized(poolAnswer)
+        ? "No free hold right now. This is the hold reauthorized last:"
+        : "No free hold right now. Holds are approved days ahead; check back later.";
+    }
   };
 
   const setBar = (name, b) => {
