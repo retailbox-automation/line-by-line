@@ -180,7 +180,7 @@ describe("pages: static files and secrets", () => {
     expect("headers.authorization = `Bearer ${k}`;").not.toMatch(BEARER_LITERAL);
 
     const files = webFiles();
-    expect(files.map((f) => f.path.slice(WEB_DIR.length)).sort()).toEqual(["app.css", "app.js", "s1.html", "s2-pickup.html", "s2.html", "s3.html"]);
+    expect(files.map((f) => f.path.slice(WEB_DIR.length)).sort()).toEqual(["app.css", "app.js", "judge.js", "s1.html", "s2-pickup.html", "s2.html", "s3.html"]);
     for (const f of files) expectNoSecret(f.path, f.text);
 
     const t = await makeAppEnv();
