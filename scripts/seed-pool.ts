@@ -56,7 +56,7 @@ async function main(): Promise<void> {
   const db = await openDb();
   try {
     await migrate(db);
-    const paypal = createPayPalClient({ clientId, clientSecret, brandName: process.env.BRAND_NAME ?? "Line by Line", onCall: dbCallSink(db) });
+    const paypal = createPayPalClient({ clientId, clientSecret, brandName: process.env.BRAND_NAME ?? "Bayside Auto Care", onCall: dbCallSink(db) });
     // Seeding creates no PayPal order, so the return and cancel pages are never used.
     const deps: CoreDeps = { db, paypal, now: () => new Date(), config: { returnUrl: "https://example.com/unused", cancelUrl: "https://example.com/unused" } };
     const results = await seedPool(deps, input);

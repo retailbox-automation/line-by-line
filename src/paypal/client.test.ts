@@ -20,7 +20,7 @@ function stub(handler: (c: Call, n: number, signal?: AbortSignal) => Response | 
     if (url.endsWith("/v1/oauth2/token")) return json(200, { access_token: `t${++tokens}`, token_type: "Bearer", expires_in: o.expiresIn ?? 32400 });
     return handler(c, calls.filter((x) => !x.url.endsWith("/v1/oauth2/token")).length, init.signal);
   };
-  const pp = createPayPalClient({ clientId: "cid", clientSecret: "csecret", brandName: "Line by Line demo shop", fetch, retryDelayMs: 0, timeoutMs: 50, now: () => clock, onCall: (r) => void records.push(r) });
+  const pp = createPayPalClient({ clientId: "cid", clientSecret: "csecret", brandName: "Bayside Auto Care", fetch, retryDelayMs: 0, timeoutMs: 50, now: () => clock, onCall: (r) => void records.push(r) });
   return {
     pp,
     calls,
@@ -245,7 +245,7 @@ describe("operations", () => {
           ],
         },
       ],
-      payment_source: { paypal: { experience_context: { user_action: "CONTINUE", shipping_preference: "NO_SHIPPING", brand_name: "Line by Line demo shop", return_url: "https://lbl.example.test/r", cancel_url: "https://lbl.example.test/c" } } },
+      payment_source: { paypal: { experience_context: { user_action: "CONTINUE", shipping_preference: "NO_SHIPPING", brand_name: "Bayside Auto Care", return_url: "https://lbl.example.test/r", cancel_url: "https://lbl.example.test/c" } } },
     });
     expect(JSON.parse(posts[1]!.body!).payment_source.paypal.experience_context.user_action).toBe("CONTINUE");
     expect(posts[0]!.headers).toMatchObject({ Prefer: "return=representation", "PayPal-Request-Id": "lbl:order-add:ro_1.abc:1", "Content-Type": "application/json" });

@@ -6,7 +6,7 @@ How well does a mechanic's spoken note become the right lines of the shop's pric
 
 - `findings.json`: 32 notes, each with the price-list codes a service writer would add and an urgency (`safety`, `soon`, `can_wait`). `[]` means no billable line (nothing found, or the work is not in the price list).
 - `audio/F01.wav` to `F32.wav`: the same notes spoken by macOS text-to-speech (`say`, 16 kHz mono). 12 voices, 175 to 215 words per minute, and every second note has shop-like noise (pink noise plus a 60 Hz hum). `audio/manifest.json` lists voice, speed and noise per file.
-- `../data/price-list.json`: the fictional price list of "Bayview Auto Care" (32 items). The model never sets a price; code looks it up by code.
+- `../data/price-list.json`: the fictional price list of "Bayside Auto Care" (32 items). The model never sets a price; code looks it up by code.
 
 **Synthetic test input, labeled by us.** The notes were written by us in a mechanic's voice and spoken by text-to-speech. They are not real customers and not real mechanics, and real shop audio will be harder. The numbers below say how the pipeline does on this set, not how it will do in a shop.
 

@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en" translate="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=430, initial-scale=1">
+<title>Line by Line — mechanic phone (S3), order #1042</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400..700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* цвета сняты пипеткой (PIL) с S3A-screen.png */
+    --page: #fdfdfe;
+    --card: #fcfcfe;
+    --card-line: #eceff4;
+    --navy: #193864;          /* кнопка Send to customer */
+    --mic: #173662;           /* круг микрофона */
+    --wave-played: #0f3865;
+    --wave-mid: #8b9dbc;
+    --wave-rest: #cfd5e0;
+    --ink: #0b1332;           /* заголовок строки, расшифровка */
+    --muted: #868d9a;         /* 0:06 */
+    --muted-2: #737a87;       /* price from shop list */
+    --slot-avatar: #b2bbca;
+    --slot-1: #cad1dc;
+    --slot-2: #d4dae4;
+    --slot-3: #d9dfe8;
+    --dots: #8f99ab;
+    --red: #e93434;
+    --white: #ffffff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--page); }
+  body {
+    width: 430px;
+    font-family: "Inter", system-ui, sans-serif;
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+  }
+  .screen {
+    width: 430px;
+    display: flex;
+    flex-direction: column;
+    background: var(--page);
+    padding-bottom: 24px;
+  }
+  /* место статус-бара и выреза устройства — пусто */
+  .status-space { flex: none; height: 28.77px; }
+
+  /* шапка: аватар-слот, две полоски-слота, «три точки» */
+  .top { flex: none; height: 52.75px; display: flex; align-items: flex-start; }
+  .top .avatar {
+    flex: none; width: 35.57px; height: 35.57px; border-radius: 50%;
+    background: var(--slot-avatar); margin: 4px 0 0 22.78px;
+  }
+  .top .who { flex: none; display: flex; flex-direction: column; gap: 6.4px; margin: 11.99px 0 0 14.38px; }
+  .slot { display: block; border-radius: 999px; }
+  .top .s1 { width: 83.12px; height: 10.39px; background: var(--slot-1); }
+  .top .s2 { width: 132.68px; height: 10.39px; background: var(--slot-2); }
+  .top .more { flex: none; margin: 8.8px 28px 0 auto; width: 7.19px; height: 24.78px; display: block; }
+
+  .photo {
+    flex: none; display: block; margin-left: 12.79px;
+    width: 404.42px; height: 236.58px; border-radius: 12.79px;
+  }
+
+  .card {
+    flex: none; margin-left: 13.19px; width: 402.83px;
+    background: var(--card); border: 1px solid var(--card-line); border-radius: 12.79px;
+  }
+
+  /* карточка голоса */
+  .voice { margin-top: 12.39px; height: 107.9px; display: flex; align-items: flex-start; padding: 0 11.6px 0 15.9px; }
+  .mic {
+    flex: none; width: 77.3px; height: 77.3px; border-radius: 50%; border: 0;
+    background: var(--mic); margin-top: 14.32px; display: block; position: relative;
+  }
+  .mic svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .voice .body { flex: 1 1 auto; min-width: 0; margin-left: 20.47px; margin-top: 17.79px; display: flex; flex-direction: column; }
+  .wave-row { height: 45.56px; display: flex; align-items: center; }
+  .wave { flex: none; width: 214.2px; height: 45.56px; display: block; }
+  .time {
+    margin-left: auto; margin-top: 0.2px; font-size: 19.2px; line-height: 24px; font-weight: 430; letter-spacing: -0.15px;
+    color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums;
+  }
+  .transcript {
+    margin-top: 3.03px; margin-left: 0.94px; font-size: 15.05px; line-height: 20px; font-weight: 550;
+    color: var(--ink); white-space: nowrap; height: 20px;
+  }
+
+  /* карточка строки ремонта */
+  .line { margin-top: 17.59px; height: 167.84px; display: flex; flex-direction: column; padding: 13.78px 0 0 16.18px; }
+  .line .head { flex: none; height: 80.72px; display: flex; align-items: flex-start; }
+  .thumb { flex: none; width: 79.13px; height: 80.72px; border-radius: 8.79px; display: block; }
+  .line .info { flex: none; margin-left: 11.99px; padding-top: 3.54px; display: flex; flex-direction: column; align-items: flex-start; }
+  .line .title { height: 18px; margin-left: -0.3px; font-size: 14.9px; line-height: 18px; font-weight: 650; letter-spacing: -0.15px; color: var(--ink); white-space: nowrap; }
+  .badge {
+    margin-top: 6.44px; margin-left: 0.6px; width: 82.9px; height: 26.38px; border-radius: 5.59px;
+    background: var(--red); color: var(--white); display: flex; align-items: flex-start;
+  }
+  .badge svg { flex: none; display: block; width: 16.78px; height: 15.51px; margin: 4.48px 0 0 8.99px; }
+  .badge span { margin: 5.1px 0 0 6.53px; font-size: 12.6px; line-height: 16px; font-weight: 650; white-space: nowrap; }
+  .line .src { margin-top: 5px; margin-left: 1.1px; height: 16px; font-size: 12.1px; line-height: 16px; font-weight: 430; color: var(--muted-2); white-space: nowrap; }
+  .line .s3 { margin: 15.69px 0 0 2.4px; width: 366.86px; height: 14.6px; background: var(--slot-3); }
+  .line .s4 { margin: 11.34px 0 0 2.4px; width: 199.01px; height: 14.39px; background: var(--slot-3); }
+
+  /* кнопка */
+  .send {
+    flex: none; margin: 12.84px 0 0 14.79px; width: 400.4px; height: 55.95px; border: 0; border-radius: 13.59px;
+    background: var(--navy); color: var(--white); font-family: inherit;
+    display: flex; align-items: flex-start; padding-left: 97.75px; cursor: pointer;
+  }
+  .send svg { flex: none; display: block; width: 32.77px; height: 28.77px; margin-top: 13.95px; }
+  .send span { margin: 17.1px 0 0 13.74px; font-size: 18px; line-height: 22px; font-weight: 680; white-space: nowrap; }
+</style>
+</head>
+<body>
+<main class="screen" data-order="1042">
+  <div class="status-space" aria-hidden="true"></div>
+
+  <header class="top">
+    <span class="avatar" data-slot="mechanic-avatar"></span>
+    <div class="who">
+      <span class="slot s1" data-slot="mechanic-name"></span>
+      <span class="slot s2" data-slot="order-ref"></span>
+    </div>
+    <svg class="more" viewBox="494 47 9 31" aria-label="More" role="img">
+      <circle cx="497.8" cy="51" r="3.05" fill="var(--dots)"/>
+      <circle cx="497.8" cy="62.2" r="3.05" fill="var(--dots)"/>
+      <circle cx="497.8" cy="73.9" r="3.05" fill="var(--dots)"/>
+    </svg>
+  </header>
+
+  <img class="photo" src="assets-variant-S3/brake-rotor-photo.png" alt="Front brake rotor and caliper, photo from the mechanic's camera" data-field="photo">
+
+  <section class="card voice" aria-label="Voice note">
+    <button class="mic" type="button" aria-label="Record voice note">
+      <svg viewBox="37.65 432.65 96.7 96.7" aria-hidden="true">
+        <rect x="77" y="455.8" width="18.6" height="33.1" rx="9.3" fill="var(--white)"/>
+        <path d="M70.6 477.6 V479.2 A15.9 15.9 0 0 0 102.4 479.2 V477.6" fill="none" stroke="var(--white)" stroke-width="4.8"/>
+        <line x1="86.4" y1="495" x2="86.4" y2="504.6" stroke="var(--white)" stroke-width="4.4" stroke-linecap="round"/>
+      </svg>
+    </button>
+    <div class="body">
+      <div class="wave-row">
+        <svg class="wave" viewBox="160 437 268 57" data-field="waveform" aria-hidden="true">
+          <g fill="var(--wave-played)">
+            <rect x="162.7" y="460.5" width="4.6" height="9" rx="2.3"/>
+            <rect x="170.7" y="458.5" width="4.6" height="14" rx="2.3"/>
+            <rect x="178.7" y="453.5" width="4.6" height="24" rx="2.3"/>
+            <rect x="186.7" y="457.5" width="4.6" height="16" rx="2.3"/>
+            <rect x="195.2" y="451.5" width="4.6" height="27" rx="2.3"/>
+            <rect x="202.7" y="457.5" width="4.6" height="15" rx="2.3"/>
+            <rect x="210.2" y="456.5" width="4.6" height="18" rx="2.3"/>
+            <rect x="217.7" y="447.5" width="4.6" height="36" rx="2.3"/>
+            <rect x="225.7" y="439.5" width="4.6" height="52" rx="2.3"/>
+            <rect x="234.2" y="448.5" width="4.6" height="33" rx="2.3"/>
+            <rect x="242.2" y="456.5" width="4.6" height="18" rx="2.3"/>
+            <rect x="250.2" y="458.5" width="4.6" height="15" rx="2.3"/>
+            <rect x="258.7" y="451.5" width="4.6" height="27" rx="2.3"/>
+            <rect x="266.7" y="457.5" width="4.6" height="15" rx="2.3"/>
+            <rect x="274.7" y="460.5" width="4.6" height="10" rx="2.3"/>
+            <rect x="281.7" y="460.5" width="4.6" height="10" rx="2.3"/>
+            <rect x="295.2" y="448.5" width="4.6" height="33" rx="2.3"/>
+            <rect x="303.2" y="440.5" width="4.6" height="50" rx="2.3"/>
+            <rect x="311.2" y="448.5" width="4.6" height="33" rx="2.3"/>
+            <rect x="318.2" y="456.5" width="4.6" height="18" rx="2.3"/>
+            <rect x="324.2" y="458.5" width="4.6" height="13" rx="2.3"/>
+            <rect x="331.7" y="453.5" width="4.6" height="24" rx="2.3"/>
+            <rect x="339.2" y="459.5" width="4.6" height="11" rx="2.3"/>
+          </g>
+          <rect x="287.7" y="459.5" width="4.6" height="12" rx="2.3" fill="var(--wave-mid)"/>
+          <g fill="var(--wave-rest)">
+            <rect x="347.2" y="458.5" width="4.6" height="14" rx="2.3"/>
+            <rect x="355.7" y="451.5" width="4.6" height="28" rx="2.3"/>
+            <rect x="363.7" y="457.5" width="4.6" height="15" rx="2.3"/>
+            <rect x="371.7" y="460.5" width="4.6" height="10" rx="2.3"/>
+            <rect x="379.7" y="458.5" width="4.6" height="13" rx="2.3"/>
+            <rect x="387.7" y="451.5" width="4.6" height="28" rx="2.3"/>
+            <rect x="395.7" y="457.5" width="4.6" height="16" rx="2.3"/>
+            <rect x="403.7" y="460.5" width="4.6" height="10" rx="2.3"/>
+            <rect x="411.7" y="461.5" width="4.6" height="8" rx="2.3"/>
+            <rect x="419.7" y="461.5" width="4.6" height="8" rx="2.3"/>
+          </g>
+        </svg>
+        <span class="time" data-field="voice-duration">0:06</span>
+      </div>
+      <p class="transcript" data-field="transcript">rotors are worn thin, both front</p>
+    </div>
+  </section>
+
+  <section class="card line" aria-label="Repair line">
+    <div class="head">
+      <img class="thumb" src="assets-variant-S3/rotors-thumb.png" alt="Brake rotors" data-field="line-thumb">
+      <div class="info">
+        <p class="title"><span data-field="line-part">Front brake rotors</span> · <span data-field="line-condition">worn thin</span> · <span data-field="line-price">$186.00</span></p>
+        <p class="badge" data-field="urgency">
+          <svg viewBox="164 629.6 21 19.4" aria-hidden="true">
+            <path d="M174.4 632.3 L183.2 647.6 L165.6 647.6 Z" fill="var(--white)" stroke="var(--white)" stroke-width="2.2" stroke-linejoin="round"/>
+            <rect x="173.3" y="636" width="1.8" height="5.6" rx="0.9" fill="var(--red)"/>
+            <circle cx="174.3" cy="644.2" r="1.1" fill="var(--red)"/>
+          </svg>
+          <span>Safety</span>
+        </p>
+        <p class="src">price from shop list <span data-field="price-code">BR-204</span></p>
+      </div>
+    </div>
+    <span class="slot s3" data-slot="line-detail-1"></span>
+    <span class="slot s4" data-slot="line-detail-2"></span>
+  </section>
+
+  <button class="send" type="button" data-field="send-state">
+    <svg viewBox="141 814 41 36" aria-hidden="true">
+      <g fill="var(--white)" stroke="var(--white)" stroke-linejoin="round">
+        <path d="M143.6 828.2 L179.2 816.4 L169.6 822.9 L154.4 834.2 Z" stroke-width="2"/>
+        <path d="M179.4 816.6 L166.9 847.2 L163 845.9 L159 837.4 L171.4 823.9 Z" stroke-width="2"/>
+        <path d="M153.6 836.6 L155 836.4 L157.4 844.2 L156.2 845.8 L154.8 845.2 Z" stroke-width="1.6"/>
+      </g>
+    </svg>
+    <span>Send to customer</span>
+  </button>
+</main>
+</body>
+</html>

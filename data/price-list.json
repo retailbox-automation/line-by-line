@@ -1,5 +1,5 @@
 {
-  "shop": "Bayview Auto Care (fictional demo shop, Florida)",
+  "shop": "Bayside Auto Care (fictional demo shop, Florida)",
   "currency": "USD",
   "note": "Fictional price list for the Line by Line demo and the voice-to-line benchmark. Prices include parts and labor. The model never sets a price: code looks it up by code.",
   "items": [

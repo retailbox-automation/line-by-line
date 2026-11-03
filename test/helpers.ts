@@ -51,7 +51,7 @@ export async function makeEnv(): Promise<Env> {
   const paypal = createPayPalClient({
     clientId: "test-client-id",
     clientSecret: "test-client-secret",
-    brandName: "Line by Line demo shop",
+    brandName: "Bayside Auto Care",
     fetch: fake.fetch,
     now: () => clock.now().getTime(),
     onCall: dbCallSink(db),

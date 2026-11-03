@@ -391,7 +391,7 @@ function onTx(t: AppEnv, q: Queryable): CoreDeps {
   const paypal = createPayPalClient({
     clientId: "test-client-id",
     clientSecret: "test-client-secret",
-    brandName: "Line by Line demo shop",
+    brandName: "Bayside Auto Care",
     fetch: t.fake.fetch,
     now: () => t.clock.now().getTime(),
     onCall: dbCallSink(q),

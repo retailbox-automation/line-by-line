@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Screens served by the API: `/` (start a demo), `/desk/:roId` (desk and pickup), `/mechanic/:roId`, `/c/:roId`
+  (customer). The reference screens are filled by one plain `web/app.js` (no build step, no library; QR code of the
+  customer link drawn in code). Pages carry no data and allow no inline script; access is checked on the page too.
+- PayPal webhook route: at most 60 requests a minute per client address (`429 RATE_LIMITED`).
+- The demo shop is "Bayside Auto Care" everywhere (price list, default `BRAND_NAME`, tests).
 - Core PayPal flows on the sandbox REST API: one `AUTHORIZE` order for the estimate and one per batch of approved new
   lines, approval links re-created after 3 hours, pickup as capture with `final_capture: false` plus void (or one full
   capture without void), reauthorization of wallet holds from day 4, reconciliation by live GET, idempotent

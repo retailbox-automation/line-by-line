@@ -18,7 +18,7 @@ import { dbCallSink } from "./paypal/journal.js";
 import { createWebhookReceiver } from "./webhooks/paypal.js";
 
 export const DEFAULT_PORT = 8080;
-export const DEFAULT_BRAND_NAME = "Line by Line";
+export const DEFAULT_BRAND_NAME = "Bayside Auto Care";
 const MIN_TOKEN_LENGTH = 16;
 /** How often the server re-runs webhook events whose processing failed for a passing reason. */
 export const WEBHOOK_RETRY_EVERY_MS = 5 * 60 * 1000;

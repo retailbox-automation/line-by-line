@@ -15,7 +15,7 @@ function aroundDeps(env: Env, around: (url: string, init: Parameters<FetchLike>[
   const paypal = createPayPalClient({
     clientId: "test-client-id",
     clientSecret: "test-client-secret",
-    brandName: "Line by Line demo shop",
+    brandName: "Bayside Auto Care",
     fetch: (url, init) => around(url, init, () => env.fake.fetch(url, init)),
     now: () => env.clock.now().getTime(),
     onCall: dbCallSink(env.db),

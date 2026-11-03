@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { addLine, createEstimateOrder, decide, getRepairOrder, pickup } from "../../src/core/index.js";
 import type { Db } from "../../src/db/db.js";
+import { WEBHOOK_RATE_PER_MINUTE } from "../../src/http/app.js";
 import { MAX_WEBHOOK_ATTEMPTS, WEBHOOK_STALE_MS } from "../../src/webhooks/paypal.js";
 import { approvedEstimate, call, CONSENT, estimateRo, makeAppEnv, PUBLIC_BASE, WEBHOOK_ID, type AppEnv } from "../helpers.js";
 
@@ -155,6 +156,41 @@ describe("webhook route: verification and dedup", () => {
     expect(r.json.code).toBe("PAYPAL");
     expect(err).toHaveBeenCalled();
     expect((await t.db.query(`SELECT id FROM webhook_events`)).rows).toEqual([]);
+  });
+});
+
+describe("webhook route: rate limit per client address", () => {
+  it("the 61st request from one address within a minute is 429 RATE_LIMITED, before the body is read or PayPal is asked", async () => {
+    const t = await makeAppEnv();
+    expect(WEBHOOK_RATE_PER_MINUTE).toBe(60);
+    // The proxy appends the address it saw; whatever the client put in front of it does not count.
+    const from = (ip: string, spoof = "203.0.113.9") => ({ "content-type": "application/json", "x-forwarded-for": `${spoof}, ${ip}` });
+    for (let i = 0; i < 60; i++) {
+      const r = await call(t.app, "POST", "/api/webhooks/paypal", "{}", from("198.51.100.7", `203.0.113.${i}`));
+      expect(r.status, `request ${i + 1}`).toBe(400);
+      expect(r.json.code).toBe("BAD_WEBHOOK");
+    }
+    const over = await call(t.app, "POST", "/api/webhooks/paypal", event("WH-EVT-RL", "PAYMENT.AUTHORIZATION.VOIDED", { id: "A-RL" }), { ...from("198.51.100.7"), ...HEADERS });
+    expect(over.status).toBe(429);
+    expect(over.json).toMatchObject({ code: "RATE_LIMITED", error: expect.any(String) });
+    expect(Number(over.headers.get("retry-after"))).toBe(60);
+    expect(t.fake.posts(VERIFY)).toHaveLength(0);
+    expect((await t.db.query(`SELECT id FROM webhook_events`)).rows).toEqual([]);
+
+    // Another address is counted on its own; the same address is let through again in the next minute.
+    expect((await call(t.app, "POST", "/api/webhooks/paypal", "{}", from("198.51.100.8"))).status).toBe(400);
+    t.clock.advance(30_000);
+    const still = await call(t.app, "POST", "/api/webhooks/paypal", "{}", from("198.51.100.7"));
+    expect(still.status).toBe(429);
+    expect(Number(still.headers.get("retry-after"))).toBe(30);
+    t.clock.advance(30_000);
+    expect((await call(t.app, "POST", "/api/webhooks/paypal", "{}", from("198.51.100.7"))).status).toBe(400);
+  });
+
+  it("without X-Forwarded-For all requests share one address (no socket in the test), and the limit still holds", async () => {
+    const t = await makeAppEnv();
+    for (let i = 0; i < 60; i++) expect((await deliver(t, "{}", {})).status).toBe(400);
+    expect((await deliver(t, "{}", {})).status).toBe(429);
   });
 });
 

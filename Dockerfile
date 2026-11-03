@@ -40,6 +40,7 @@ COPY --from=build /app/dist ./dist
 COPY package.json ./
 COPY migrations ./migrations
 COPY data ./data
+COPY web ./web
 COPY eval/audio ./eval/audio
 COPY eval/recordings ./eval/recordings
 COPY eval/findings.json ./eval/findings.json

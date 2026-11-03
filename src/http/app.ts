@@ -55,6 +55,8 @@ import {
 import { DISCLOSURE_VERSION, flEstimateRequired, flNeedsNewAuthorization, flNewLineNeedsConsent, flToleranceCents } from "../rules/florida.js";
 import type { WebhookReceiver } from "../webhooks/paypal.js";
 import { HttpError } from "./errors.js";
+import { mountPages } from "./pages.js";
+import { clientAddress, windowLimiter } from "./rateLimit.js";
 import { withUsd } from "./serialize.js";
 
 /** Largest request body (a repair order with 50 estimate lines and long descriptions fits). */
@@ -62,6 +64,8 @@ export const MAX_BODY_BYTES = 256 * 1024;
 /** Largest voice note upload (POST /api/ro/:id/voice only). */
 export const MAX_VOICE_BYTES = 2 * 1024 * 1024;
 const VOICE_PATH = /^\/api\/ro\/[^/]+\/voice$/;
+/** Webhook requests per client address and minute; each may cost a verify-webhook-signature call at PayPal. */
+export const WEBHOOK_RATE_PER_MINUTE = 60;
 /** Audio types the voice route takes, and the file extension the upload is written with. */
 const AUDIO_EXT: Record<string, string> = { "audio/webm": ".webm", "audio/mp4": ".m4a", "audio/mpeg": ".mp3", "audio/wav": ".wav", "audio/ogg": ".ogg" };
 
@@ -528,9 +532,23 @@ export function createApp(o: AppOptions): Hono {
     return c.json(withUsd(await runReauthorize(deps)));
   });
 
+  const webhookLimit = windowLimiter(WEBHOOK_RATE_PER_MINUTE, 60_000);
   app.post("/api/webhooks/paypal", async (c) => {
+    const socket = (c.env as { incoming?: { socket?: { remoteAddress?: string } } } | undefined)?.incoming?.socket;
+    const limit = webhookLimit(clientAddress(c.req.header("x-forwarded-for"), socket?.remoteAddress), deps.now().getTime());
+    if (!limit.ok) {
+      c.header("Retry-After", String(Math.ceil(limit.retryAfterMs / 1000)));
+      throw new HttpError(429, "RATE_LIMITED", `more than ${WEBHOOK_RATE_PER_MINUTE} webhook requests a minute from this address; try again later`);
+    }
     const r = await webhooks.receive(await c.req.text(), c.req.header());
     return c.json(r.body, r.status);
+  });
+
+  // The screens (HTML of web/, filled by web/app.js from the routes above).
+  mountPages(app, {
+    db: deps.db,
+    requireDeskOrJudge,
+    isCustomerToken: (roId, k) => sameToken(k, customerToken(deskToken, roId)),
   });
 
   return app;

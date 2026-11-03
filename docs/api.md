@@ -59,6 +59,7 @@ something useful, for example the list of validation issues or the PayPal issue)
 | 415 | `UNSUPPORTED_MEDIA_TYPE` | Voice note not sent as `audio/webm`, `audio/mp4`, `audio/mpeg`, `audio/wav` or `audio/ogg` (parameters such as `;codecs=opus` are fine) | |
 | 429 | `DAILY_CAP` | The day's (UTC) ceiling of paid model calls (`LBL_LIVE_DAILY_CAP`) or of new judge sessions (`LBL_JUDGE_DAILY_SESSIONS`) is reached | use a sample; try after 00:00 UTC |
 | 429 | `DEMO_LIMIT` | The judge session already created 5 demo repair orders | start a new session |
+| 429 | `RATE_LIMITED` | More than 60 webhook requests a minute from one address (`Retry-After` in seconds) | PayPal delivers again later |
 | 502 | `MODEL_ERROR` | Speech recognition or line drafting failed (provider error or no answer); the text says which | let the mechanic type the note or pick lines by hand |
 | 503 | `VOICE_DISABLED` | `POST /api/ro/:id/voice` called, but `LBL_STT` is not set ("speech recognition is not configured") | use `/lines/draft` or a sample |
 | 503 | `JOB_DISABLED` | Reauthorize job called, but `JOB_TOKEN` is not set on the server | |
@@ -395,6 +396,11 @@ For PayPal only. The raw body is sent byte for byte to `verify-webhook-signature
 | PayPal did not answer the verification | `502 PAYPAL` | nothing (PayPal delivers again) |
 | event id already processed, or being processed right now | `200 {"received": true, "duplicate": true}` | nothing |
 | verified (new, or open for a retry) | `200 {"received": true, "duplicate": false}` at once; processed in the background | event row, then `processed_at` and `outcome` |
+| more than 60 requests a minute from one address | `429 RATE_LIMITED` with `Retry-After`, before the body is read | nothing |
+
+The limit is kept in the server's memory per client address: the last `X-Forwarded-For` entry (the one the
+platform's proxy appends; what a client puts in front of it does not count), else the socket address. Every request
+past the limit is refused before any call to PayPal's verification.
 
 An event counts as handled only once it was processed. If processing fails for a reason that may pass (PayPal 5xx
 or no answer, the return redirect authorizing the same order at that moment, our database), the row keeps
@@ -562,6 +568,31 @@ never touched):
   `REAUTHORIZATION_TOO_SOON`) gets `needsAttention` in the same transaction that records the refusal, so the next call
   takes the next hold.
 - The reauthorize job never touches pool holds (`judge` or `reserved`).
+
+## Pages
+
+The screens are HTML from `web/` (working copies of the reference screens in `design/screens/`), sent without any
+repair order data; `web/app.js` fills them from the routes above and polls `GET /api/ro/:id` every 5 seconds. Every
+page answer has `Cache-Control: no-store`, `Referrer-Policy: same-origin` (the customer link carries its token) and a
+`Content-Security-Policy` that allows scripts only from our own files (`script-src 'self'`; styles inline and from
+Google Fonts). No page and no file under `/web/` contains `DESK_TOKEN` or `JOB_TOKEN`.
+
+| Page | Screen | Access |
+|---|---|---|
+| `GET /` | the service desk, empty, with "Start a demo repair order" | anyone; reads and creates nothing (no session, no order, no PayPal call) |
+| `GET /desk/:roId` | the service desk; the pickup screen once the repair order is picked up, or with `?view=pickup` | the judge session that created the repair order (cookie `lbl_judge`) or the desk token |
+| `GET /mechanic/:roId` | the mechanic's phone (recorded voice samples, draft lines, "Send to customer") | as `/desk/:roId` |
+| `GET /c/:roId?k=…` | the customer's phone (FL 559.905(2) disclosure and e-records consent before the first approval, the estimate, a decision per added line) | the customer link token `k`; without `k` only with `paypal=` (PayPal's return), where the page takes `k` from the browser tab it was opened in |
+
+A refused page is an HTML page with the same status and no data: `401` (no or an ended judge session), `403` (another
+session's repair order, or a wrong customer link), `404` (no such repair order), `400` (malformed id).
+
+The start button calls `POST /api/judge/demo` and, if that answers `401` (no session in this browser yet),
+`POST /api/judge/session` and the demo again, with the consent `{"approverName": "Demo customer", "channel": "link",
+"esignConsent": true}`. The live microphone is not offered: the mechanic's screen uses the recorded samples.
+
+`GET /web/*.js|css|png` serves the screens' script, style and pictures (`Cache-Control: public, max-age=300`); the HTML
+templates themselves are not served there, and nothing outside `web/` is.
 
 ## Screen flow (customer page `/c/:roId`)
 
