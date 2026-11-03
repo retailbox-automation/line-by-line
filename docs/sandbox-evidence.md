@@ -41,3 +41,17 @@ Authorization `02279938GY4089153` ($5.00): 30 captures of $0.01 with `final_capt
 | Holds B1 `1CM060836C119894N` ($96.00), B2 `1Y214495HX657682L` ($128.75) | read only | — | still `CREATED`, `update_time` 2026-10-29 |
 
 The order `GET` of `2D013382FG2239920` and `6KC95743EL574562E` lists both authorizations of each hold as `VOIDED` and the one capture as `COMPLETED`. See [platform-findings.md](platform-findings.md) rows 15–18.
+
+## Hosted demo, the full story in a browser, 2026-11-03 14:48–14:53Z
+
+Run on the hosted demo (desk at 1440 px, the two phones at 390 px), as a judge would: a new judge session, the sandbox buyer approving in a mobile browser, statuses read back afterwards with a separate `GET` on each id.
+
+| Step | PayPal object | Amount | Status after the run |
+|---|---|---|---|
+| Estimate approved on the customer page after the Florida 559.905(2) statement and the e-records consent (four price-list lines) | order `1SB68118SA4622349` → authorization `8SL27553M3586882A` | $412.00 | `VOIDED` after pickup |
+| Mechanic's recorded note F02 → line "Front brake rotors — replace (pair)", Safety, price from the list (`BRK-ROT-F`) → customer approved it on its own | order `8TD78129F1542400U` → authorization `0F2716879V776490B` | $186.00 | `CAPTURED` |
+| "Cabin air filter — replace", customer tapped "Not now" | no PayPal order | $39.00 | not billed |
+| Pickup: estimate work came to $398, capture with `final_capture: false`, then void of the remaining $14 | capture `8L207537F5667934E` | $398.00 (fee $14.38) | `COMPLETED` |
+| Pickup: rotors in full, `final_capture: true`, no void | capture `6AV85540J9784725A` | $186.00 (fee $6.98) | `COMPLETED` |
+
+Total $584.00, net $562.64. The cabin filter line was added through the API in this run: without a language model the keyword drafting does not match "cabin filter" in note F03 to the price-list item "Cabin air filter" (it is one of the 20 misses of the no-model baseline in `eval/`).

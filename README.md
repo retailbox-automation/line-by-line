@@ -6,6 +6,8 @@ When a mechanic finds something new, the customer gets each line on their phone 
 
 > Status: in active development for the PayPal AI Hackathon (submission window Oct 1 – Nov 12, 2026). This README grows with the build; every claim below links to code or a sandbox id you can check.
 
+**Live demo (PayPal sandbox):** https://linebyline.retailbox-automation.com — press "Start a demo repair order" and approve with your own PayPal sandbox buyer.
+
 ## Judge it in 90 seconds
 
 | Claim | Proof | What you will see |
