@@ -118,6 +118,45 @@ export function reauthView(r, parentExpiry, timeZone) {
   };
 }
 
+/**
+ * The result card of a reauthorized pool hold, from its row in GET /api/judge/pool: the two ids, and the small timeline
+ * on one scale from the hold's first authorization to its expiry. The new id's bar starts at the reauthorization and
+ * ends where PayPal says the new id expires (the parent's expiry plus a second: no new 29 days).
+ */
+export function resultCard(h, timeZone) {
+  const r = h.reauthorized;
+  const created = Date.parse(h.createdAt);
+  const end = r.expirationTime ?? h.expirationTime;
+  const span = Date.parse(end) - created;
+  const at = r.at ? Date.parse(r.at) : created;
+  const pct = (t) => Math.min(100, Math.max(0, span > 0 ? ((t - created) / span) * 100 : 0));
+  const same = sameExpiry(r.expirationTime, h.expirationTime);
+  const round = (x) => Math.round(x * 10) / 10;
+  return {
+    oldId: h.authorizationId,
+    newId: r.newId,
+    amount: money(h.amountCents),
+    status: r.live?.status ?? null,
+    startDate: dateText(h.createdAt, timeZone),
+    endDate: end ? dateText(end, timeZone) : null,
+    newStartDate: r.at ? dateText(r.at, timeZone) : null,
+    barOld: { left: 0, width: round(pct(Date.parse(h.expirationTime ?? end))) },
+    barNew: { left: round(pct(at)), width: round(pct(Date.parse(end)) - pct(at)) },
+    note: same ? "same end date · no new 29 days" : `new id expires ${end ? dateText(end, timeZone) : "(not read)"}`,
+  };
+}
+
+/** The pool row that is the hold a reauthorize answer (or a POOL_EMPTY's last) is about. */
+export function holdOf(poolAnswer, parentId) {
+  return (poolAnswer?.holds ?? []).find((h) => h.authorizationId === parentId && h.reauthorized) ?? null;
+}
+
+/** "1:58:12" until the judge session ends; "0:00:00" once it has. */
+export function sessionLeft(expiresAt, now) {
+  const s = Math.max(0, Math.floor((Date.parse(expiresAt) - now) / 1000));
+  return `${Math.floor(s / 3600)}:${String(Math.floor((s % 3600) / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+}
+
 /** A refused reauthorize-next -> what the page says instead of the card. */
 export function reauthRefusal(status, json, timeZone) {
   const code = json?.code ?? "";

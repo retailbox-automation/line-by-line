@@ -126,6 +126,10 @@ describe("the judge flow on the app", () => {
 
     const after = await judge.loadPool(req2, t.clock.now().getTime(), TZ);
     expect(after.view.rows[0]).toMatchObject({ status: "Reauthorized", tone: "done", newId: card.newId, available: false });
+    const real = judge.resultCard(judge.holdOf(after.answer, old), TZ);
+    expect(real).toMatchObject({ oldId: old, newId: card.newId, amount: "$142.50", status: "CREATED", note: "same end date · no new 29 days" });
+    expect(real.barNew.left).toBeGreaterThan(13); // reauthorized after 4 days 11 minutes of 29 days
+    expect(judge.holdOf(after.answer, "NOPE0000000000000")).toBeNull();
 
     // the pool's ids are read through the pool listing (a judge may not GET another repair order's authorization)
     expect(await req2("GET", `/api/authorizations/${card.newId}`)).toMatchObject({ status: 403, json: { code: "FORBIDDEN" } });
@@ -144,6 +148,26 @@ describe("the judge flow on the app", () => {
     const authId = state.json.authorizations[0].id;
     expect(await judge.liveGet(req2, authId, TZ)).toMatchObject({ id: authId, status: "CREATED", amount: "$412.00", captured: "$0.00", matches: true, diffs: [], source: "authorization" });
     await expect(judge.liveGet(req2, "not-an-id", TZ)).rejects.toThrow(/17 capital letters/);
+  });
+
+  it("resultCard places the old and the new id on one scale: the new bar starts at the reauthorization, both end together", () => {
+    const h = {
+      authorizationId: "4RR33540BR8604004", amountCents: 14250, createdAt: "2026-10-29T16:02:00Z", expirationTime: "2026-11-27T16:02:00Z",
+      reauthorized: { at: "2026-11-02T16:12:17Z", newId: "0MM670868D710561J", expirationTime: "2026-11-27T16:02:01Z", live: { status: "CREATED" }, liveError: null },
+    };
+    const c = judge.resultCard(h, "UTC");
+    expect(c).toMatchObject({ oldId: "4RR33540BR8604004", newId: "0MM670868D710561J", amount: "$142.50", status: "CREATED", startDate: "Oct 29", endDate: "Nov 27", newStartDate: "Nov 2", note: "same end date · no new 29 days" });
+    expect(c.barOld).toEqual({ left: 0, width: 100 });
+    expect(c.barNew.left).toBeCloseTo(13.8, 1); // 4 days 10 minutes of 29 days
+    expect(c.barNew.left + c.barNew.width).toBeCloseTo(100, 1);
+    const longer = judge.resultCard({ ...h, reauthorized: { ...h.reauthorized, expirationTime: "2026-12-01T16:12:17Z" } }, "UTC");
+    expect(longer.note).toBe("new id expires Dec 1");
+    expect(longer.barOld.width).toBeLessThan(100);
+  });
+
+  it("sessionLeft counts down to 0:00:00", () => {
+    expect(judge.sessionLeft("2026-11-03T18:00:00Z", Date.parse("2026-11-03T16:01:48Z"))).toBe("1:58:12");
+    expect(judge.sessionLeft("2026-11-03T18:00:00Z", Date.parse("2026-11-03T19:00:00Z"))).toBe("0:00:00");
   });
 
   it("a refusal other than the two pool answers shows its code and message", () => {
