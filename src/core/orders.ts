@@ -31,6 +31,12 @@ const esignMessage = { message: "an approval on the phone needs the e-records co
 const flRule = (v: { flChoice?: string | undefined; flLimitCents?: number | undefined }) => (v.flChoice === "limit") === (v.flLimitCents !== undefined);
 const flMessage = { message: 'flLimitCents goes with flChoice "limit" and only with it', path: ["flLimitCents"] };
 
+/**
+ * The name the demo's start button (web/app.js) records the estimate consent under, before the customer has seen the
+ * Florida statement. The customer page's signature replaces it; nothing replaces a real name.
+ */
+export const DEMO_START_APPROVER = "Demo customer";
+
 export const ConsentInputSchema = z.object(consentFields).refine(esignRule, esignMessage).refine(flRule, flMessage);
 export type ConsentInput = z.input<typeof ConsentInputSchema>;
 
@@ -221,6 +227,15 @@ export async function createEstimateOrder(deps: CoreDeps, roId: string, consentI
           existing.id,
           consent.flChoice,
           consent.flLimitCents ?? null,
+        ]);
+      // Same for the signature: the customer's own name and channel take the place of the start button's placeholder.
+      // The first real signature stays, and the desk never signs for the customer.
+      if (consent.channel !== "desk" && consent.approverName !== DEMO_START_APPROVER)
+        await q.query(`UPDATE consents SET approver_name = $2, channel = $3 WHERE paypal_order_id = $1 AND decision = 'approved' AND approver_name = $4`, [
+          existing.id,
+          consent.approverName,
+          consent.channel,
+          DEMO_START_APPROVER,
         ]);
       return { existing };
     }

@@ -810,6 +810,7 @@ function initStart() {
   btn.addEventListener(
     "click",
     act(btn, async () => {
+      // Placeholder consent until the customer signs on their page (DEMO_START_APPROVER in src/core/orders.ts).
       const consent = { approverName: "Demo customer", channel: "link", esignConsent: true };
       let r;
       try {
