@@ -51,7 +51,7 @@ ol,ul{list-style:none}
 .nw{white-space:nowrap}
 
 /* ---------- frame: exactly 1440 px wide ---------- */
-.app{width:1440px;margin:0 auto;background:var(--page)}
+.app{width:100%;max-width:1440px;margin:0 auto;background:var(--page)}
 
 /* ---------- header ---------- */
 .top{height:91.5px;background:var(--navy);display:flex;align-items:flex-start;padding:0 40.6px 0 47.2px}
@@ -182,9 +182,17 @@ ol,ul{list-style:none}
 .note{position:absolute;left:15.3px;right:13.5px;top:207.3px;height:43.5px;padding:0 0 2.5px 18.6px;border-radius:7px;background:var(--note-bg);display:flex;align-items:center;font-weight:450;font-size:22.5px;line-height:22.5px;letter-spacing:0.04px;white-space:nowrap;color:var(--note-ink)}
 .empty-line{margin-top:16.7px;padding:16px 24.4px;border:1px solid var(--line);border-radius:10px;background:var(--card);font-weight:680;font-size:20px;line-height:26px;color:var(--ink)}
 
-/* ---------- 390 px and other narrow screens ---------- */
+/* ---------- below 1280 px: one column (phones, tablets, small laptops) ---------- */
 @media (max-width:1439.98px){ .app{width:100%} }
-@media (max-width:760px){
+/* between the 1440 design and the stacked phone layout: the right column follows the window */
+@media (min-width:1280px) and (max-width:1439.98px){
+  .reauth-btn{width:100%;white-space:normal;font-size:clamp(22px,2.3vw,33px)}
+  .col-title.held{white-space:normal;font-size:clamp(30px,2.9vw,41px);line-height:1.15;height:auto}
+  .track{width:auto;right:26.1px}
+  .tick.end{left:auto;right:29.2px}
+  .tl-date.end{left:auto;right:29.2px}
+}
+@media (max-width:1279.98px){
   .top{height:auto;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:14px 16px}
   .brand{width:auto;margin:0;font-size:30px;line-height:36px;letter-spacing:-0.2px}
   .tag{width:auto;height:30px;margin:0;padding:0 12px;border-radius:8px;font-size:14px;line-height:14px;letter-spacing:-0.1px}
