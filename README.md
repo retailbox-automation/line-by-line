@@ -28,7 +28,7 @@ When a mechanic finds something new, the customer gets each line on their phone 
 | Step | Live or prepared |
 |---|---|
 | Repair order, PayPal orders, your approval, authorization, decisions, pickup, captures and voids | live, PayPal sandbox |
-| Voice step | prepared: 32 recorded notes (synthetic voices) with recorded speech recognition; the lines are drafted live from the transcript (see "How it uses AI") |
+| Voice step | prepared: 32 recorded notes (synthetic voices), their speech recognition and the model's answers recorded on 2026-11-03 (see "How it uses AI"); text you type into the draft box goes to the model live |
 | Reauthorization | a live call on a hold made days earlier (`/api/judge/pool`), because PayPal allows it only from day 4 |
 | Shop, price list, customer | made up for the demo |
 
@@ -48,15 +48,15 @@ Before the first approval the customer page shows the written-estimate statement
 
 `src/agent/` turns a mechanic's voice note into lines of the shop's price list: the code, the urgency and a sentence for the customer. The price always comes from the list. A code that is not in the list is dropped and counted as invented. The mechanic confirms each line before it goes to the customer.
 
-On the hosted demo the mechanic's screen uses 32 recorded notes. Their speech recognition was recorded with a local model (parakeet). The lines are drafted by the keyword baseline: no language model has been measured on our set yet, and one goes into the demo only if it beats this baseline.
+The demo drafts lines with `openai/gpt-oss-120b` on Groq (free tier, with zero data retention switched on). The mechanic's screen uses 32 recorded notes: their speech recognition was recorded with a local model (parakeet), and the model's answers for them are cached, so a click on a sample makes no model call. Text typed into the draft box goes to the model live, within a daily ceiling on the server.
 
-What we measure: how often the lines of a note match what a service writer would add, on 32 synthetic notes (spoken by text-to-speech, labeled by us; see [eval/README.md](eval/README.md)). Keyword matching on the price list gets 16/32 notes exactly right on the note text and 12/32 after speech recognition, with no invented codes.
+What we measure: how often the lines of a note match what a service writer would add, on 32 synthetic notes (spoken by text-to-speech, labeled by us; see [eval/README.md](eval/README.md)). Keyword matching on the price list gets 16/32 notes exactly right on the note text and 12/32 after speech recognition. `gpt-oss-120b` gets 32/32 on both, with no invented codes, and the urgency right on 25 of 33 lines after speech recognition (`gpt-oss-20b`: also 32/32, urgency 19/33). On this set the models no longer differ on codes, so a larger, harder set is next.
 
 ```bash
 npm run eval -- --replay
 ```
 
-No key and no network: it replays recorded speech recognition and prints the numbers.
+No key and no network: it replays recorded speech recognition and prints the numbers; add `--llm recorded:gpt-oss-120b-parakeet` to replay the model's answers.
 
 ## PayPal's AI tools
 

@@ -30,6 +30,22 @@ The `keywords` provider matches price-list aliases and item names in the text an
 | the note text | 16/32 | 0.818 | 0.545 | 0 | 18/18 |
 | after local speech recognition (`recorded:parakeet-local`) | 12/32 | 0.765 | 0.394 | 0 | 12/13 |
 
+## With a model (Groq, 2026-11-03)
+
+Groq's free tier with zero data retention on, temperature 0, the strict JSON schema of `src/agent/lines.ts`. The answers are recorded in `recordings/llm/`, so `--llm recorded:<name>` replays them without a key.
+
+| Lines | Input | Exact notes | Precision | Recall | Invented | Urgency | p50 / p95 per note |
+|---|---|---|---|---|---|---|---|
+| `groq:openai/gpt-oss-120b` | after local speech recognition | 32/32 | 1.000 | 1.000 | 0 | 25/33 | 6.9 s / 11.3 s |
+| `groq:openai/gpt-oss-120b` | the note text | 32/32 | 1.000 | 1.000 | 0 | 23/33 | 4.0 s / 9.3 s |
+| `groq:openai/gpt-oss-20b` | after local speech recognition | 32/32 | 1.000 | 1.000 | 0 | 19/33 | 8.5 s / 11.6 s |
+
+Both models get every code right on these 32 notes, so the set no longer separates them on codes; urgency does (gpt-oss-120b 25/33). The demo uses gpt-oss-120b. The times include waiting out the free tier's 8K tokens a minute. A larger and harder set is the next step.
+
+```bash
+npm run eval -- --stt recorded:parakeet-local --llm recorded:gpt-oss-120b-parakeet   # replays the 32/32 run, no key
+```
+
 Any model has to beat these. `eval/run.test.ts` fails if the port drifts from them.
 
 ## Run it
