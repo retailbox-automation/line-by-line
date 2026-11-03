@@ -63,7 +63,9 @@ svg { display: block; flex: none; }
 .topline .sep { margin: 0 5px; color: var(--dot); }
 
 /* плашка сметы / итога */
-.est-bar { margin-left: 12.43px; width: 405.5px; height: 51.64px; flex: none; border-radius: 17.6px; background: var(--est-bg); display: flex; align-items: center; }
+.est-bar { margin-left: 12.43px; width: 405.5px; min-height: 51.64px; flex: none; border-radius: 17.6px; background: var(--est-bg); display: flex; align-items: center; }
+/* Live status words ("awaiting approval") are longer than the reference's "held": let the text wrap inside the bar. */
+.est-bar .est-text { min-width: 0; flex: 1 1 auto; flex-wrap: wrap; white-space: normal; padding: 6px 0; }
 .est-bar .pin { margin-left: 14.04px; width: 19.25px; height: 21.66px; }
 .est-bar .divider { margin-left: 11.24px; width: 1.2px; height: 27.28px; border-radius: 1px; background: var(--divider); flex: none; }
 .est-bar .doc { margin-left: 12.44px; width: 24.07px; height: 28.08px; }
