@@ -598,6 +598,7 @@ Google Fonts). No page and no file under `/web/` contains `DESK_TOKEN` or `JOB_T
 |---|---|---|
 | `GET /` | the service desk, empty, with "Start a demo repair order" | anyone; reads and creates nothing (no session, no order, no PayPal call) |
 | `GET /desk/:roId` | the service desk; the pickup screen once the repair order is picked up, or with `?view=pickup` | the judge session that created the repair order (cookie `lbl_judge`) or the desk token |
+| `GET /judge` | the judge page: the Florida statement and e-records consent, then "Approve with your PayPal sandbox buyer" (`POST /api/judge/demo`); the pool of aged holds with "Reauthorize the next free hold" and the result card (old id → new id on one timeline); Live GET of any id (pool ids through `GET /api/judge/pool`, the judge's own through `GET /api/authorizations/:id`) | anyone; the page reads and creates nothing, `web/judge.js` opens a judge session only when the browser has none |
 | `GET /mechanic/:roId` | the mechanic's phone (recorded voice samples, draft lines, "Send to customer") | as `/desk/:roId` |
 | `GET /c/:roId?k=…` | the customer's phone (FL 559.905(2) disclosure and e-records consent before the first approval, the estimate, a decision per added line) | the customer link token `k`; without `k` only with `paypal=` (PayPal's return), where the page takes `k` from the browser tab it was opened in |
 
