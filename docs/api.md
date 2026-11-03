@@ -59,7 +59,7 @@ something useful, for example the list of validation issues or the PayPal issue)
 | 415 | `UNSUPPORTED_MEDIA_TYPE` | Voice note not sent as `audio/webm`, `audio/mp4`, `audio/mpeg`, `audio/wav` or `audio/ogg` (parameters such as `;codecs=opus` are fine) | |
 | 429 | `DAILY_CAP` | The day's (UTC) ceiling of paid model calls (`LBL_LIVE_DAILY_CAP`) or of new judge sessions (`LBL_JUDGE_DAILY_SESSIONS`) is reached | use a sample; try after 00:00 UTC |
 | 429 | `DEMO_LIMIT` | The judge session already created 5 demo repair orders | start a new session |
-| 429 | `RATE_LIMITED` | More than 60 webhook requests a minute from one address (`Retry-After` in seconds) | PayPal delivers again later |
+| 429 | `RATE_LIMITED` | More than 60 PayPal-shaped webhook deliveries a minute, or more than 10 judge sessions an hour, from one address (`Retry-After` in seconds) | PayPal delivers again later; a judge waits or uses the open session |
 | 502 | `MODEL_ERROR` | Speech recognition or line drafting failed (provider error or no answer); the text says which | let the mechanic type the note or pick lines by hand |
 | 503 | `VOICE_DISABLED` | `POST /api/ro/:id/voice` called, but `LBL_STT` is not set ("speech recognition is not configured") | use `/lines/draft` or a sample |
 | 503 | `JOB_DISABLED` | Reauthorize job called, but `JOB_TOKEN` is not set on the server | |
@@ -396,11 +396,14 @@ For PayPal only. The raw body is sent byte for byte to `verify-webhook-signature
 | PayPal did not answer the verification | `502 PAYPAL` | nothing (PayPal delivers again) |
 | event id already processed, or being processed right now | `200 {"received": true, "duplicate": true}` | nothing |
 | verified (new, or open for a retry) | `200 {"received": true, "duplicate": false}` at once; processed in the background | event row, then `processed_at` and `outcome` |
-| more than 60 requests a minute from one address | `429 RATE_LIMITED` with `Retry-After`, before the body is read | nothing |
+| more than 60 PayPal-shaped deliveries a minute from one address | `429 RATE_LIMITED` with `Retry-After`, before PayPal is asked | nothing |
 
 The limit is kept in the server's memory per client address: the last `X-Forwarded-For` entry (the one the
-platform's proxy appends; what a client puts in front of it does not count), else the socket address. Every request
-past the limit is refused before any call to PayPal's verification.
+platform's proxy appends; what a client puts in front of it does not count) when it is a valid IP address, else the
+socket address. Only requests shaped like a PayPal delivery are counted (JSON with a string `id` and `event_type`, sent
+with the `PAYPAL-TRANSMISSION-ID` and `PAYPAL-TRANSMISSION-SIG` headers): junk is refused with 400 without a PayPal
+call and cannot use up the bucket that PayPal's real deliveries may share. Every counted request past the limit is
+refused before any call to PayPal's verification.
 
 An event counts as handled only once it was processed. If processing fails for a reason that may pass (PayPal 5xx
 or no answer, the return redirect authorizing the same order at that moment, our database), the row keeps
@@ -504,7 +507,8 @@ real reauthorization on a hold older than 3 days. What is live and what is prepa
 1. `POST /api/judge/session` (anyone, no body) → `201 {"token": "j.<sessionId>.<expiresAt>.<hmac>", "expiresAt": "…",
    "liveVoice": false}` and the cookie `lbl_judge` (HttpOnly, Secure, SameSite=Lax, Path=/, 2 hours). The token is an
    HMAC-SHA256 under a key derived from `DESK_TOKEN` with its own label (checked in constant time); a new `DESK_TOKEN`
-   ends every session. At most `LBL_JUDGE_DAILY_SESSIONS` (default 200) new sessions per UTC day, then `429 DAILY_CAP`.
+   ends every session. At most `LBL_JUDGE_DAILY_SESSIONS` (default 200) new sessions per UTC day, then `429 DAILY_CAP`; at most 10 per
+   client address an hour (same address rule as the webhook limit), then `429 RATE_LIMITED` with `Retry-After`.
 2. `POST /api/judge/demo` (judge) with the consent record, exactly as `POST /api/ro/:id/estimate/approval` takes it
    (`{"approverName": "…", "channel": "link", "esignConsent": true}`; the judge screen shows the FL disclosure and the
    e-records consent first) → `201 {"roId", "order", "approveUrl", "customerUrl"}`. The estimate is $412 in four
