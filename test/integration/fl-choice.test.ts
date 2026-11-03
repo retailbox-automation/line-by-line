@@ -1,7 +1,8 @@
 // Fla. Stat. 559.905(2): which of the three statements the customer checked is kept in the consent record
 // (migration 004). Optional in the API: the desk, older clients and approvals after the first one send none.
 import { describe, expect, it } from "vitest";
-import { call, CONSENT, desk, makeAppEnv, type AppEnv } from "../helpers.js";
+import { customerToken } from "../../src/http/app.js";
+import { call, CONSENT, desk, DESK_TOKEN, makeAppEnv, type AppEnv } from "../helpers.js";
 
 const NEW_RO = {
   customerLabel: "Dana Demo (made-up)",
@@ -52,6 +53,23 @@ describe("Florida statement choice in the consent record", () => {
     const d = await desk(t.app, "POST", `/api/ro/${roId}/decisions`, { decline: [line.json.line.id], ...CONSENT, flChoice: "none" });
     expect(d.status, d.text).toBe(200);
     expect((await consents(t, roId)).find((r) => r.lineId === line.json.line.id)).toMatchObject({ decision: "declined", flChoice: "none", flLimitCents: null });
+  });
+
+  it("an order the desk already made with its consent gets the customer's statement when the customer page approves (first choice stays)", async () => {
+    const t = await makeAppEnv();
+    const roId = await newRo(t);
+    const made = await desk(t.app, "POST", `/api/ro/${roId}/estimate/approval`, { ...CONSENT, channel: "desk" });
+    expect(made.status).toBe(201);
+    expect((await consents(t, roId)).map((r) => r.flChoice)).toEqual([null, null]);
+    const customer = { authorization: `Bearer ${customerToken(DESK_TOKEN, roId)}` };
+    const page = await call(t.app, "POST", `/api/ro/${roId}/estimate/approval`, { ...CONSENT, channel: "link", flChoice: "limit", flLimitCents: 45000 }, customer);
+    expect(page.status, page.text).toBe(200);
+    expect(page.json.order.id).toBe(made.json.order.id);
+    expect((await consents(t, roId)).map((r) => [r.flChoice, r.flLimitCents])).toEqual([["limit", 45000], ["limit", 45000]]);
+    const again = await call(t.app, "POST", `/api/ro/${roId}/estimate/approval`, { ...CONSENT, channel: "link", flChoice: "written" }, customer);
+    expect(again.status).toBe(200);
+    expect((await consents(t, roId)).map((r) => r.flChoice)).toEqual(["limit", "limit"]);
+    expect(t.fake.posts("/v2/checkout/orders")).toHaveLength(1);
   });
 
   it("refuses a limit without an amount, an amount without 'limit', a zero amount and an unknown statement; no PayPal call", async () => {

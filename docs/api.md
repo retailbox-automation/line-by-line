@@ -225,7 +225,9 @@ page, before PayPal):
   estimate), `limit` (no written estimate as long as the repair costs do not exceed an amount) or `none`. With `limit`,
   `flLimitCents` (a positive whole number of cents, the amount the customer wrote) is required; with anything else it
   is refused (`400 VALIDATION`). The customer page sends them with the first approval, where it shows the statement;
-  the desk and later decisions send none, and the record keeps `null`. `POST /api/ro/:id/decisions` takes the same two
+  the desk and later decisions send none, and the record keeps `null`. When the estimate order already exists (the desk
+  or the judge's start made it with its own consent) and the customer page approves with a statement, that statement
+  is written onto the estimate's records that have none; the first choice stays. `POST /api/ro/:id/decisions` takes the same two
   fields. Every consent record in `GET /api/ro/:id` carries `flChoice` and `flLimitCents` (`null` for records made
   before 2026-11-03).
 

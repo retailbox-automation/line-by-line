@@ -214,6 +214,14 @@ export async function createEstimateOrder(deps: CoreDeps, roId: string, consentI
     const existing = (await q.query<PaypalOrder>(`SELECT ${ORDER_COLS} FROM paypal_orders WHERE ro_id = $1 AND purpose = 'estimate' AND ${ACTIVE_ORDER_SQL}`, [roId])).rows[0];
     if (existing) {
       if (existing.status === "COMPLETED") throw new CoreError("CONFLICT", `the estimate of ${roId} is already approved`, { roId, orderId: existing.id });
+      // The desk (or the judge's start) made this order with its own consent; the customer page now sends the Florida
+      // statement the customer checked. Keep it on the estimate's records; the first choice stays.
+      if (consent.flChoice)
+        await q.query(`UPDATE consents SET fl_choice = $2, fl_limit_cents = $3 WHERE paypal_order_id = $1 AND decision = 'approved' AND fl_choice IS NULL`, [
+          existing.id,
+          consent.flChoice,
+          consent.flLimitCents ?? null,
+        ]);
       return { existing };
     }
     const decided = lines.filter((l) => l.status !== "proposed" && l.status !== "sent");
