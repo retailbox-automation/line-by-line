@@ -3,7 +3,7 @@
 // is the data layer only: pure view functions plus a thin client over any `request(method, path, body)` that answers
 // `{status, json}` (the browser's fetch with the judge cookie, or the app itself in test/web/judge.test.ts).
 // No libraries and no build step.
-import { money, timeText } from "./app.js";
+import { applyFields, customerConsent, errorText, isPayPalUrl, money, timeText } from "./app.js";
 
 const DAY_MS = 86_400_000;
 
@@ -204,13 +204,33 @@ async function ok(request, method, path, body) {
 
 /** Session if there is none yet (401), then the demo repair order with the judge's consent. */
 export async function startDemo(request, consent) {
+  let sessionExpiresAt = null;
   let r = await request("POST", "/api/judge/demo", consent);
   if (r.status === 401) {
-    await ok(request, "POST", "/api/judge/session");
+    sessionExpiresAt = (await ok(request, "POST", "/api/judge/session")).expiresAt ?? null;
     r = await request("POST", "/api/judge/demo", consent);
   }
   if (r.status !== 201) throw requestError(r);
-  return { roId: r.json.roId, approveUrl: r.json.approveUrl, customerUrl: r.json.customerUrl, order: r.json.order };
+  return { roId: r.json.roId, approveUrl: r.json.approveUrl, customerUrl: r.json.customerUrl, order: r.json.order, sessionExpiresAt };
+}
+
+/** The pool listing; opens a judge session first when this browser has none (401). */
+export async function ensureSession(request) {
+  let r = await request("GET", "/api/judge/pool");
+  let expiresAt = null;
+  if (r.status === 401) {
+    expiresAt = (await ok(request, "POST", "/api/judge/session")).expiresAt ?? null;
+    r = await request("GET", "/api/judge/pool");
+  }
+  if (r.status !== 200) throw requestError(r);
+  return { pool: r.json, expiresAt };
+}
+
+/** The hold reauthorized last in a pool listing, or null. */
+export function latestReauthorized(poolAnswer) {
+  const done = (poolAnswer?.holds ?? []).filter((h) => h.reauthorized);
+  done.sort((a, b) => Date.parse(b.reauthorized.at ?? 0) - Date.parse(a.reauthorized.at ?? 0));
+  return done[0] ?? null;
 }
 
 export async function loadPool(request, now, timeZone) {
@@ -274,5 +294,219 @@ export function browserRequest(method, path, body) {
       json = null;
     }
     return { status: res.status, json };
+  });
+}
+
+// ---------- the page (browser only; the functions above are tested in test/web/judge.test.ts) ----------
+
+const STORE = "lbl-judge";
+
+function recall() {
+  try {
+    return JSON.parse(localStorage.getItem(STORE) || "{}") || {};
+  } catch {
+    return {};
+  }
+}
+
+function remember(patch) {
+  const v = { ...recall(), ...patch };
+  try {
+    localStorage.setItem(STORE, JSON.stringify(v));
+  } catch {
+    /* private window: the page still works, it just forgets the repair order on reload */
+  }
+  return v;
+}
+
+async function initJudge() {
+  const $ = (sel, root = document) => root.querySelector(sel);
+  const errorLine = $('[data-judge="error"]');
+  const showError = (e) => {
+    if (!errorLine) return;
+    errorLine.textContent = e instanceof Error && !("code" in e) && !("status" in e) ? e.message : errorText(e);
+    errorLine.hidden = false;
+  };
+  const clearError = () => {
+    if (errorLine) errorLine.hidden = true;
+  };
+  let store = recall();
+
+  const date = $("#consent-date");
+  if (date) date.textContent = new Date().toLocaleDateString("en-US");
+
+  const STEP = '[data-judge="step-1"],[data-judge="step-2"],[data-judge="step-3"],[data-judge="step-4"]';
+  for (const t of document.querySelectorAll('[data-judge="step-toggle"]')) {
+    t.addEventListener("click", () => {
+      const step = t.closest(STEP);
+      const panel = step?.querySelector('[data-judge="step-panel"]');
+      if (!panel) return;
+      panel.hidden = !panel.hidden;
+      t.setAttribute("aria-expanded", String(!panel.hidden));
+      step.classList.toggle("is-open", !panel.hidden);
+    });
+  }
+
+  const tick = () => {
+    const el = $('[data-field="session-left"]');
+    if (el) el.textContent = store.expiresAt ? sessionLeft(store.expiresAt, Date.now()) : "—";
+  };
+  tick();
+  setInterval(tick, 1000);
+
+  const showRo = async () => {
+    if (!store.roId) return;
+    const links = { "link-mechanic": `/mechanic/${encodeURIComponent(store.roId)}`, "link-customer": store.customerUrl, "link-desk": `/desk/${encodeURIComponent(store.roId)}` };
+    for (const [k, href] of Object.entries(links)) {
+      const a = $(`[data-judge="${k}"]`);
+      if (a && href) a.href = href;
+    }
+    const r = await browserRequest("GET", `/api/ro/${encodeURIComponent(store.roId)}`);
+    if (r.status !== 200) return;
+    const est = r.json.orders.find((o) => o.purpose === "estimate");
+    const auth = est ? r.json.authorizations.find((a) => a.paypalOrderId === est.id || a.paypalOrderId === est.supersededBy) : null;
+    const st = $('[data-field="step1-status"]');
+    if (!st) return;
+    st.textContent = auth ? `Authorization · ${money(auth.amountCents)} · ${auth.status}` : est ? `Estimate ${money(est.amountCents)} · waiting for your approval in PayPal` : "";
+    st.hidden = !st.textContent;
+  };
+
+  const approve = $('[data-judge="approve"]');
+  approve?.addEventListener("click", async () => {
+    clearError();
+    approve.disabled = true;
+    try {
+      const consent = customerConsent(
+        { needsDisclosure: true, estimateRequired: true, approverName: "" },
+        { flValue: $('input[name="fl-choice"]:checked')?.value ?? null, flLimit: $(".fl-limit")?.value ?? "", esign: $("#esign-consent")?.checked === true, name: $("#approver-name")?.value ?? "" },
+      );
+      const d = await startDemo(browserRequest, consent);
+      store = remember({ roId: d.roId, customerUrl: d.customerUrl, ...(d.sessionExpiresAt ? { expiresAt: d.sessionExpiresAt } : {}) });
+      if (!isPayPalUrl(d.approveUrl)) throw new Error("the approval link is not a PayPal address");
+      location.href = d.approveUrl;
+    } catch (e) {
+      showError(e);
+      approve.disabled = false;
+    }
+  });
+
+  const pool = $('[data-judge="pool"]');
+  const rowTemplate = pool?.querySelector('[data-judge="pool-row"]')?.cloneNode(true) ?? null;
+  const card = $('[data-judge="result"]');
+  const empty = $('[data-judge="empty"]');
+  let poolAnswer = null;
+
+  const renderPool = (view) => {
+    if (!pool || !rowTemplate) return;
+    for (const n of pool.querySelectorAll('[data-judge="pool-row"]')) n.remove();
+    for (const row of view.rows) {
+      const n = rowTemplate.cloneNode(true);
+      n.classList.remove("is-done", "is-go", "is-wait", "is-muted");
+      n.classList.add(`is-${row.tone}`);
+      applyFields(n, { amount: row.amount, age: row.age, status: row.status });
+      applyFields(n, { label: row.label, window: row.window }, "data-slot");
+      if (row.reason) n.title = row.reason;
+      pool.append(n);
+    }
+    if (empty) empty.hidden = view.rows.length > 0;
+  };
+
+  const setBar = (name, b) => {
+    const el = card?.querySelector(`[data-judge="${name}"]`);
+    if (el) {
+      el.style.left = `${b.left}%`;
+      el.style.width = `${b.width}%`;
+    }
+  };
+  const showCard = (h) => {
+    if (!card) return;
+    if (!h) {
+      card.hidden = true;
+      return;
+    }
+    const c = resultCard(h);
+    applyFields(card, {
+      "old-id": c.oldId,
+      "new-id": c.newId,
+      "result-amount": c.amount,
+      "result-status": c.status ?? "not read",
+      "start-date": c.startDate,
+      "end-date": c.endDate,
+      "new-start-date": c.newStartDate,
+      "result-note": c.note,
+    });
+    setBar("bar-old", c.barOld);
+    setBar("bar-new", c.barNew);
+    card.hidden = false;
+  };
+
+  const reloadPool = async () => {
+    const fresh = await loadPool(browserRequest, Date.now());
+    poolAnswer = fresh.answer;
+    renderPool(fresh.view);
+  };
+
+  const reauth = $('[data-judge="reauthorize"]');
+  reauth?.addEventListener("click", async () => {
+    clearError();
+    reauth.disabled = true;
+    try {
+      const r = await reauthorizeNext(browserRequest, poolAnswer);
+      await reloadPool();
+      if (r.card) {
+        if (empty) empty.hidden = true;
+        showCard(holdOf(poolAnswer, r.card.oldId));
+      } else {
+        showError(new Error(r.refused.message));
+        if (r.refused.code === "POOL_EMPTY") {
+          if (empty) empty.hidden = false;
+          showCard(r.refused.last ? holdOf(poolAnswer, r.refused.last.oldId) : null);
+        }
+      }
+    } catch (e) {
+      showError(e);
+    } finally {
+      reauth.disabled = false;
+    }
+  });
+
+  const liveButton = $('[data-judge="live-get"]');
+  liveButton?.addEventListener("click", async () => {
+    const out = $('[data-judge="live-result"]');
+    if (!out) return;
+    try {
+      const v = await liveGet(browserRequest, $('[data-judge="live-id"]')?.value);
+      const parts = [v.id, v.status ?? "not read", v.amount];
+      if (v.captured) parts.push(`captured ${v.captured}`);
+      if (v.expires) parts.push(`expires ${v.expires}`);
+      if (v.matches === true) parts.push("matches our record");
+      if (v.matches === false) parts.push(`differs: ${v.diffs.join("; ")}`);
+      out.textContent = `${parts.join(" · ")} (read live from PayPal)`;
+    } catch (e) {
+      out.textContent = e instanceof Error && !("status" in e) ? e.message : errorText(e);
+    }
+    out.hidden = false;
+  });
+
+  try {
+    const s = await ensureSession(browserRequest);
+    if (s.expiresAt) store = remember({ expiresAt: s.expiresAt });
+    tick();
+    poolAnswer = s.pool;
+    renderPool(poolView(s.pool, Date.now()));
+    showCard(latestReauthorized(s.pool));
+  } catch (e) {
+    showError(e);
+  }
+  await showRo().catch(() => {});
+}
+
+if (typeof document !== "undefined" && document.body?.dataset.screen === "judge") {
+  initJudge().catch((e) => {
+    const el = document.querySelector('[data-judge="error"]');
+    if (el) {
+      el.textContent = errorText(e);
+      el.hidden = false;
+    }
   });
 }

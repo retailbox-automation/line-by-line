@@ -130,6 +130,15 @@ describe("the judge flow on the app", () => {
     expect(real).toMatchObject({ oldId: old, newId: card.newId, amount: "$142.50", status: "CREATED", note: "same end date · no new 29 days" });
     expect(real.barNew.left).toBeGreaterThan(13); // reauthorized after 4 days 11 minutes of 29 days
     expect(judge.holdOf(after.answer, "NOPE0000000000000")).toBeNull();
+    expect(judge.latestReauthorized(after.answer)?.authorizationId).toBe(old);
+    expect(judge.latestReauthorized({ holds: [] })).toBeNull();
+
+    // a browser with no session: the pool read opens one and says when it ends
+    const fresh = judgeRequest(t);
+    const s3 = await judge.ensureSession(fresh);
+    expect(s3.expiresAt).toMatch(/^2026-/);
+    expect(s3.pool.holds).toHaveLength(2);
+    expect((await judge.ensureSession(fresh)).expiresAt).toBeNull(); // the cookie is there now: no second session
 
     // the pool's ids are read through the pool listing (a judge may not GET another repair order's authorization)
     expect(await req2("GET", `/api/authorizations/${card.newId}`)).toMatchObject({ status: 403, json: { code: "FORBIDDEN" } });
