@@ -2,29 +2,55 @@
 
 Extra work at an auto repair shop gets paid only line by line, the way the customer approved it in PayPal.
 
-When a mechanic finds something new, the customer gets each line on their phone and approves or declines it one by one. Every approved line becomes its own PayPal authorization (a hold). Declined lines never touch money. At pickup the shop captures only what was approved and voids the rest.
+When a mechanic finds something new, the customer gets each line on their phone and approves or declines it one by one. Every approved line becomes its own PayPal authorization (a hold). A declined line gets no PayPal order. At pickup the shop captures the final amount of each approved job from its hold, and the unused part of the hold is released.
 
-> Status: in active development for the PayPal AI Hackathon (submission window Oct 1 – Nov 12, 2026). This README grows with the build; every claim below links to code or a sandbox id you can check.
+> Status: in active development for the PayPal AI Hackathon (submission window Oct 1 to Nov 12, 2026). This README grows with the build; the claims below point to code or to sandbox ids you can check.
 
-**Live demo (PayPal sandbox):** https://linebyline.retailbox-automation.com — press "Start a demo repair order" and approve with your own PayPal sandbox buyer.
+**Live demo (PayPal sandbox):** https://linebyline.retailbox-automation.com. Press "Start a demo repair order" and approve with your own PayPal sandbox buyer.
 
 ## Judge it in 90 seconds
 
 | Claim | Proof | What you will see |
 |---|---|---|
-| Each approved line is its own PayPal hold | [sandbox evidence](docs/sandbox-evidence.md): estimate order `9R8100836T065372J`, rotor line order `0DE79626HT245092A`, declined filter line has no order | two authorizations, one per approval; nothing for the declined line |
-| Capture only what was approved, void the rest | [sandbox evidence](docs/sandbox-evidence.md): capture `6G777920EC171302S` ($398 of $412, then void) and `2ST05119E70486816` ($186 in full, no void) | estimate hold `VOIDED` with $398 captured; rotor hold `CAPTURED` |
+| Each approved line is its own PayPal hold | [hosted demo run](docs/sandbox-evidence.md#hosted-demo-the-full-story-in-a-browser-2026-11-03-14481453z): estimate order `1SB68118SA4622349`, rotor line order `8TD78129F1542400U`, the declined cabin filter line has no order | two authorizations, one per approval; nothing for the declined line |
+| Pickup takes the final amount of each approved job from its own hold | same run: capture `8L207537F5667934E` ($398 of the $412 estimate hold, then a void) and `6AV85540J9784725A` ($186 in full, no void) | estimate hold `VOIDED` with $398 captured; rotor hold `CAPTURED` |
 | A real reauthorization on a hold older than 3 days | [sandbox evidence](docs/sandbox-evidence.md#judge-pool-reauthorize-and-pickup-2026-11-02): 4-day-old holds `4RR33540BR8604004` → `0MM670868D710561J` and `5YP64371F43512053` → `2DD92506PJ253491L` through `POST /api/judge/pool/reauthorize-next`, then pickup captured $130.00 (`92984242RT203153G`) and $164.00 (`8V639545C7025732D`) on the new ids and voided the originals | new ids `CREATED` with the same amount and no new 29 days (expiry one second after the original's); after pickup the captures `COMPLETED`, both ids of each hold `VOIDED` |
+| Your own sandbox buyer works | [sandbox evidence](docs/sandbox-evidence.md#a-buyer-from-another-sandbox-2026-11-03-15021507z): a buyer from another developer's sandbox approved order `3CU42758521717259` → authorization `53712651KB727854G` ($412.00) | `CREATED`; our webhook handler confirmed it 19 seconds later |
+
+## Try the demo
+
+1. Open the [demo](https://linebyline.retailbox-automation.com) and press "Start a demo repair order". You get the service desk with a $412 estimate of four price-list lines.
+2. Open the customer page ("Copy link" or "QR code"). It shows Florida's estimate statement and asks for consent to electronic records, then "Approve with PayPal". Approve as your own sandbox buyer.
+3. "Open mechanic phone": pick one of the recorded notes, check the drafted line, "Send to customer". Do it twice.
+4. On the customer page, approve one new line and tap "Not now" on the other.
+5. Back at the desk, "Pickup": enter what the work came to. The desk shows each capture, its fee and what was released, from PayPal's answer.
+
+| Step | Live or prepared |
+|---|---|
+| Repair order, PayPal orders, your approval, authorization, decisions, pickup, captures and voids | live, PayPal sandbox |
+| Voice step | prepared: 32 recorded notes (synthetic voices) with recorded speech recognition; the lines are drafted live from the transcript (see "How it uses AI") |
+| Reauthorization | a live call on a hold made days earlier (`/api/judge/pool`), because PayPal allows it only from day 4 |
+| Shop, price list, customer | made up for the demo |
 
 ## How it uses PayPal
 
-PayPal Orders v2 with `intent: AUTHORIZE`, Payments v2 authorizations (capture with `final_capture: false`, void, reauthorize), webhooks with signature verification. Sandbox only. Details and the sandbox findings we hit along the way: [docs/platform-findings.md](docs/platform-findings.md).
+- Orders v2 with `intent: AUTHORIZE`: one order for the estimate and one for each approval of new lines (the customer page approves one line at a time; the API also takes several at once). A declined line creates no order.
+- Payments v2 authorizations: capture with `final_capture: false` and then a void of the rest, or one full capture with no void; reauthorize once, for the same amount, on PayPal-wallet holds from day 4. A reauthorized hold keeps its original expiry, so the screens show that date.
+- Every capture pays its own fee, read from PayPal's answer: $14.38 on $398 and $6.98 on $186 in the run above (3.49% + $0.49). That is why the shop captures once per hold at pickup.
+- `PayPal-Request-Id` on every POST that creates an order or moves money; a live `GET` of each hold after pickup and whenever you ask (`GET /api/authorizations/:id` compares PayPal with our record); webhooks with signature verification as a second layer, since a webhook can come late and the screens poll.
+- Sandbox only. What we ran into along the way: [docs/platform-findings.md](docs/platform-findings.md).
+
+## Florida's repair rules, in code
+
+Before the first approval the customer page shows the written-estimate statement of Fla. Stat. 559.905(2) and asks for consent to electronic records; the record of each consent is kept with its PayPal id. The desk shows the 559.909 tolerance computed in code ([src/rules/florida.ts](src/rules/florida.ts): $10 or 10%, whichever is greater, at most $50). The demo is stricter than the statute: a new line always gets its own approval, whatever the tolerance. Not legal advice.
 
 ## How it uses AI
 
-The module in `src/agent/` turns what a mechanic dictates into lines of the shop's price list (code, urgency, a sentence for the customer). The API offers it as a draft the mechanic confirms line by line (`POST /api/ro/:id/voice`, `/lines/draft`, and 32 recorded samples for judges, see [docs/api.md](docs/api.md)); the screens do not call it yet. The model only names price-list codes: the price always comes from the list, and a code that is not in the list is dropped and counted as invented.
+`src/agent/` turns a mechanic's voice note into lines of the shop's price list: the code, the urgency and a sentence for the customer. The price always comes from the list. A code that is not in the list is dropped and counted as invented. The mechanic confirms each line before it goes to the customer.
 
-What we measure: how often the lines of a note match what a service writer would add, on 32 synthetic notes (spoken by text-to-speech, labeled by us; see [eval/README.md](eval/README.md)). Without any model, keyword matching on the price list gets 16/32 notes exactly right on the note text and 12/32 after local speech recognition. A model has to beat that.
+On the hosted demo the mechanic's screen uses 32 recorded notes. Their speech recognition was recorded with a local model (parakeet). The lines are drafted by the keyword baseline: no language model has been measured on our set yet, and one goes into the demo only if it beats this baseline.
+
+What we measure: how often the lines of a note match what a service writer would add, on 32 synthetic notes (spoken by text-to-speech, labeled by us; see [eval/README.md](eval/README.md)). Keyword matching on the price list gets 16/32 notes exactly right on the note text and 12/32 after speech recognition, with no invented codes.
 
 ```bash
 npm run eval -- --replay
@@ -32,9 +58,13 @@ npm run eval -- --replay
 
 No key and no network: it replays recorded speech recognition and prints the numbers.
 
+## PayPal's AI tools
+
+The product does not use them. We tried PayPal's hosted sandbox MCP server on 2026-10-29. It lists 46 tools, none of them for the authorization lifecycle (authorize, capture of an authorization, void, reauthorize), and `get_order` answered `Unsupported cache mode: default` as a normal result. A product built on holds cannot move its money through it, so the money path is plain REST. Details: rows 7 and 8 of [docs/platform-findings.md](docs/platform-findings.md).
+
 ## Feedback for PayPal
 
-[docs/sponsor-feedback.md](docs/sponsor-feedback.md) — what worked and what did not, with dates and debug details.
+[docs/sponsor-feedback.md](docs/sponsor-feedback.md) lists what worked and what did not, with dates and debug details.
 
 ## Run locally
 

@@ -55,3 +55,16 @@ Run on the hosted demo (desk at 1440 px, the two phones at 390 px), as a judge w
 | Pickup: rotors in full, `final_capture: true`, no void | capture `6AV85540J9784725A` | $186.00 (fee $6.98) | `COMPLETED` |
 
 Total $584.00, net $562.64. The cabin filter line was added through the API in this run: without a language model the keyword drafting does not match "cabin filter" in note F03 to the price-list item "Cabin air filter" (it is one of the 20 misses of the no-model baseline in `eval/`).
+
+## A buyer from another sandbox, 2026-11-03 15:02–15:07Z
+
+PayPal told hackathon participants on 2026-10-25 that judges test with their own sandboxes. To check that path, a judge session on the hosted demo created the $412.00 demo estimate, and a sandbox buyer from a different PayPal developer account (not the one that owns our REST app) approved it. Its default funding was the bank account in its sandbox wallet.
+
+| Step | PayPal object | Amount | Status |
+|---|---|---|---|
+| `POST /api/judge/demo`, 15:02:30Z | order `3CU42758521717259` | $412.00 | `PAYER_ACTION_REQUIRED` |
+| Approved by the other sandbox's buyer, "Review Order", return to `/api/paypal/return` | authorization `53712651KB727854G`, created 15:06:19Z | $412.00 | `CREATED`, expires 2026-12-02T15:06:19Z |
+| `PAYMENT.AUTHORIZATION.CREATED` webhook (signature verified) marked it confirmed | `confirmedAt` 15:06:38Z, 19 s after the hold | | |
+| `GET /api/authorizations/53712651KB727854G` (live read at PayPal), 15:06:57Z | | $412.00, captured $0.00 | `CREATED`, no differences from our record |
+
+The hold was left `CREATED` (no capture, no void).
