@@ -1,0 +1,32 @@
+{"id":"F01","lines":[{"code":"BRK-PAD-F","urgency":"safety","customerText":"We need to replace the front brake pads."}],"ms":651}
+{"id":"F02","lines":[{"code":"BRK-ROT-F","urgency":"safety","customerText":"The front brake rotors are worn and need to be replaced for safety."}],"ms":9268}
+{"id":"F03","lines":[{"code":"FLT-CABIN","urgency":"can_wait","customerText":"We'll replace the cabin air filter at your next oil change."}],"ms":7863}
+{"id":"F04","lines":[{"code":"BELT-SERP","urgency":"soon","customerText":"We need to replace the serpentine belt soon to prevent it from failing."}],"ms":4191}
+{"id":"F05","lines":[{"code":"BAT-REPL","urgency":"soon","customerText":"We recommend replacing the battery soon to avoid starting problems."}],"ms":710}
+{"id":"F06","lines":[{"code":"COOL-FLUSH","urgency":"safety","customerText":"We need to flush the coolant to prevent overheating."}],"ms":9956}
+{"id":"F07","lines":[{"code":"BRK-PAD-R","urgency":"safety","customerText":"We’ll replace the rear brake pads to keep your brakes safe."},{"code":"BRK-ROT-R","urgency":"safety","customerText":"We’ll replace the rear brake rotors to keep your brakes safe."}],"ms":6844}
+{"id":"F08","lines":[{"code":"STEER-TIE","urgency":"safety","customerText":"We need to replace the outer tie rod to keep the steering safe."},{"code":"ALIGN-4","urgency":"soon","customerText":"We also need to do a four-wheel alignment."}],"ms":1570}
+{"id":"F09","lines":[{"code":"FLT-ENGINE","urgency":"can_wait","customerText":"We'll replace the engine air filter to keep the engine running cleanly."}],"ms":2952}
+{"id":"F10","lines":[{"code":"TIRE-REPL-1","urgency":"safety","customerText":"We need to replace the front left tire because the cords are showing, which is unsafe to drive."}],"ms":3659}
+{"id":"F11","lines":[{"code":"TIRE-PATCH","urgency":"soon","customerText":"We will plug the puncture in your rear tire."}],"ms":2949}
+{"id":"F12","lines":[{"code":"GASKET-VC","urgency":"safety","customerText":"We need to replace the valve cover gasket to stop oil leaking onto the exhaust."}],"ms":1936}
+{"id":"F13","lines":[{"code":"SUSP-STRUT-F","urgency":"safety","customerText":"We need to replace the front struts to restore proper handling."}],"ms":4729}
+{"id":"F14","lines":[{"code":"BRK-FLUID","urgency":"safety","customerText":"We need to flush the brake fluid to keep the brakes safe."}],"ms":1031}
+{"id":"F15","lines":[{"code":"WIPER-F","urgency":"can_wait","customerText":"Your wipers are streaking. We'll replace the front wiper blades."}],"ms":4031}
+{"id":"F16","lines":[{"code":"BULB-HEAD","urgency":"safety","customerText":"Your passenger side headlight bulb needs to be replaced."}],"ms":9289}
+{"id":"F17","lines":[{"code":"WHEEL-BEAR-F","urgency":"safety","customerText":"Your front left wheel bearing needs to be replaced."}],"ms":8696}
+{"id":"F18","lines":[{"code":"AC-RECHARGE","urgency":"soon","customerText":"Your A/C needs a refrigerant recharge to cool properly."}],"ms":3109}
+{"id":"F19","lines":[{"code":"CV-AXLE","urgency":"safety","customerText":"The passenger-side CV axle is damaged and needs to be replaced."}],"ms":8745}
+{"id":"F20","lines":[],"ms":9000}
+{"id":"F21","lines":[],"ms":7648}
+{"id":"F22","lines":[{"code":"DIAG-CEL","urgency":"soon","customerText":"We will diagnose the check engine light to find the issue."}],"ms":1026}
+{"id":"F23","lines":[{"code":"SUSP-LINK","urgency":"soon","customerText":"We’ll replace the sway bar end links to stop the clunking over bumps."}],"ms":5546}
+{"id":"F24","lines":[{"code":"SPARK-4","urgency":"soon","customerText":"Your spark plugs need to be replaced."}],"ms":1974}
+{"id":"F25","lines":[{"code":"THERMO","urgency":"safety","customerText":"We need to replace the thermostat to fix the temperature gauge."}],"ms":960}
+{"id":"F26","lines":[{"code":"WATER-PUMP","urgency":"soon","customerText":"We need to replace the water pump because it's leaking."}],"ms":4325}
+{"id":"F27","lines":[{"code":"MOTOR-MOUNT","urgency":"safety","customerText":"We need to replace the passenger side engine mount because it’s torn and the engine rocks when you shift into drive."}],"ms":2933}
+{"id":"F28","lines":[{"code":"TIRE-ROT","urgency":"soon","customerText":"We’ll rotate your tires to even out the wear."}],"ms":2932}
+{"id":"F29","lines":[{"code":"TRANS-FLUID","urgency":"soon","customerText":"We need to replace the transmission fluid to keep the transmission running smoothly."}],"ms":2335}
+{"id":"F30","lines":[{"code":"BRK-PAD-F","urgency":"safety","customerText":"The front brake pads need to be replaced because they are worn and could affect safety."},{"code":"BRK-ROT-F","urgency":"safety","customerText":"The front brake rotors need to be replaced because they are worn and could affect safety."}],"ms":5540}
+{"id":"F31","lines":[{"code":"BULB-BRAKE","urgency":"safety","customerText":"We will replace the left brake light bulb."}],"ms":742}
+{"id":"F32","lines":[{"code":"BELT-TENS","urgency":"soon","customerText":"We’ll replace the belt tensioner to stop the chattering and wobble."}],"ms":9315}

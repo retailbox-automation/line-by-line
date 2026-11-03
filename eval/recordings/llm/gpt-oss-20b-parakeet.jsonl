@@ -1,0 +1,32 @@
+{"id":"F01","lines":[{"code":"BRK-PAD-F","urgency":"safety","customerText":"Front brake pads need replacement to ensure safe braking."}],"ms":1139}
+{"id":"F02","lines":[{"code":"BRK-ROT-F","urgency":"safety","customerText":"Front brake rotors need replacement."}],"ms":816}
+{"id":"F03","lines":[{"code":"FLT-CABIN","urgency":"can_wait","customerText":"Replace cabin air filter."}],"ms":723}
+{"id":"F04","lines":[{"code":"BELT-SERP","urgency":"soon","customerText":"Replace the serpentine belt to prevent failure."}],"ms":524}
+{"id":"F05","lines":[{"code":"BAT-REPL","urgency":"safety","customerText":"Replace battery to avoid starting problems."}],"ms":589}
+{"id":"F06","lines":[{"code":"COOL-FLUSH","urgency":"can_wait","customerText":"We recommend flushing the coolant to remove the burned residue."}],"ms":1138}
+{"id":"F07","lines":[{"code":"BRK-PAD-R","urgency":"safety","customerText":"Replace rear brake pads."},{"code":"BRK-ROT-R","urgency":"safety","customerText":"Replace rear brake rotors."}],"ms":1989}
+{"id":"F08","lines":[{"code":"STEER-TIE","urgency":"safety","customerText":"Replace the left tie rod end to fix the play."},{"code":"ALIGN-4","urgency":"can_wait","customerText":"Perform a four-wheel alignment after the tie rod replacement."}],"ms":10766}
+{"id":"F09","lines":[{"code":"FLT-ENGINE","urgency":"can_wait","customerText":"Replace the engine air filter."}],"ms":10754}
+{"id":"F10","lines":[{"code":"TIRE-REPL-1","urgency":"safety","customerText":"Replace the damaged front tire."}],"ms":5728}
+{"id":"F11","lines":[{"code":"TIRE-PATCH","urgency":"soon","customerText":"We can patch the puncture in the right rear tire."}],"ms":9241}
+{"id":"F12","lines":[{"code":"GASKET-VC","urgency":"safety","customerText":"Replace the valve cover gasket to stop oil leaking onto the exhaust."}],"ms":12338}
+{"id":"F13","lines":[{"code":"SUSP-STRUT-F","urgency":"safety","customerText":"Replace the front struts to stop the bouncing and leaks."}],"ms":9742}
+{"id":"F14","lines":[{"code":"BRK-FLUID","urgency":"safety","customerText":"Brake fluid flush to keep brakes working safely."}],"ms":7771}
+{"id":"F15","lines":[{"code":"WIPER-F","urgency":"safety","customerText":"Replace the front wiper blades."}],"ms":8912}
+{"id":"F16","lines":[{"code":"BULB-HEAD","urgency":"safety","customerText":"Replace the passenger headlight bulb."}],"ms":9618}
+{"id":"F17","lines":[{"code":"WHEEL-BEAR-F","urgency":"safety","customerText":"Replace the front left wheel bearing."}],"ms":6724}
+{"id":"F18","lines":[{"code":"AC-RECHARGE","urgency":"soon","customerText":"Recharge the A/C to restore cooling."}],"ms":10400}
+{"id":"F19","lines":[{"code":"CV-AXLE","urgency":"safety","customerText":"Replace the passenger side CV axle."}],"ms":10079}
+{"id":"F20","lines":[],"ms":9874}
+{"id":"F21","lines":[],"ms":7560}
+{"id":"F22","lines":[{"code":"DIAG-CEL","urgency":"soon","customerText":"We need to diagnose the check engine light."}],"ms":8741}
+{"id":"F23","lines":[{"code":"SUSP-LINK","urgency":"safety","customerText":"Replace sway bar end links on both sides."}],"ms":6919}
+{"id":"F24","lines":[{"code":"SPARK-4","urgency":"soon","customerText":"Replace spark plugs."}],"ms":6093}
+{"id":"F25","lines":[{"code":"THERMO","urgency":"safety","customerText":"Replace the thermostat to keep the engine from overheating."}],"ms":2549}
+{"id":"F26","lines":[{"code":"WATER-PUMP","urgency":"safety","customerText":"Water pump needs to be replaced."}],"ms":594}
+{"id":"F27","lines":[{"code":"MOTOR-MOUNT","urgency":"safety","customerText":"Replace the passenger side engine mount to stop the engine from rocking."}],"ms":9748}
+{"id":"F28","lines":[{"code":"TIRE-ROT","urgency":"soon","customerText":"We recommend rotating your tires to even out wear."}],"ms":8754}
+{"id":"F29","lines":[{"code":"TRANS-FLUID","urgency":"soon","customerText":"Transmission fluid needs to be changed."}],"ms":3275}
+{"id":"F30","lines":[{"code":"BRK-PAD-F","urgency":"safety","customerText":"Front brake pads need replacement."},{"code":"BRK-ROT-F","urgency":"safety","customerText":"Front brake rotors need replacement."}],"ms":10424}
+{"id":"F31","lines":[{"code":"BULB-BRAKE","urgency":"safety","customerText":"Replace the left brake light bulb."}],"ms":3134}
+{"id":"F32","lines":[{"code":"BELT-TENS","urgency":"soon","customerText":"Replace the belt tensioner to stop the chattering and wobbling."}],"ms":8390}

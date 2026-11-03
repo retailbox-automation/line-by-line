@@ -27,6 +27,36 @@ export function parseDollars(text) {
   return Number(m[1]) * 100 + Number((m[2] ?? "").padEnd(2, "0"));
 }
 
+/**
+ * The Florida statement the customer checked (Fla. Stat. 559.905(2)) as the consent record takes it; the "limit"
+ * statement needs the dollar amount typed into it. null when nothing is checked.
+ */
+export function flChoiceOf(value, limitText) {
+  if (!value) return null;
+  if (value === "written" || value === "none") return { flChoice: value };
+  if (value !== "limit") throw new ApiError(0, "CONSENT", "unknown Florida statement");
+  const cents = parseDollars(limitText ?? "");
+  if (!cents) throw new ApiError(0, "CONSENT", "type the dollar amount in the statement you checked");
+  return { flChoice: "limit", flLimitCents: cents };
+}
+
+/**
+ * The consent the customer page sends with an approval or a decision. While the page shows the Florida statement
+ * (first approval) it carries the checked statement, and the e-records box must be ticked. `form` is what the page
+ * read from its inputs. Throws ApiError CONSENT with the line the screen shows.
+ */
+export function customerConsent(view, form) {
+  let fl = null;
+  if (view.needsDisclosure) {
+    if (view.estimateRequired && !form.flValue) throw new ApiError(0, "CONSENT", "check one of the Florida statements first");
+    fl = flChoiceOf(form.flValue, form.flLimit);
+    if (!form.esign) throw new ApiError(0, "CONSENT", "agree to electronic records first (the box above)");
+  }
+  const approverName = String(view.needsDisclosure ? form.name : view.approverName || form.name).trim();
+  if (!approverName) throw new ApiError(0, "CONSENT", "type your name to sign");
+  return { approverName, channel: "link", esignConsent: true, ...(fl ?? {}) };
+}
+
 /** The short order number the screens show: the last 6 characters of the repair order id. */
 export function shortId(roId) {
   return String(roId).replace(/^ro_/, "").slice(-6).toUpperCase();
@@ -780,6 +810,7 @@ function initStart() {
   btn.addEventListener(
     "click",
     act(btn, async () => {
+      // Placeholder consent until the customer signs on their page (DEMO_START_APPROVER in src/core/orders.ts).
       const consent = { approverName: "Demo customer", channel: "link", esignConsent: true };
       let r;
       try {
@@ -996,15 +1027,13 @@ function initCustomer() {
   let view = null;
   const groups = $("#line-groups");
   const nameInput = $("#approver-name");
-  const consent = () => {
-    if (view.needsDisclosure) {
-      if (view.estimateRequired && !document.querySelector('input[name="fl-choice"]:checked')) throw new ApiError(0, "CONSENT", "check one of the Florida statements first");
-      if (!$("#esign-consent").checked) throw new ApiError(0, "CONSENT", "agree to electronic records first (the box above)");
-    }
-    const approverName = (view.needsDisclosure ? nameInput.value : view.approverName || nameInput.value).trim();
-    if (!approverName) throw new ApiError(0, "CONSENT", "type your name to sign");
-    return { approverName, channel: "link", esignConsent: true };
-  };
+  const consent = () =>
+    customerConsent(view, {
+      flValue: document.querySelector('input[name="fl-choice"]:checked')?.value ?? null,
+      flLimit: $(".fl-limit")?.value ?? "",
+      esign: $("#esign-consent").checked,
+      name: nameInput.value,
+    });
   const render = () => {
     document.title = view.title;
     applyFields(document, view.fields);
@@ -1053,10 +1082,9 @@ function initCustomer() {
   $("#approve-estimate").addEventListener(
     "click",
     act($("#approve-estimate"), async () => {
-      const body = consent();
-      const r = view.estimate.orderId
-        ? await api("POST", `/api/orders/${encodeURIComponent(view.estimate.orderId)}/refresh`, undefined, k)
-        : await api("POST", `/api/ro/${encodeURIComponent(roId)}/estimate/approval`, body, k);
+      // Always through estimate/approval, also when the desk already made the order: the route returns that order
+      // (a new one when its link is older than 3 hours) and keeps the Florida statement the customer checked.
+      const r = await api("POST", `/api/ro/${encodeURIComponent(roId)}/estimate/approval`, consent(), k);
       goPayPal(r.approveUrl);
     }),
   );

@@ -1,14 +1,32 @@
 import { PGlite } from "@electric-sql/pglite";
 import { describe, expect, it } from "vitest";
 import { addLine, createEstimateOrder, createRepairOrder, decide, getRepairOrder } from "../../src/core/index.js";
-import { migrate } from "../../src/db/migrate.js";
+import { copyFile, mkdtemp, readdir, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { migrate, MIGRATIONS_DIR } from "../../src/db/migrate.js";
 import { wrapPglite } from "../../src/db/pglite.js";
 import { approvedEstimate, CONSENT, estimateRo, makeEnv } from "../helpers.js";
 
 describe("migrations", () => {
+  it("004 keeps consent records made before it with no Florida statement choice (null)", async () => {
+    const db = wrapPglite(new PGlite());
+    const upTo003 = await mkdtemp(join(tmpdir(), "lbl-mig-"));
+    for (const f of (await readdir(MIGRATIONS_DIR)).filter((f) => /^00[1-3]_.*\.sql$/.test(f))) await copyFile(join(MIGRATIONS_DIR, f), join(upTo003, f));
+    expect(await migrate(db, upTo003)).toEqual(["001", "002", "003"]);
+    await db.exec(`INSERT INTO repair_orders (id, customer_label) VALUES ('ro_old', 'Old Demo');
+      INSERT INTO lines (id, ro_id, kind, title, price_cents, source) VALUES ('ln_old', 'ro_old', 'estimate', 'Pads', 18900, 'desk');
+      INSERT INTO consents (id, ro_id, line_id, decision, decided_at, channel, approver_name, esign_consent, disclosure_version, amount_cents, new_total_cents)
+        VALUES ('cn_old', 'ro_old', 'ln_old', 'approved', now(), 'link', 'Old Demo', true, 'FL-559.905-2026-10-31', 18900, 18900);`);
+    expect(await migrate(db)).toEqual(["004"]);
+    const r = await db.query<{ fl_choice: string | null; fl_limit_cents: number | null }>(`SELECT fl_choice, fl_limit_cents FROM consents WHERE id = 'cn_old'`);
+    expect(r.rows).toEqual([{ fl_choice: null, fl_limit_cents: null }]);
+    await rm(upTo003, { recursive: true, force: true });
+  });
+
   it("apply once and are idempotent", async () => {
     const db = wrapPglite(new PGlite());
-    expect(await migrate(db)).toEqual(["001", "002", "003"]);
+    expect(await migrate(db)).toEqual(["001", "002", "003", "004"]);
     expect(await migrate(db)).toEqual([]);
     const t = await db.query<{ table_name: string }>(`SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name`);
     expect(t.rows.map((r) => r.table_name)).toEqual([

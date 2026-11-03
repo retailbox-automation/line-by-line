@@ -1,0 +1,470 @@
+{
+  "stt": "recorded:parakeet-local",
+  "llm": "groq:openai/gpt-oss-20b",
+  "notes": 32,
+  "exact": 32,
+  "precision": 1,
+  "recall": 1,
+  "invented": 0,
+  "urgency": {
+    "ok": 19,
+    "n": 33
+  },
+  "wer": {
+    "mean": 0.1144,
+    "max": 0.375
+  },
+  "latencyMs": {
+    "p50": 8509,
+    "p95": 11607
+  },
+  "rows": [
+    {
+      "id": "F01",
+      "ok": true,
+      "expected": [
+        "BRK-PAD-F"
+      ],
+      "got": [
+        "BRK-PAD-F"
+      ],
+      "invented": 0,
+      "transcript": "Front pads are down to about 2mm. Rotors look fine though.",
+      "wer": 0,
+      "ms": 2030
+    },
+    {
+      "id": "F02",
+      "ok": true,
+      "expected": [
+        "BRK-ROT-F"
+      ],
+      "got": [
+        "BRK-ROT-F"
+      ],
+      "invented": 0,
+      "transcript": "Front discs are scored pretty bad and they're under minimum thickness. Pat still got some life left.",
+      "wer": 0.0588,
+      "ms": 1691
+    },
+    {
+      "id": "F03",
+      "ok": true,
+      "expected": [
+        "FLT-CABIN"
+      ],
+      "got": [
+        "FLT-CABIN"
+      ],
+      "invented": 0,
+      "transcript": "Cabin filter is packed with leaves. Not urgent, it can wait till the next oil change.",
+      "wer": 0,
+      "ms": 1541
+    },
+    {
+      "id": "F04",
+      "ok": true,
+      "expected": [
+        "BELT-SERP"
+      ],
+      "got": [
+        "BELT-SERP"
+      ],
+      "invented": 0,
+      "transcript": "Serpentine belt has cracks all over it. I'd do it soon, before it lets go.",
+      "wer": 0,
+      "ms": 1344
+    },
+    {
+      "id": "F05",
+      "ok": true,
+      "expected": [
+        "BAT-REPL"
+      ],
+      "got": [
+        "BAT-REPL"
+      ],
+      "invented": 0,
+      "transcript": "Battery tested week, cold cranking amps are way under the rating. She might not start one of these mornings.",
+      "wer": 0.0526,
+      "ms": 1418
+    },
+    {
+      "id": "F06",
+      "ok": true,
+      "expected": [
+        "COOL-FLUSH"
+      ],
+      "got": [
+        "COOL-FLUSH"
+      ],
+      "invented": 0,
+      "transcript": "Coolant has brown and it smells burned. I'd recommend a flush.",
+      "wer": 0.1818,
+      "ms": 1905
+    },
+    {
+      "id": "F07",
+      "ok": true,
+      "expected": [
+        "BRK-PAD-R",
+        "BRK-ROT-R"
+      ],
+      "got": [
+        "BRK-PAD-R",
+        "BRK-ROT-R"
+      ],
+      "invented": 0,
+      "transcript": "Rear brakes. Pads are at three wheel and the rotors have a big lip on them, to both on the rear.",
+      "wer": 0.15,
+      "ms": 2863
+    },
+    {
+      "id": "F08",
+      "ok": true,
+      "expected": [
+        "ALIGN-4",
+        "STEER-TIE"
+      ],
+      "got": [
+        "ALIGN-4",
+        "STEER-TIE"
+      ],
+      "invented": 0,
+      "transcript": "Left target tyrod has play in it, that's a safety thing, and it'll need an alignment after.",
+      "wer": 0.1667,
+      "ms": 11607
+    },
+    {
+      "id": "F09",
+      "ok": true,
+      "expected": [
+        "FLT-ENGINE"
+      ],
+      "got": [
+        "FLT-ENGINE"
+      ],
+      "invented": 0,
+      "transcript": "Engineer filter is dirty. Just a regular.",
+      "wer": 0.375,
+      "ms": 11506
+    },
+    {
+      "id": "F10",
+      "ok": true,
+      "expected": [
+        "TIRE-REPL-1"
+      ],
+      "got": [
+        "TIRE-REPL-1"
+      ],
+      "invented": 0,
+      "transcript": "Driver side front tire has cords showing on the inside edge, can't let it go out like that.",
+      "wer": 0,
+      "ms": 6510
+    },
+    {
+      "id": "F11",
+      "ok": true,
+      "expected": [
+        "TIRE-PATCH"
+      ],
+      "got": [
+        "TIRE-PATCH"
+      ],
+      "invented": 0,
+      "transcript": "Ficked up a screw in the right rear tire, it's in the tread we can flug it.",
+      "wer": 0.1176,
+      "ms": 9992
+    },
+    {
+      "id": "F12",
+      "ok": true,
+      "expected": [
+        "GASKET-VC"
+      ],
+      "got": [
+        "GASKET-VC"
+      ],
+      "invented": 0,
+      "transcript": "Valve cover gasket is seeping oil onto the exhaust manifold. You can smell it burning.",
+      "wer": 0,
+      "ms": 13048
+    },
+    {
+      "id": "F13",
+      "ok": true,
+      "expected": [
+        "SUSP-STRUT-F"
+      ],
+      "got": [
+        "SUSP-STRUT-F"
+      ],
+      "invented": 0,
+      "transcript": "Front struts are leaking and the car keeps bouncing after bumps.",
+      "wer": 0,
+      "ms": 10412
+    },
+    {
+      "id": "F14",
+      "ok": true,
+      "expected": [
+        "BRK-FLUID"
+      ],
+      "got": [
+        "BRK-FLUID"
+      ],
+      "invented": 0,
+      "transcript": "Break fluid tested at 4% moisture. Flush it.",
+      "wer": 0.1111,
+      "ms": 8509
+    },
+    {
+      "id": "F15",
+      "ok": true,
+      "expected": [
+        "WIPER-F"
+      ],
+      "got": [
+        "WIPER-F"
+      ],
+      "invented": 0,
+      "transcript": "Wipers are streaking cheap fits whenever they want.",
+      "wer": 0.125,
+      "ms": 9622
+    },
+    {
+      "id": "F16",
+      "ok": true,
+      "expected": [
+        "BULB-HEAD"
+      ],
+      "got": [
+        "BULB-HEAD"
+      ],
+      "invented": 0,
+      "transcript": "Passenger headlight is out.",
+      "wer": 0,
+      "ms": 10382
+    },
+    {
+      "id": "F17",
+      "ok": true,
+      "expected": [
+        "WHEEL-BEAR-F"
+      ],
+      "got": [
+        "WHEEL-BEAR-F"
+      ],
+      "invented": 0,
+      "transcript": "Hearing a hum from the front left that changes with speed. Wheel bearing as play.",
+      "wer": 0.0667,
+      "ms": 7463
+    },
+    {
+      "id": "F18",
+      "ok": true,
+      "expected": [
+        "AC-RECHARGE"
+      ],
+      "got": [
+        "AC-RECHARGE"
+      ],
+      "invented": 0,
+      "transcript": "AC is blowing warm. It's low on refrigerant, no visible leak.",
+      "wer": 0.1667,
+      "ms": 11243
+    },
+    {
+      "id": "F19",
+      "ok": true,
+      "expected": [
+        "CV-AXLE"
+      ],
+      "got": [
+        "CV-AXLE"
+      ],
+      "invented": 0,
+      "transcript": "NRCV boot on the passenger side is turning sling increase, and the axle clicks on turns.",
+      "wer": 0.3333,
+      "ms": 10819
+    },
+    {
+      "id": "F20",
+      "ok": true,
+      "expected": [],
+      "got": [],
+      "invented": 0,
+      "transcript": "Sunroof rays are clocked, wider's getting into the headliner.",
+      "wer": 0.3333,
+      "ms": 10596
+    },
+    {
+      "id": "F21",
+      "ok": true,
+      "expected": [],
+      "got": [],
+      "invented": 0,
+      "transcript": "Everything else looks good. Tires are fine. Brakes are fine.",
+      "wer": 0,
+      "ms": 8354
+    },
+    {
+      "id": "F22",
+      "ok": true,
+      "expected": [
+        "DIAG-CEL"
+      ],
+      "got": [
+        "DIAG-CEL"
+      ],
+      "invented": 0,
+      "transcript": "Check engine light is on, code P0420, needs a diagnosis.",
+      "wer": 0,
+      "ms": 9599
+    },
+    {
+      "id": "F23",
+      "ok": true,
+      "expected": [
+        "SUSP-LINK"
+      ],
+      "got": [
+        "SUSP-LINK"
+      ],
+      "invented": 0,
+      "transcript": "Sway bar and links are clunking over bumps, both sides.",
+      "wer": 0.1,
+      "ms": 7696
+    },
+    {
+      "id": "F24",
+      "ok": true,
+      "expected": [
+        "SPARK-4"
+      ],
+      "got": [
+        "SPARK-4"
+      ],
+      "invented": 0,
+      "transcript": "Plugs are at 110,000 miles. They are overdue.",
+      "wer": 0.2857,
+      "ms": 6812
+    },
+    {
+      "id": "F25",
+      "ok": true,
+      "expected": [
+        "THERMO"
+      ],
+      "got": [
+        "THERMO"
+      ],
+      "invented": 0,
+      "transcript": "Thermostat is stuck open, the temp gauge never comes up.",
+      "wer": 0,
+      "ms": 3292
+    },
+    {
+      "id": "F26",
+      "ok": true,
+      "expected": [
+        "WATER-PUMP"
+      ],
+      "got": [
+        "WATER-PUMP"
+      ],
+      "invented": 0,
+      "transcript": "Water pump is weeping at the weep hole, there's coolant crust all over it.",
+      "wer": 0,
+      "ms": 1326
+    },
+    {
+      "id": "F27",
+      "ok": true,
+      "expected": [
+        "MOTOR-MOUNT"
+      ],
+      "got": [
+        "MOTOR-MOUNT"
+      ],
+      "invented": 0,
+      "transcript": "passenger side engine mount is tone. The engine rocks when I shift in the drive.",
+      "wer": 0.2143,
+      "ms": 10503
+    },
+    {
+      "id": "F28",
+      "ok": true,
+      "expected": [
+        "TIRE-ROT"
+      ],
+      "got": [
+        "TIRE-ROT"
+      ],
+      "invented": 0,
+      "transcript": "Rotate the tires, the fronts are wearing faster.",
+      "wer": 0,
+      "ms": 9479
+    },
+    {
+      "id": "F29",
+      "ok": true,
+      "expected": [
+        "TRANS-FLUID"
+      ],
+      "got": [
+        "TRANS-FLUID"
+      ],
+      "invented": 0,
+      "transcript": "Transfluid is dark. 60,000 miles and it's never been changed.",
+      "wer": 0.1818,
+      "ms": 4021
+    },
+    {
+      "id": "F30",
+      "ok": true,
+      "expected": [
+        "BRK-PAD-F",
+        "BRK-ROT-F"
+      ],
+      "got": [
+        "BRK-PAD-F",
+        "BRK-ROT-F"
+      ],
+      "invented": 0,
+      "transcript": "Front pads and rotors both. It's metal and metal grinding.",
+      "wer": 0.1,
+      "ms": 11175
+    },
+    {
+      "id": "F31",
+      "ok": true,
+      "expected": [
+        "BULB-BRAKE"
+      ],
+      "got": [
+        "BULB-BRAKE"
+      ],
+      "invented": 0,
+      "transcript": "Left brake light has burned out.",
+      "wer": 0.1667,
+      "ms": 3854
+    },
+    {
+      "id": "F32",
+      "ok": true,
+      "expected": [
+        "BELT-TENS"
+      ],
+      "got": [
+        "BELT-TENS"
+      ],
+      "invented": 0,
+      "transcript": "Well Pessner is chattering at the pulley wobbles.",
+      "wer": 0.375,
+      "ms": 9177
+    }
+  ],
+  "summary": "groq:openai/gpt-oss-20b on speech recognition recorded:parakeet-local: 32/32 exact notes, precision 1.000, recall 1.000, 0 invented codes, urgency 19/33, WER 0.114"
+}

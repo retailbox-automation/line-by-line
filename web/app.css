@@ -103,11 +103,11 @@ html { overflow: auto; }
 .fl-caps { margin: 0; font: 700 16px/1.35 Inter, system-ui, sans-serif; text-transform: uppercase; color: #030b2e; }
 .fl-choice { display: block; font-weight: 600; }
 .fl-choice input[type="radio"] { width: 18px; height: 18px; margin: 0 6px 0 0; vertical-align: -3px; }
-.fl-limit { width: 80px; height: 26px; padding: 0 6px; border: 1px solid #b1c0d6; border-radius: 6px; font: 600 15px Inter, system-ui, sans-serif; }
+.fl-limit { width: 80px; height: 26px; padding: 0 6px; border: 1px solid #b1c0d6; border-radius: 6px; font: 600 16px Inter, system-ui, sans-serif; }
 .fl-source { margin: 0; font: 500 12.5px Inter, system-ui, sans-serif; color: #5c6d8e; }
-.lbl-field { display: flex; align-items: center; gap: 8px; font: 700 15px Inter, system-ui, sans-serif; color: #030b2e; }
+.lbl-field { display: flex; align-items: center; gap: 8px; font: 700 16px Inter, system-ui, sans-serif; color: #030b2e; }
 .lbl-field input { flex: 1; height: 38px; padding: 0 10px; border: 1px solid #b1c0d6; border-radius: 9px; font: 500 16px Inter, system-ui, sans-serif; }
-.lbl-date { margin: 0; font: 700 15px Inter, system-ui, sans-serif; color: #030b2e; }
+.lbl-date { margin: 0; font: 700 16px Inter, system-ui, sans-serif; color: #030b2e; }
 .lbl-check { display: flex; align-items: flex-start; gap: 10px; font: 500 14.5px/1.35 Inter, system-ui, sans-serif; color: #192d52; }
 .lbl-check input { width: 22px; height: 22px; margin: 0; flex: none; }
 .est-actions { margin: 10px 0 0 12.43px; }
