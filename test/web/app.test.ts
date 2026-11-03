@@ -413,6 +413,15 @@ describe("web/app.js: the Florida statement the customer checked (Fla. Stat. 559
     expect(web.customerConsent!({ needsDisclosure: false, estimateRequired: true, approverName: "Ana Driver" }, { ...form, name: "" })).toEqual({ approverName: "Ana Driver", channel: "link", esignConsent: true });
   });
 
+  it("the customer page's estimate button always sends the consent (estimate/approval), also when the desk already made the order", () => {
+    const js = readFileSync(join(WEB_DIR, "app.js"), "utf8");
+    const at = js.indexOf('$("#approve-estimate").addEventListener(');
+    const handler = js.slice(at, js.indexOf("goPayPal(", at));
+    expect(at).toBeGreaterThan(0);
+    expect(handler).toMatch(/api\("POST", `\/api\/ro\/\$\{encodeURIComponent\(roId\)\}\/estimate\/approval`, consent\(\), k\)/);
+    expect(handler).not.toContain("/refresh");
+  });
+
   it("SIGNED and DATE are in capital letters of at least 12-point type (16px), like the statement", () => {
     const css = readFileSync(join(WEB_DIR, "app.css"), "utf8");
     for (const cls of ["fl-caps", "fl-limit", "lbl-field", "lbl-date"]) {

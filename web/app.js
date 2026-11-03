@@ -1081,10 +1081,9 @@ function initCustomer() {
   $("#approve-estimate").addEventListener(
     "click",
     act($("#approve-estimate"), async () => {
-      const body = consent();
-      const r = view.estimate.orderId
-        ? await api("POST", `/api/orders/${encodeURIComponent(view.estimate.orderId)}/refresh`, undefined, k)
-        : await api("POST", `/api/ro/${encodeURIComponent(roId)}/estimate/approval`, body, k);
+      // Always through estimate/approval, also when the desk already made the order: the route returns that order
+      // (a new one when its link is older than 3 hours) and keeps the Florida statement the customer checked.
+      const r = await api("POST", `/api/ro/${encodeURIComponent(roId)}/estimate/approval`, consent(), k);
       goPayPal(r.approveUrl);
     }),
   );
