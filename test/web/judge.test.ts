@@ -174,6 +174,13 @@ describe("the judge flow on the app", () => {
     expect(longer.barOld.width).toBeLessThan(100);
   });
 
+  it("ageText shows whole days, and a hold younger than a day as such (the API sends fractions)", () => {
+    expect(judge.ageText(0.1)).toBe("under a day");
+    expect(judge.ageText(1.4)).toBe("1 day");
+    expect(judge.ageText(5)).toBe("5 days");
+    expect(judge.ageText(4.98)).toBe("4 days");
+  });
+
   it("sessionLeft counts down to 0:00:00", () => {
     expect(judge.sessionLeft("2026-11-03T18:00:00Z", Date.parse("2026-11-03T16:01:48Z"))).toBe("1:58:12");
     expect(judge.sessionLeft("2026-11-03T18:00:00Z", Date.parse("2026-11-03T19:00:00Z"))).toBe("0:00:00");

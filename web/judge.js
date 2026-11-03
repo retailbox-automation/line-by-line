@@ -79,13 +79,19 @@ export function holdStatus(h) {
   return { status: "Not available", tone: "muted" };
 }
 
+/** The age of a hold as the pool shows it: whole days ("1 day", "5 days"); under one day as "under a day". */
+export function ageText(days) {
+  const d = Math.floor(Number(days) || 0);
+  return d < 1 ? "under a day" : `${d} ${d === 1 ? "day" : "days"}`;
+}
+
 /** GET /api/judge/pool -> the rows of the pool, oldest first as the server sends them. */
 export function poolView(answer, now, timeZone) {
   const rows = (answer?.holds ?? []).map((h) => ({
     id: h.authorizationId,
     label: h.label,
     amount: money(h.amountCents),
-    age: `${h.ageDays} ${h.ageDays === 1 ? "day" : "days"}`,
+    age: ageText(h.ageDays),
     window: windowText(h.window, now, timeZone),
     ...holdStatus(h),
     available: h.available,
