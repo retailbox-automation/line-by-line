@@ -963,7 +963,11 @@ function initPickup() {
     act(retry, async () => {
       const result = await api("POST", `/api/ro/${encodeURIComponent(roId)}/pickup`, view.retry);
       const problems = pickupProblems(result);
-      if (problems.length) showError(problems.join(". "));
+      // Keep PayPal's outcome on screen; the poll below refreshes the holds in place.
+      if (problems.length) {
+        showError(problems.join(". "));
+        return;
+      }
       location.reload();
     }),
   );

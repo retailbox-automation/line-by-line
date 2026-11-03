@@ -34,4 +34,11 @@ describe("clientAddress", () => {
     expect(clientAddress(undefined, "10.0.0.1")).toBe("10.0.0.1");
     expect(clientAddress(undefined, undefined)).toBe("unknown");
   });
+
+  it("never uses a non-IP string as the key: a forged last entry falls back to the socket address", () => {
+    expect(clientAddress("198.51.100.7, " + "x".repeat(8000), "10.0.0.1")).toBe("10.0.0.1");
+    expect(clientAddress("not-an-ip", undefined)).toBe("unknown");
+    expect(clientAddress("2001:db8::1", "10.0.0.1")).toBe("2001:db8::1");
+    expect(clientAddress(undefined, "garbage")).toBe("unknown");
+  });
 });

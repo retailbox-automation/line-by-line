@@ -66,6 +66,8 @@ export const MAX_VOICE_BYTES = 2 * 1024 * 1024;
 const VOICE_PATH = /^\/api\/ro\/[^/]+\/voice$/;
 /** Webhook requests per client address and minute; each may cost a verify-webhook-signature call at PayPal. */
 export const WEBHOOK_RATE_PER_MINUTE = 60;
+/** Judge sessions one client address may start in an hour (the daily cap still applies to everyone together). */
+export const JUDGE_SESSIONS_PER_HOUR = 10;
 /** Audio types the voice route takes, and the file extension the upload is written with. */
 const AUDIO_EXT: Record<string, string> = { "audio/webm": ".webm", "audio/mp4": ".m4a", "audio/mpeg": ".mp3", "audio/wav": ".wav", "audio/ogg": ".ogg" };
 
@@ -502,7 +504,13 @@ export function createApp(o: AppOptions): Hono {
 
   // --- judge mode (API only; the /judge screen comes later) ---
 
+  const judgeSessionLimit = windowLimiter(JUDGE_SESSIONS_PER_HOUR, 3_600_000);
   app.post("/api/judge/session", async (c) => {
+    const limit = judgeSessionLimit(clientAddressOf(c), deps.now().getTime());
+    if (!limit.ok) {
+      c.header("Retry-After", String(Math.ceil(limit.retryAfterMs / 1000)));
+      throw new HttpError(429, "RATE_LIMITED", `more than ${JUDGE_SESSIONS_PER_HOUR} judge sessions an hour from this address; try again later`);
+    }
     const s = await createJudgeSession(deps, judge.dailySessions);
     const token = signJudgeToken(deskToken, s.id, s.expiresAt.getTime());
     setCookie(c, JUDGE_COOKIE, token, { httpOnly: true, secure: true, sameSite: "Lax", path: "/", maxAge: JUDGE_SESSION_MS / 1000 });
@@ -534,13 +542,17 @@ export function createApp(o: AppOptions): Hono {
 
   const webhookLimit = windowLimiter(WEBHOOK_RATE_PER_MINUTE, 60_000);
   app.post("/api/webhooks/paypal", async (c) => {
-    const socket = (c.env as { incoming?: { socket?: { remoteAddress?: string } } } | undefined)?.incoming?.socket;
-    const limit = webhookLimit(clientAddress(c.req.header("x-forwarded-for"), socket?.remoteAddress), deps.now().getTime());
-    if (!limit.ok) {
-      c.header("Retry-After", String(Math.ceil(limit.retryAfterMs / 1000)));
-      throw new HttpError(429, "RATE_LIMITED", `more than ${WEBHOOK_RATE_PER_MINUTE} webhook requests a minute from this address; try again later`);
+    const raw = await c.req.text();
+    // Only a request that could reach PayPal's verify step is counted: junk (not JSON, no id, no PayPal transmission
+    // headers) is refused without a PayPal call anyway, and must not use up a bucket real deliveries may share.
+    if (looksLikePayPalDelivery(raw, c.req.header("paypal-transmission-id"), c.req.header("paypal-transmission-sig"))) {
+      const limit = webhookLimit(clientAddressOf(c), deps.now().getTime());
+      if (!limit.ok) {
+        c.header("Retry-After", String(Math.ceil(limit.retryAfterMs / 1000)));
+        throw new HttpError(429, "RATE_LIMITED", `more than ${WEBHOOK_RATE_PER_MINUTE} webhook requests a minute from this address; try again later`);
+      }
     }
-    const r = await webhooks.receive(await c.req.text(), c.req.header());
+    const r = await webhooks.receive(raw, c.req.header());
     return c.json(r.body, r.status);
   });
 
@@ -552,4 +564,21 @@ export function createApp(o: AppOptions): Hono {
   });
 
   return app;
+}
+
+/** The client address of a request (see clientAddress): the platform proxy's X-Forwarded-For entry or the socket. */
+function clientAddressOf(c: Context): string {
+  const socket = (c.env as { incoming?: { socket?: { remoteAddress?: string } } } | undefined)?.incoming?.socket;
+  return clientAddress(c.req.header("x-forwarded-for"), socket?.remoteAddress);
+}
+
+/** JSON with a string id and event_type, sent with PayPal's transmission id and signature headers. */
+function looksLikePayPalDelivery(raw: string, transmissionId: string | undefined, transmissionSig: string | undefined): boolean {
+  if (!transmissionId || !transmissionSig) return false;
+  try {
+    const e = JSON.parse(raw) as { id?: unknown; event_type?: unknown } | null;
+    return !!e && typeof e.id === "string" && typeof e.event_type === "string";
+  } catch {
+    return false;
+  }
 }

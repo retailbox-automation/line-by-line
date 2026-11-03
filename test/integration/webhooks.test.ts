@@ -160,37 +160,46 @@ describe("webhook route: verification and dedup", () => {
 });
 
 describe("webhook route: rate limit per client address", () => {
-  it("the 61st request from one address within a minute is 429 RATE_LIMITED, before the body is read or PayPal is asked", async () => {
+  const from = (ip: string, spoof = "203.0.113.9") => ({ "content-type": "application/json", "x-forwarded-for": `${spoof}, ${ip}` });
+
+  it("junk is never counted; the 61st PayPal-shaped delivery from one address within a minute is 429 RATE_LIMITED before PayPal is asked", async () => {
     const t = await makeAppEnv();
     expect(WEBHOOK_RATE_PER_MINUTE).toBe(60);
-    // The proxy appends the address it saw; whatever the client put in front of it does not count.
-    const from = (ip: string, spoof = "203.0.113.9") => ({ "content-type": "application/json", "x-forwarded-for": `${spoof}, ${ip}` });
+    // 100 junk requests (not JSON, or no PayPal transmission headers) from the address: refused, not counted, no PayPal call.
+    for (let i = 0; i < 50; i++) expect((await call(t.app, "POST", "/api/webhooks/paypal", "not json", from("198.51.100.7"))).status).toBe(400);
+    for (let i = 0; i < 50; i++) expect((await call(t.app, "POST", "/api/webhooks/paypal", event(`WH-JUNK-${i}`, "PAYMENT.AUTHORIZATION.VOIDED", { id: "A-J" }), from("198.51.100.7"))).status).toBe(400);
+    expect(t.fake.posts(VERIFY)).toHaveLength(0);
+    // 60 deliveries shaped like PayPal's: all reach the verify step.
     for (let i = 0; i < 60; i++) {
-      const r = await call(t.app, "POST", "/api/webhooks/paypal", "{}", from("198.51.100.7", `203.0.113.${i}`));
-      expect(r.status, `request ${i + 1}`).toBe(400);
-      expect(r.json.code).toBe("BAD_WEBHOOK");
+      const r = await call(t.app, "POST", "/api/webhooks/paypal", event(`WH-RL-${i}`, "PAYMENT.AUTHORIZATION.VOIDED", { id: "A-RL" }), { ...from("198.51.100.7", `203.0.113.${i}`), ...HEADERS });
+      expect(r.status, `delivery ${i + 1}`).not.toBe(429);
     }
-    const over = await call(t.app, "POST", "/api/webhooks/paypal", event("WH-EVT-RL", "PAYMENT.AUTHORIZATION.VOIDED", { id: "A-RL" }), { ...from("198.51.100.7"), ...HEADERS });
+    expect(t.fake.posts(VERIFY)).toHaveLength(60);
+    const over = await call(t.app, "POST", "/api/webhooks/paypal", event("WH-RL-61", "PAYMENT.AUTHORIZATION.VOIDED", { id: "A-RL" }), { ...from("198.51.100.7"), ...HEADERS });
     expect(over.status).toBe(429);
     expect(over.json).toMatchObject({ code: "RATE_LIMITED", error: expect.any(String) });
     expect(Number(over.headers.get("retry-after"))).toBe(60);
-    expect(t.fake.posts(VERIFY)).toHaveLength(0);
-    expect((await t.db.query(`SELECT id FROM webhook_events`)).rows).toEqual([]);
+    expect(t.fake.posts(VERIFY)).toHaveLength(60);
+    expect(await eventRow(t.db, "WH-RL-61")).toBeUndefined();
 
     // Another address is counted on its own; the same address is let through again in the next minute.
-    expect((await call(t.app, "POST", "/api/webhooks/paypal", "{}", from("198.51.100.8"))).status).toBe(400);
+    expect((await call(t.app, "POST", "/api/webhooks/paypal", event("WH-RL-B", "PAYMENT.AUTHORIZATION.VOIDED", { id: "A-RL" }), { ...from("198.51.100.8"), ...HEADERS })).status).not.toBe(429);
     t.clock.advance(30_000);
-    const still = await call(t.app, "POST", "/api/webhooks/paypal", "{}", from("198.51.100.7"));
+    const still = await call(t.app, "POST", "/api/webhooks/paypal", event("WH-RL-62", "PAYMENT.AUTHORIZATION.VOIDED", { id: "A-RL" }), { ...from("198.51.100.7"), ...HEADERS });
     expect(still.status).toBe(429);
     expect(Number(still.headers.get("retry-after"))).toBe(30);
     t.clock.advance(30_000);
-    expect((await call(t.app, "POST", "/api/webhooks/paypal", "{}", from("198.51.100.7"))).status).toBe(400);
+    expect((await call(t.app, "POST", "/api/webhooks/paypal", event("WH-RL-63", "PAYMENT.AUTHORIZATION.VOIDED", { id: "A-RL" }), { ...from("198.51.100.7"), ...HEADERS })).status).not.toBe(429);
   });
 
-  it("without X-Forwarded-For all requests share one address (no socket in the test), and the limit still holds", async () => {
+  it("a forged, non-IP last X-Forwarded-For entry does not get its own bucket", async () => {
     const t = await makeAppEnv();
-    for (let i = 0; i < 60; i++) expect((await deliver(t, "{}", {})).status).toBe(400);
-    expect((await deliver(t, "{}", {})).status).toBe(429);
+    // No socket in the test: every non-IP entry falls back to the same "unknown" key, so rotating junk strings does not help.
+    for (let i = 0; i < 60; i++) {
+      const r = await call(t.app, "POST", "/api/webhooks/paypal", event(`WH-FX-${i}`, "PAYMENT.AUTHORIZATION.VOIDED", { id: "A-FX" }), { ...from(`forged-${i}`), ...HEADERS });
+      expect(r.status).not.toBe(429);
+    }
+    expect((await call(t.app, "POST", "/api/webhooks/paypal", event("WH-FX-61", "PAYMENT.AUTHORIZATION.VOIDED", { id: "A-FX" }), { ...from("forged-x"), ...HEADERS })).status).toBe(429);
   });
 });
 

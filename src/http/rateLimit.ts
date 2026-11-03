@@ -1,5 +1,6 @@
-// A fixed one-minute window per client address, in the memory of one server process. Used on the PayPal webhook
-// route, where every request may cost a call to PayPal's verify-webhook-signature.
+// A fixed window per client address, in the memory of one server process. Used on the PayPal webhook route (every
+// counted request may cost a call to PayPal's verify-webhook-signature) and on judge session starts.
+import { isIP } from "node:net";
 
 export type Take = (key: string, nowMs: number) => { ok: true } | { ok: false; retryAfterMs: number };
 
@@ -29,7 +30,8 @@ export function windowLimiter(max: number, windowMs: number, maxKeys = 10_000): 
 
 /**
  * The client address: the last X-Forwarded-For entry (the one the platform's proxy appended; earlier entries are
- * whatever the client sent), else the socket's address, else "unknown".
+ * whatever the client sent) when it is a valid IP address, else the socket's address, else "unknown". Anything that is
+ * not an IP (an attacker's long string) never becomes a key.
  */
 export function clientAddress(forwardedFor: string | undefined, socketAddress: string | undefined): string {
   const last = forwardedFor
@@ -37,5 +39,6 @@ export function clientAddress(forwardedFor: string | undefined, socketAddress: s
     .map((s) => s.trim())
     .filter(Boolean)
     .at(-1);
-  return last ?? socketAddress ?? "unknown";
+  if (last && isIP(last)) return last;
+  return socketAddress && isIP(socketAddress) ? socketAddress : "unknown";
 }

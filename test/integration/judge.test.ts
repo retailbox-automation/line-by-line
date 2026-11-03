@@ -84,6 +84,18 @@ async function count(t: AppEnv, table: string): Promise<number> {
   return (await t.db.query<{ n: number }>(`SELECT count(*)::int AS n FROM ${table}`)).rows[0]!.n;
 }
 
+describe("judge session starts per address", () => {
+  it("one address may start 10 judge sessions an hour; the 11th is 429 RATE_LIMITED, another address still gets one", async () => {
+    const t = await makeAppEnv();
+    const from = (ip: string) => ({ "x-forwarded-for": ip });
+    for (let i = 0; i < 10; i++) expect((await call(t.app, "POST", "/api/judge/session", undefined, from("198.51.100.20"))).status).toBe(201);
+    const over = await call(t.app, "POST", "/api/judge/session", undefined, from("198.51.100.20"));
+    expect(over.status).toBe(429);
+    expect(over.json).toMatchObject({ code: "RATE_LIMITED" });
+    expect((await call(t.app, "POST", "/api/judge/session", undefined, from("198.51.100.21"))).status).toBe(201);
+  });
+});
+
 describe("judge session", () => {
   it("hands out a signed 2-hour token as JSON and as an HttpOnly, Secure, SameSite=Lax cookie", async () => {
     const t = await judgeEnv();
