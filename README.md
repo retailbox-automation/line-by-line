@@ -2,7 +2,7 @@
 
 Extra work at an auto repair shop gets paid only line by line, the way the customer approved it in PayPal.
 
-When a mechanic finds something new, the customer gets each line on their phone and approves or declines it one by one. Every approved line becomes its own PayPal authorization (a hold). A declined line gets no PayPal order. At pickup the shop captures the final amount of each approved job from its hold, and the unused part of the hold is released.
+When a mechanic finds something new, the customer gets each line on their phone and approves or declines it one by one. Each approval becomes its own PayPal authorization (a hold): the customer page approves one line at a time, and the API also takes several lines in one approval. A declined line gets no PayPal order. At pickup the shop captures the final amount of each approved job from its hold, and the unused part of the hold is released.
 
 Why: in Cox Automotive's November 2025 service study, 45% of vehicle owners were dissatisfied with dealership service, "primarily due to unexpected costs and poor communication" ([press release, PDF](https://www.coxautoinc.com/wp-content/uploads/2025/11/Press-Release_CAI-Service-Study-Nov-2025_FINAL.pdf)). The idea came from the author's own service visit: $801 of recommended work, about $391 of it needed, four lines declined.
 
@@ -47,7 +47,7 @@ What you can check live yourself: the judge page (https://linebyline.retailbox-a
 
 ## Florida's repair rules, in code
 
-Before the first approval the customer page shows the written-estimate statement of Fla. Stat. 559.905(2) and asks for consent to electronic records; the record of each consent is kept with its PayPal id. The desk shows the 559.909 tolerance computed in code ([src/rules/florida.ts](src/rules/florida.ts): $10 or 10%, whichever is greater, at most $50). The demo is stricter than the statute: a new line always gets its own approval, whatever the tolerance. Not legal advice.
+Before the first approval the customer page shows the written-estimate statement of Fla. Stat. 559.905(2) and asks for consent to electronic records; each approval's consent record is kept with its PayPal id (a declined line has none, since no order is made). One gap in the demo: "Start a demo repair order" writes a placeholder consent for the estimate ("Demo customer") before the customer signs; their signature then replaces the placeholder name and adds the statement they chose, but the consent time stays the button's. The desk shows the 559.909 tolerance computed in code ([src/rules/florida.ts](src/rules/florida.ts): $10 or 10%, whichever is greater, at most $50). The demo is stricter than the statute: a new line always gets its own approval, whatever the tolerance. Not legal advice.
 
 ## How it uses AI
 
