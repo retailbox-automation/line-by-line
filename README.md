@@ -4,6 +4,8 @@ Extra work at an auto repair shop gets paid only line by line, the way the custo
 
 When a mechanic finds something new, the customer gets each line on their phone and approves or declines it one by one. Every approved line becomes its own PayPal authorization (a hold). A declined line gets no PayPal order. At pickup the shop captures the final amount of each approved job from its hold, and the unused part of the hold is released.
 
+Why: in Cox Automotive's November 2025 service study, 45% of vehicle owners were dissatisfied with dealership service, "primarily due to unexpected costs and poor communication" ([press release, PDF](https://www.coxautoinc.com/wp-content/uploads/2025/11/Press-Release_CAI-Service-Study-Nov-2025_FINAL.pdf)). The idea came from the author's own service visit: $801 of recommended work, about $391 of it needed, four lines declined.
+
 > Status: in active development for the PayPal AI Hackathon (submission window Oct 1 to Nov 12, 2026). This README grows with the build; the claims below point to code or to sandbox ids you can check.
 
 **Live demo (PayPal sandbox):** https://linebyline.retailbox-automation.com. Press "Start a demo repair order" and approve with your own PayPal sandbox buyer.
@@ -14,8 +16,11 @@ When a mechanic finds something new, the customer gets each line on their phone 
 |---|---|---|
 | Each approved line is its own PayPal hold | [hosted demo run](docs/sandbox-evidence.md#hosted-demo-the-full-story-in-a-browser-2026-11-03-14481453z): estimate order `1SB68118SA4622349`, rotor line order `8TD78129F1542400U`, the declined cabin filter line has no order | two authorizations, one per approval; nothing for the declined line |
 | Pickup takes the final amount of each approved job from its own hold | same run: capture `8L207537F5667934E` ($398 of the $412 estimate hold, then a void) and `6AV85540J9784725A` ($186 in full, no void) | estimate hold `VOIDED` with $398 captured; rotor hold `CAPTURED` |
-| A real reauthorization on a hold older than 3 days | [sandbox evidence](docs/sandbox-evidence.md#judge-pool-reauthorize-and-pickup-2026-11-02): 4-day-old holds `4RR33540BR8604004` → `0MM670868D710561J` and `5YP64371F43512053` → `2DD92506PJ253491L` through `POST /api/judge/pool/reauthorize-next`, then pickup captured $130.00 (`92984242RT203153G`) and $164.00 (`8V639545C7025732D`) on the new ids and voided the originals | new ids `CREATED` with the same amount and no new 29 days (expiry one second after the original's); after pickup the captures `COMPLETED`, both ids of each hold `VOIDED` |
+| A real reauthorization on a hold older than 3 days | [sandbox evidence](docs/sandbox-evidence.md#judge-pool-reauthorize-and-pickup-2026-11-02): 4-day-old holds `4RR33540BR8604004` → `0MM670868D710561J` and `5YP64371F43512053` → `2DD92506PJ253491L` through `POST /api/judge/pool/reauthorize-next` (a local server on 2 Nov), then pickup captured $130.00 (`92984242RT203153G`) and $164.00 (`8V639545C7025732D`) on the new ids and voided the originals | new ids `CREATED` with the same amount and no new 29 days (expiry one second after the original's); after pickup the captures `COMPLETED`, both ids of each hold `VOIDED` |
+| An AI model drafts each repair line from the mechanic's voice note; the price always comes from the shop's list | [eval/README.md](eval/README.md): 32 synthetic voice notes labeled by us; keyword matching gets 12/32 after speech recognition, `gpt-oss-120b` on Groq gets 32/32 with no invented codes | `npm run eval -- --replay --llm recorded:gpt-oss-120b-parakeet` with no key and no network prints the same numbers |
 | Your own sandbox buyer works | [sandbox evidence](docs/sandbox-evidence.md#a-buyer-from-another-sandbox-2026-11-03-15021507z): a buyer from another developer's sandbox approved order `3CU42758521717259` → authorization `53712651KB727854G` ($412.00) | `CREATED`; our webhook handler confirmed it 19 seconds later |
+
+What you can check live yourself: the judge page (https://linebyline.retailbox-automation.com/judge) reads at PayPal the holds of your own run and of the pool. Holds for judges are added in waves from mid-November; until then the page says "No free hold right now". The other ids above are recorded with their statuses in [docs/sandbox-evidence.md](docs/sandbox-evidence.md).
 
 ## Try the demo
 
