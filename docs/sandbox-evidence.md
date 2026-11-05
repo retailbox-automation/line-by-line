@@ -1,6 +1,6 @@
 # Sandbox evidence
 
-Every id below is a PayPal sandbox id from a run against `api-m.sandbox.paypal.com`: `npm run e2e:sandbox` (the demo story, a sandbox buyer approved each order in a mobile browser) or the app's judge pool (holds a sandbox buyer approved four days earlier). Statuses were read back afterwards with a separate `GET` on each id. Dates are UTC.
+Every id below is a PayPal sandbox id from a run against `api-m.sandbox.paypal.com`: `npm run e2e:sandbox` (the demo story, a sandbox buyer approved each order in a mobile browser) or the app's judge pool (holds a sandbox buyer approved at least four days earlier). Statuses were read back afterwards with a separate `GET` on each id. Dates are UTC.
 
 ## Demo story, 2026-10-31 14:31–14:35Z (9 of 9 checks passed)
 
@@ -68,3 +68,25 @@ PayPal told hackathon participants on 2026-10-25 that judges test with their own
 | `GET /api/authorizations/53712651KB727854G` (live read at PayPal), 15:06:57Z | | $412.00, captured $0.00 | `CREATED`, no differences from our record |
 
 The hold was left `CREATED` (no capture, no void).
+
+## Hosted story recorded for the video, 2026-11-04
+
+The desk, customer and mechanic pages were recorded on the hosted app. A separate REST read on 2026-11-05 at 17:00:56Z confirmed the following capture amounts, fees and authorization states.
+
+| Step | Order / authorization | Capture | Amount and fee | Read-back |
+|---|---|---|---|---|
+| Estimate work at pickup | order `4UY69928WG167372F`, authorization `7RT00815ER5288808` | `0WX53472M30660128` | $398.00, fee $14.38, net $383.62 | capture `COMPLETED`; authorization `VOIDED` after releasing the unused $14 |
+| Approved rotor line, full capture | order `0G3493781L972034J`, authorization `5AB17746AV757720H` | `4W380274VH992773Y` | $186.00, fee $6.98, net $179.02 | capture `COMPLETED`; authorization `CAPTURED` |
+
+The two captures total $584.00. The declined cabin-filter line has no PayPal order.
+
+## Two real reauthorizations on day 7, 2026-11-05
+
+Two holds approved on October 29 were imported into the hosted judge pool, then reauthorized through the product in two separate browser sessions. The screen recording includes both operations and the judge page's Live GET for each new id. A separate REST client read the two parent and two new authorizations at 16:18:44Z.
+
+| Hold | Parent id | New id and creation time | Amount | Expiration, parent → new | REST status of both |
+|---|---|---|---|---|---|
+| B1, estimate | `1CM060836C119894N` | `9ET49300M3905934C`, 16:10:58Z | $96.00 | 2026-11-27T16:02:03Z → 2026-11-27T16:02:04Z | `CREATED` |
+| B2, added line | `1Y214495HX657682L` | `1E838569N46612115`, 16:15:20Z | $128.75 | 2026-11-27T16:02:04Z → 2026-11-27T16:02:05Z | `CREATED` |
+
+The new id expires one second later than its parent, on the same original date: it does **not** get another 29 days. Neither hold was captured or voided in this run. Both pool entries are now reauthorized, not free holds for a second judge. The four reserved C/D holds stayed `CREATED`, with no reauthorization pointer. At the 16:19:20Z database read-back, the app had recorded 54 PayPal calls since the import with no HTTP failures or unfinished operations.

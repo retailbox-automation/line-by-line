@@ -10,6 +10,8 @@ Why: in Cox Automotive's November 2025 service study, 45% of vehicle owners were
 
 **Live demo (PayPal sandbox):** https://linebyline.retailbox-automation.com. Press "Start a demo repair order" and approve with your own PayPal sandbox buyer.
 
+**Video (2:22):** https://youtu.be/stZtetLOE2s
+
 ## Judge it in 90 seconds
 
 | Claim | Proof | What you will see |
@@ -18,6 +20,7 @@ Why: in Cox Automotive's November 2025 service study, 45% of vehicle owners were
 | Pickup takes the final amount of each approved job from its own hold | same run: capture `8L207537F5667934E` ($398 of the $412 estimate hold, then a void) and `6AV85540J9784725A` ($186 in full, no void) | estimate hold `VOIDED` with $398 captured; rotor hold `CAPTURED` |
 | A real reauthorization on a hold older than 3 days | [sandbox evidence](docs/sandbox-evidence.md#judge-pool-reauthorize-and-pickup-2026-11-02): 4-day-old holds `4RR33540BR8604004` → `0MM670868D710561J` and `5YP64371F43512053` → `2DD92506PJ253491L` through `POST /api/judge/pool/reauthorize-next` (a local server on 2 Nov), then pickup captured $130.00 (`92984242RT203153G`) and $164.00 (`8V639545C7025732D`) on the new ids and voided the originals | new ids `CREATED` with the same amount and no new 29 days (expiry one second after the original's); after pickup the captures `COMPLETED`, both ids of each hold `VOIDED` |
 | An AI model drafts each repair line from the mechanic's voice note; the price always comes from the shop's list | [eval/README.md](eval/README.md): 32 synthetic voice notes labeled by us; keyword matching gets 12/32 after speech recognition, `gpt-oss-120b` on Groq gets 32/32 with no invented codes | `npm run eval -- --replay --llm recorded:gpt-oss-120b-parakeet` with no key and no network prints the same numbers |
+| The reauthorization in the video is real | [sandbox evidence](docs/sandbox-evidence.md#two-real-reauthorizations-on-day-7-2026-11-05): holds approved on October 29, reauthorized through the hosted judge page on November 5: `1CM060836C119894N` → `9ET49300M3905934C` ($96.00) and `1Y214495HX657682L` → `1E838569N46612115` ($128.75) | new ids `CREATED`, same amounts, expiry one second after the parent's |
 | Your own sandbox buyer works | [sandbox evidence](docs/sandbox-evidence.md#a-buyer-from-another-sandbox-2026-11-03-15021507z): a buyer from another developer's sandbox approved order `3CU42758521717259` → authorization `53712651KB727854G` ($412.00) | `CREATED`; our webhook handler confirmed it 19 seconds later |
 
 What you can check live yourself: the judge page (https://linebyline.retailbox-automation.com/judge) reads at PayPal the holds of your own run and of the pool. Holds for judges are added in waves from mid-November; until then the page says "No free hold right now". The other ids above are recorded with their statuses in [docs/sandbox-evidence.md](docs/sandbox-evidence.md).
@@ -77,7 +80,7 @@ Node 22 or newer. Values come from the environment only; `.env.example` lists th
 
 ```bash
 npm ci
-npm test                      # unit and integration tests, no network
+npm test                      # 422 unit and integration tests in 36 files on 9d4a26f, no network
 npm run build && npm start    # API on PORT (default 8080), migrations run on start
 ```
 
