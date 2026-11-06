@@ -122,6 +122,23 @@ describe("hard set (eval/hard)", () => {
     expect(r.exact).toBe(10);
     expect(r.invented).toBe(0);
   });
+
+  it("the recorded runs of 2026-11-06 replay to the README numbers, with no network", async () => {
+    vi.stubGlobal("fetch", vi.fn(() => { throw new Error("no network in a replay"); }));
+    const run = (stt: string, llm: string) => runEval({ stt, llm, writeResults: false, evalDir: hardDir });
+    const kw = await run("recorded:parakeet-local", "keywords");
+    expect([kw.exact, kw.modelErrors]).toEqual([8, 0]);
+    expect(kw.wer?.mean).toBe(0.2183);
+    expect(kw.rows.filter((r) => (r.wer ?? 0) > 0.6).map((r) => r.id)).toEqual(["H07", "H09", "H24", "H25", "H36"]);
+    const big = await run("recorded:parakeet-local", "recorded:gpt-oss-120b-parakeet");
+    expect([big.exact, big.modelErrors, big.invented]).toEqual([37, 0, 0]);
+    // on the five transcripts that are noise the model drafts nothing rather than inventing lines
+    for (const id of ["H07", "H09", "H24", "H25", "H36"]) expect(big.rows.find((r) => r.id === id)?.got, id).toEqual([]);
+    const small = await run("recorded:parakeet-local", "recorded:gpt-oss-20b-parakeet");
+    expect([small.exact, small.modelErrors, small.invented]).toEqual([32, 5, 0]);
+    const smallText = await run("text", "recorded:gpt-oss-20b-text");
+    expect([smallText.exact, smallText.modelErrors]).toEqual([47, 0]);
+  });
 });
 
 describe("live providers and recordings", () => {

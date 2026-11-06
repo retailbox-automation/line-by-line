@@ -19,7 +19,7 @@ Why: in Cox Automotive's November 2025 service study, 45% of vehicle owners were
 | Each approved line is its own PayPal hold | [hosted demo run](docs/sandbox-evidence.md#hosted-demo-the-full-story-in-a-browser-2026-11-03-14481453z): estimate order `1SB68118SA4622349`, rotor line order `8TD78129F1542400U`, the declined cabin filter line has no order | two authorizations, one per approval; nothing for the declined line |
 | Pickup takes the final amount of each approved job from its own hold | same run: capture `8L207537F5667934E` ($398 of the $412 estimate hold, then a void) and `6AV85540J9784725A` ($186 in full, no void) | estimate hold `VOIDED` with $398 captured; rotor hold `CAPTURED` |
 | A real reauthorization on a hold older than 3 days | [sandbox evidence](docs/sandbox-evidence.md#judge-pool-reauthorize-and-pickup-2026-11-02): 4-day-old holds `4RR33540BR8604004` → `0MM670868D710561J` and `5YP64371F43512053` → `2DD92506PJ253491L` through `POST /api/judge/pool/reauthorize-next` (a local server on 2 Nov), then pickup captured $130.00 (`92984242RT203153G`) and $164.00 (`8V639545C7025732D`) on the new ids and voided the originals | new ids `CREATED` with the same amount and no new 29 days (expiry one second after the original's); after pickup the captures `COMPLETED`, both ids of each hold `VOIDED` |
-| An AI model drafts each repair line from the mechanic's voice note; the price always comes from the shop's list | [eval/README.md](eval/README.md): 32 synthetic voice notes labeled by us; keyword matching gets 12/32 after speech recognition, `gpt-oss-120b` on Groq gets 32/32 with no invented codes | `npm run eval -- --replay --llm recorded:gpt-oss-120b-parakeet` with no key and no network prints the same numbers |
+| An AI model drafts each repair line from the mechanic's voice note; the price always comes from the shop's list | [eval/README.md](eval/README.md): 32 synthetic voice notes labeled by us; keyword matching gets 12/32 after speech recognition, `gpt-oss-120b` on Groq gets 32/32 with no invented codes; on 48 harder, noisier notes it gets 37/48 (`gpt-oss-20b` 32/48) | `npm run eval -- --replay --llm recorded:gpt-oss-120b-parakeet` with no key and no network prints the same numbers |
 | The reauthorization in the video is real | [sandbox evidence](docs/sandbox-evidence.md#two-real-reauthorizations-on-day-7-2026-11-05): holds approved on October 29, reauthorized through the hosted judge page on November 5: `1CM060836C119894N` → `9ET49300M3905934C` ($96.00) and `1Y214495HX657682L` → `1E838569N46612115` ($128.75) | new ids `CREATED`, same amounts, expiry one second after the parent's |
 | Your own sandbox buyer works | [sandbox evidence](docs/sandbox-evidence.md#a-buyer-from-another-sandbox-2026-11-03-15021507z): a buyer from another developer's sandbox approved order `3CU42758521717259` → authorization `53712651KB727854G` ($412.00) | `CREATED`; our webhook handler confirmed it 19 seconds later |
 
@@ -58,13 +58,13 @@ Before the first approval the customer page shows the written-estimate statement
 
 The demo drafts lines with `openai/gpt-oss-120b` on Groq (free tier, with zero data retention switched on). The mechanic's screen uses 32 recorded notes: their speech recognition was recorded with a local model (parakeet), and the model's answers for them are cached, so a click on a sample makes no model call. Text typed into the draft box goes to the model live, within a daily ceiling on the server.
 
-What we measure: how often the lines of a note match what a service writer would add, on 32 synthetic notes (spoken by text-to-speech, labeled by us; see [eval/README.md](eval/README.md)). Keyword matching on the price list gets 16/32 notes exactly right on the note text and 12/32 after speech recognition. `gpt-oss-120b` gets 32/32 on both, with no invented codes, and the urgency right on 25 of 33 lines after speech recognition (`gpt-oss-20b`: also 32/32, urgency 19/33). On this set the models no longer differ on codes, so a larger, harder set is next.
+What we measure: how often the lines of a note match what a service writer would add, on 32 synthetic notes (spoken by text-to-speech, labeled by us; see [eval/README.md](eval/README.md)). Keyword matching on the price list gets 16/32 notes exactly right on the note text and 12/32 after speech recognition. `gpt-oss-120b` gets 32/32 on both, with no invented codes, and the urgency right on 25 of 33 lines after speech recognition (`gpt-oss-20b`: also 32/32, urgency 19/33). On this set the models no longer differ on codes, so we added a harder set of 48 notes (several jobs in one note, work already done or declined, price-list words that are not a job, shop slang, self-corrections, louder shop noise; labels checked blind by two independent labelers). After speech recognition `gpt-oss-120b` gets 37/48, `gpt-oss-20b` 32/48 (5 of its answers broke the JSON schema), keyword matching 8/48; five of the 48 transcripts are noise, so 43 is the ceiling. On the clean note text `gpt-oss-20b` gets 47/48: the hard part is the noisy transcript, not the line step.
 
 ```bash
 npm run eval -- --replay
 ```
 
-No key and no network: it replays recorded speech recognition and prints the numbers; add `--llm recorded:gpt-oss-120b-parakeet` to replay the model's answers.
+No key and no network: it replays recorded speech recognition and prints the numbers; add `--llm recorded:gpt-oss-120b-parakeet` to replay the model's answers, and `--set hard` for the hard set.
 
 ## PayPal's AI tools
 
@@ -80,7 +80,7 @@ Node 22 or newer. Values come from the environment only; `.env.example` lists th
 
 ```bash
 npm ci
-npm test                      # 422 unit and integration tests in 36 files on 9d4a26f, no network
+npm test                      # 430 unit and integration tests in 36 files, no network
 npm run build && npm start    # API on PORT (default 8080), migrations run on start
 ```
 

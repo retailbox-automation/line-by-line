@@ -1,0 +1,48 @@
+{"id":"H01","lines":[{"code":"BRK-PAD-F","urgency":"safety","customerText":"Replace the front brake pads."},{"code":"BELT-SERP","urgency":"soon","customerText":"Replace the serpentine belt."},{"code":"FLT-CABIN","urgency":"can_wait","customerText":"Replace the cabin air filter."}],"ms":1126}
+{"id":"H02","lines":[{"code":"BAT-REPL","urgency":"soon","customerText":"Replace the battery."},{"code":"WIPER-F","urgency":"can_wait","customerText":"Replace the front wiper blades."},{"code":"FLT-ENGINE","urgency":"can_wait","customerText":"Replace the engine air filter."}],"ms":1198}
+{"id":"H03","lines":[{"code":"COOL-FLUSH","urgency":"soon","customerText":"Replace the rusty coolant with a fresh flush."},{"code":"TRANS-FLUID","urgency":"soon","customerText":"Replace the burnt transmission fluid."},{"code":"OIL-SYN","urgency":"soon","customerText":"Change the oil that is overdue."}],"ms":895}
+{"id":"H04","lines":[{"code":"WHEEL-BEAR-F","urgency":"safety","customerText":"Replace the right front wheel bearing."},{"code":"STEER-TIE","urgency":"safety","customerText":"Replace the left outer tie rod."},{"code":"ALIGN-4","urgency":"safety","customerText":"Perform a four-wheel alignment."}],"ms":1571}
+{"id":"H05","lines":[{"code":"BULB-HEAD","urgency":"safety","customerText":"Replace the driver headlight bulb."},{"code":"BULB-BRAKE","urgency":"safety","customerText":"Replace the third brake light bulb."},{"code":"WIPER-F","urgency":"can_wait","customerText":"Replace the front wiper blades."}],"ms":935}
+{"id":"H06","lines":[{"code":"SUSP-STRUT-F","urgency":"soon","customerText":"Replace front struts."},{"code":"SUSP-LINK","urgency":"soon","customerText":"Replace sway bar end links."},{"code":"TIRE-ROT","urgency":"can_wait","customerText":"Rotate tires."}],"ms":686}
+{"id":"H07","lines":[],"ms":477}
+{"id":"H08","lines":[{"code":"BRK-PAD-F","urgency":"safety","customerText":"Replace front brake pads."},{"code":"BRK-ROT-F","urgency":"safety","customerText":"Replace front brake rotors."}],"ms":1360}
+{"id":"H09","error":"Groq /chat/completions answered 400: {\"error\":{\"message\":\"Failed to validate JSON. Please adjust your prompt. See 'failed_generation' for more details.\",\"type\":\"invalid_request_error\",\"code\":\"json_validate_failed\",\"failed_generation\":\"\"}}\n","ms":9125}
+{"id":"H10","lines":[{"code":"FLT-CABIN","urgency":"can_wait","customerText":"Replace cabin air filter."}],"ms":8520}
+{"id":"H11","lines":[{"code":"OIL-SYN","urgency":"soon","customerText":"Oil change"}],"ms":10237}
+{"id":"H12","lines":[],"ms":3153}
+{"id":"H13","lines":[],"ms":7007}
+{"id":"H14","lines":[{"code":"BELT-TENS","urgency":"soon","customerText":"Replace the tensioner soon."}],"ms":9986}
+{"id":"H15","lines":[{"code":"DIAG-CEL","urgency":"soon","customerText":"Diagnose the misfire and check engine light."}],"ms":11098}
+{"id":"H16","lines":[],"ms":11740}
+{"id":"H17","lines":[],"ms":9174}
+{"id":"H18","error":"Groq /chat/completions answered 400: {\"error\":{\"message\":\"Failed to validate JSON. Please adjust your prompt. See 'failed_generation' for more details.\",\"type\":\"invalid_request_error\",\"code\":\"json_validate_failed\",\"failed_generation\":\"\"}}\n","ms":9950}
+{"id":"H19","lines":[{"code":"BRK-ROT-F","urgency":"soon","customerText":"Replace front brake rotors to stop the pulsing at every stop."}],"ms":8467}
+{"id":"H20","error":"Groq /chat/completions answered 400: {\"error\":{\"message\":\"Failed to validate JSON. Please adjust your prompt. See 'failed_generation' for more details.\",\"type\":\"invalid_request_error\",\"code\":\"json_validate_failed\",\"failed_generation\":\"\"}}\n","ms":12250}
+{"id":"H21","lines":[{"code":"TRANS-FLUID","urgency":"can_wait","customerText":"Transmission fluid change recommended."}],"ms":9749}
+{"id":"H22","lines":[{"code":"GASKET-VC","urgency":"soon","customerText":"Replace the valve cover gasket."}],"ms":9011}
+{"id":"H23","lines":[{"code":"BRK-PAD-R","urgency":"safety","customerText":"Rear brake pads need replacement for safe driving."},{"code":"WIPER-F","urgency":"safety","customerText":"Front wiper blades are worn and need replacement for clear visibility."},{"code":"TIRE-REPL-1","urgency":"safety","customerText":"One tire is damaged and must be replaced for safe handling."}],"ms":3578}
+{"id":"H24","lines":[],"ms":18782}
+{"id":"H25","lines":[],"ms":471}
+{"id":"H26","lines":[{"code":"SUSP-STRUT-F","urgency":"soon","customerText":"Replace the front struts to improve ride quality."},{"code":"SUSP-LINK","urgency":"soon","customerText":"Replace the sway bar end links to stop the knocking noise."}],"ms":9179}
+{"id":"H27","error":"Groq /chat/completions answered 400: {\"error\":{\"message\":\"Failed to validate JSON. Please adjust your prompt. See 'failed_generation' for more details.\",\"type\":\"invalid_request_error\",\"code\":\"json_validate_failed\",\"failed_generation\":\"\"}}\n","ms":18691}
+{"id":"H28","lines":[{"code":"AC-RECHARGE","urgency":"can_wait","customerText":"Recharge the AC refrigerant."}],"ms":5881}
+{"id":"H29","lines":[{"code":"WHEEL-BEAR-F","urgency":"safety","customerText":"Replace the front left wheel bearing to fix the wobble and noise."}],"ms":9880}
+{"id":"H30","lines":[{"code":"BRK-PAD-R","urgency":"safety","customerText":"Replace rear brake pads."},{"code":"BRK-ROT-R","urgency":"safety","customerText":"Replace rear brake rotors."}],"ms":1103}
+{"id":"H31","lines":[{"code":"WIPER-F","urgency":"can_wait","customerText":"Replace the front wiper blades."}],"ms":5805}
+{"id":"H32","lines":[{"code":"FLT-CABIN","urgency":"can_wait","customerText":"Replace the cabin air filter."}],"ms":635}
+{"id":"H33","lines":[],"ms":12875}
+{"id":"H34","lines":[],"ms":9158}
+{"id":"H35","lines":[{"code":"WATER-PUMP","urgency":"soon","customerText":"Replace the water pump to fix the leak."}],"ms":2271}
+{"id":"H36","lines":[],"ms":478}
+{"id":"H37","lines":[{"code":"BULB-HEAD","urgency":"safety","customerText":"Replace the passenger side headlight bulb."}],"ms":11532}
+{"id":"H38","lines":[],"ms":14150}
+{"id":"H39","lines":[{"code":"WIPER-F","urgency":"soon","customerText":"Replace front wiper blades."}],"ms":1297}
+{"id":"H40","lines":[{"code":"DIAG-CEL","urgency":"soon","customerText":"We will diagnose the check engine light and catalytic converter issue."}],"ms":3529}
+{"id":"H41","lines":[{"code":"BRK-PAD-R","urgency":"soon","customerText":"Replace rear brake pads."}],"ms":13104}
+{"id":"H42","lines":[{"code":"BULB-BRAKE","urgency":"safety","customerText":"Replace the left brake light bulb."}],"ms":8674}
+{"id":"H43","lines":[{"code":"STEER-TIE","urgency":"can_wait","customerText":"Replace the tie rod end to improve steering."},{"code":"ALIGN-4","urgency":"can_wait","customerText":"Perform a four-wheel alignment to straighten the vehicle."}],"ms":4411}
+{"id":"H44","lines":[{"code":"TIRE-REPL-1","urgency":"soon","customerText":"Replace the front right tire."}],"ms":1253}
+{"id":"H45","lines":[{"code":"BAT-REPL","urgency":"can_wait","customerText":"Replace the battery to ensure reliable starting."}],"ms":7574}
+{"id":"H46","error":"Groq /chat/completions answered 400: {\"error\":{\"message\":\"Failed to validate JSON. Please adjust your prompt. See 'failed_generation' for more details.\",\"type\":\"invalid_request_error\",\"code\":\"json_validate_failed\",\"failed_generation\":\"\"}}\n","ms":4193}
+{"id":"H47","lines":[{"code":"BELT-SERP","urgency":"safety","customerText":"Replace the serpentine belt to prevent loss of power steering and water pump."}],"ms":8013}
+{"id":"H48","lines":[{"code":"FLT-CABIN","urgency":"can_wait","customerText":"Replace the cabin air filter."},{"code":"FLT-ENGINE","urgency":"can_wait","customerText":"Replace the engine air filter."},{"code":"AC-RECHARGE","urgency":"can_wait","customerText":"Recharge the air conditioning system."}],"ms":12032}
