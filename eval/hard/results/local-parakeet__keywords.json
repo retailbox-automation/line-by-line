@@ -1,0 +1,689 @@
+{
+  "stt": "local:parakeet",
+  "llm": "keywords",
+  "notes": 48,
+  "exact": 8,
+  "precision": 0.5333,
+  "recall": 0.3529,
+  "invented": 0,
+  "urgency": {
+    "ok": 13,
+    "n": 24
+  },
+  "wer": {
+    "mean": 0.2183,
+    "max": 0.95
+  },
+  "latencyMs": {
+    "p50": 962,
+    "p95": 1404
+  },
+  "rows": [
+    {
+      "id": "H01",
+      "ok": false,
+      "expected": [
+        "BELT-SERP",
+        "BRK-PAD-F",
+        "FLT-CABIN"
+      ],
+      "got": [
+        "BELT-SERP",
+        "BRK-PAD-F"
+      ],
+      "invented": 0,
+      "transcript": "Okay, so on this one, front pads are a 2mm, the serpentine belt is cracked all over, and the cabin filter is full of leaves. Pats are a mustate, the belt in the next few weeks, the filter whenever.",
+      "wer": 0.1,
+      "ms": 4159
+    },
+    {
+      "id": "H02",
+      "ok": false,
+      "expected": [
+        "BAT-REPL",
+        "FLT-ENGINE",
+        "WIPER-F"
+      ],
+      "got": [
+        "BAT-REPL",
+        "FLT-ENGINE"
+      ],
+      "invented": 0,
+      "transcript": "Battery failed to load test, the front wiper plates are chattering, and the engine air filter is black. Battery soon, the rest is just a recommendation.",
+      "wer": 0.0769,
+      "ms": 1364
+    },
+    {
+      "id": "H03",
+      "ok": false,
+      "expected": [
+        "BRK-FLUID",
+        "COOL-FLUSH",
+        "OIL-SYN",
+        "TRANS-FLUID"
+      ],
+      "got": [],
+      "invented": 0,
+      "transcript": "Great fluid tested at 5% water, the coolant is rusty, the trans fluid smells burnt and it's a thousand miles past the oil change to all the fluids in the next couple of weeks. Nothing is an emergency.",
+      "wer": 0.0526,
+      "ms": 1404
+    },
+    {
+      "id": "H04",
+      "ok": false,
+      "expected": [
+        "ALIGN-4",
+        "STEER-TIE",
+        "WHEEL-BEAR-F"
+      ],
+      "got": [
+        "ALIGN-4",
+        "STEER-TIE"
+      ],
+      "invented": 0,
+      "transcript": "Right front wheel bearing is growling at the fast way to left outer tie rod is too and once those are in the knees and alignment, it's not safe to drive like this.",
+      "wer": 0.2647,
+      "ms": 1326
+    },
+    {
+      "id": "H05",
+      "ok": false,
+      "expected": [
+        "BULB-BRAKE",
+        "BULB-HEAD",
+        "WIPER-F"
+      ],
+      "got": [
+        "WIPER-F"
+      ],
+      "invented": 0,
+      "transcript": "Driver headlight is out, the third brake light is out, and the wipers are smearing. The lights first, those are a safety issue, the lipers can wait.",
+      "wer": 0.037,
+      "ms": 1390
+    },
+    {
+      "id": "H06",
+      "ok": false,
+      "expected": [
+        "SUSP-LINK",
+        "SUSP-STRUT-F",
+        "TIRE-ROT"
+      ],
+      "got": [
+        "SUSP-STRUT-F",
+        "TIRE-REPL-1"
+      ],
+      "invented": 0,
+      "transcript": "Front struts are leaking and the straight bar and links are going to be both sides. Struts and drink soon and rotate the tires while it's up, no rush on that.",
+      "wer": 0.2069,
+      "ms": 3689
+    },
+    {
+      "id": "H07",
+      "ok": false,
+      "expected": [
+        "COOL-FLUSH",
+        "THERMO",
+        "WATER-PUMP"
+      ],
+      "got": [],
+      "invented": 0,
+      "transcript": "French touches start poking, the larger countries each hand as a cool inches all the new. Do you have countries of the stats in as large cooling to while you are there?",
+      "wer": 0.931,
+      "ms": 1264
+    },
+    {
+      "id": "H08",
+      "ok": false,
+      "expected": [
+        "BRK-PAD-F",
+        "BRK-PAD-R",
+        "BRK-ROT-F"
+      ],
+      "got": [
+        "BRK-PAD-F",
+        "BRK-PAD-R",
+        "BRK-ROT-R"
+      ],
+      "invented": 0,
+      "transcript": "All four printers, front pads and rotors are metal on metal, rear pads are at 4mm, rear rotors are fine, runs today, the rear pads in the next month or so.",
+      "wer": 0.0645,
+      "ms": 1068
+    },
+    {
+      "id": "H09",
+      "ok": false,
+      "expected": [
+        "BRK-PAD-R"
+      ],
+      "got": [],
+      "invented": 0,
+      "transcript": "Just have a says it is a lot of great last round and they weren't good. The only thing is no real pass. You will have to do a little bit of this. That has to be done before she leaves.",
+      "wer": 0.697,
+      "ms": 880
+    },
+    {
+      "id": "H10",
+      "ok": false,
+      "expected": [
+        "FLT-CABIN"
+      ],
+      "got": [
+        "BAT-REPL"
+      ],
+      "invented": 0,
+      "transcript": "Battery was replaced at another shop two weeks ago and it tests good, the cabin filter is dirty though, just recommend it.",
+      "wer": 0,
+      "ms": 874
+    },
+    {
+      "id": "H11",
+      "ok": false,
+      "expected": [
+        "OIL-SYN"
+      ],
+      "got": [
+        "ALIGN-4",
+        "TIRE-REPL-1"
+      ],
+      "invented": 0,
+      "transcript": "She declined the alignment last time and she declined it again today, so don't put it on, the tires are wearing evenly anyway, just the oil change, she's a thousand miles over.",
+      "wer": 0,
+      "ms": 944
+    },
+    {
+      "id": "H12",
+      "ok": true,
+      "expected": [],
+      "got": [],
+      "invented": 0,
+      "transcript": "We already rotated the tyres and top off the washer fluid, that's done, nothing else needed today.",
+      "wer": 0.1176,
+      "ms": 962
+    },
+    {
+      "id": "H13",
+      "ok": false,
+      "expected": [
+        "MOTOR-MOUNT"
+      ],
+      "got": [
+        "THERMO",
+        "WATER-PUMP"
+      ],
+      "invented": 0,
+      "transcript": "No leaks at the water pump, the thermostat opens fine, the coolant is clean, cooling system checks out, the only thing I found is a thorn engine maroon on the passenger side, do that soon.",
+      "wer": 0.0571,
+      "ms": 892
+    },
+    {
+      "id": "H14",
+      "ok": false,
+      "expected": [
+        "BELT-TENS"
+      ],
+      "got": [
+        "BELT-SERP"
+      ],
+      "invented": 0,
+      "transcript": "The serpentine belt was replaced at 60,000 and it still looks new, the noise eyes the tensioner, the bearing is dry and squealing, do the tensioner soon.",
+      "wer": 0.037,
+      "ms": 857
+    },
+    {
+      "id": "H15",
+      "ok": false,
+      "expected": [
+        "DIAG-CEL"
+      ],
+      "got": [
+        "TIRE-PATCH"
+      ],
+      "invented": 0,
+      "transcript": "Don't touch the scar plugs, the owner did them last weekend, the check engine light came on up to that though, it's a misfire though, it needs a diagnosis.",
+      "wer": 0.1429,
+      "ms": 910
+    },
+    {
+      "id": "H16",
+      "ok": false,
+      "expected": [],
+      "got": [
+        "BAT-REPL",
+        "TIRE-REPL-1"
+      ],
+      "invented": 0,
+      "transcript": "Customer asked how much a new battery would be, I told her hers is fine, it tested at full strength, tire pressures were low, I said and, nothing to add.",
+      "wer": 0.0667,
+      "ms": 918
+    },
+    {
+      "id": "H17",
+      "ok": false,
+      "expected": [],
+      "got": [
+        "FLT-ENGINE"
+      ],
+      "invented": 0,
+      "transcript": "The clip on the air filter box was broken, we zip tied it, no charge, the filter itself is fine.",
+      "wer": 0,
+      "ms": 898
+    },
+    {
+      "id": "H18",
+      "ok": false,
+      "expected": [
+        "TIRE-REPL-1"
+      ],
+      "got": [],
+      "invented": 0,
+      "transcript": "When you like he's up, can someone move his car up? Every CD boots are fine, but the left put by the new light on the sidewall. It can't be clubbed. It needs a new fire. You couldn't fly on it like that.",
+      "wer": 0.4565,
+      "ms": 1095
+    },
+    {
+      "id": "H19",
+      "ok": false,
+      "expected": [
+        "BRK-ROT-F"
+      ],
+      "got": [
+        "BAT-REPL",
+        "BRK-ROT-F",
+        "WIPER-F"
+      ],
+      "invented": 0,
+      "transcript": "The Lust owner put a cheap battery and cheap wipers in it, both still working fine, I just keep an eye on them. Today it needs the front rotors, they walked, it pulses at every stop. Do them in the next couple of weeks.",
+      "wer": 0.0909,
+      "ms": 1036
+    },
+    {
+      "id": "H20",
+      "ok": false,
+      "expected": [
+        "OIL-SYN"
+      ],
+      "got": [],
+      "invented": 0,
+      "transcript": "The AC works great, blowing ice cold, the customer was worried about it for nothing. Brats are fine, belts are fine. Just an oil change, it's two.",
+      "wer": 0.1429,
+      "ms": 1032
+    },
+    {
+      "id": "H21",
+      "ok": false,
+      "expected": [
+        "TRANS-FLUID"
+      ],
+      "got": [
+        "STEER-TIE"
+      ],
+      "invented": 0,
+      "transcript": "tie rods, ball joints, bearings, all tight. The front end is solid. I just recommend the transmission fluid. It's the original fluid at 90,000.",
+      "wer": 0.0417,
+      "ms": 1053
+    },
+    {
+      "id": "H22",
+      "ok": false,
+      "expected": [
+        "GASKET-VC"
+      ],
+      "got": [
+        "GASKET-VC",
+        "THERMO"
+      ],
+      "invented": 0,
+      "transcript": "I check the thermostat housing for leaks because of the snow, it's dry, the snow is a valve cover gasket ripped no exhaust, it needs to rain soon.",
+      "wer": 0.3448,
+      "ms": 1039
+    },
+    {
+      "id": "H23",
+      "ok": false,
+      "expected": [
+        "BRK-PAD-F",
+        "BRK-ROT-F"
+      ],
+      "got": [],
+      "invented": 0,
+      "transcript": "Pads are blank her toast down to the back and blade and the roads are moved bad, don't let it leave.",
+      "wer": 0.4,
+      "ms": 1051
+    },
+    {
+      "id": "H24",
+      "ok": false,
+      "expected": [
+        "CV-AXLE",
+        "MOTOR-MOUNT"
+      ],
+      "got": [],
+      "invented": 0,
+      "transcript": "Darth burn lines beside and the hatch after his wake hand hard springs opened his lip wide open, both sooner.",
+      "wer": 0.7273,
+      "ms": 857
+    },
+    {
+      "id": "H25",
+      "ok": false,
+      "expected": [
+        "DIAG-CEL"
+      ],
+      "got": [],
+      "invented": 0,
+      "transcript": "Got to these props every month to mess your processor escape. I guess everyone's a library cast.",
+      "wer": 0.95,
+      "ms": 964
+    },
+    {
+      "id": "H26",
+      "ok": true,
+      "expected": [
+        "SUSP-LINK",
+        "SUSP-STRUT-F"
+      ],
+      "got": [
+        "SUSP-LINK",
+        "SUSP-STRUT-F"
+      ],
+      "invented": 0,
+      "transcript": "Stabilizer links are knocking and the front struts are blown, it corpuses over every dip, get them both done soon.",
+      "wer": 0.05,
+      "ms": 859
+    },
+    {
+      "id": "H27",
+      "ok": false,
+      "expected": [
+        "BAT-REPL"
+      ],
+      "got": [],
+      "invented": 0,
+      "transcript": "CCA is at half the rating and the posts are crusty, she won't crank on a cold morning, swap it soon.",
+      "wer": 0.1304,
+      "ms": 842
+    },
+    {
+      "id": "H28",
+      "ok": true,
+      "expected": [
+        "AC-RECHARGE"
+      ],
+      "got": [
+        "AC-RECHARGE"
+      ],
+      "invented": 0,
+      "transcript": "Freon is low, the compressor kicks on and off every few seconds, no leap on the sniffer, top it off whenever she wants.",
+      "wer": 0.0435,
+      "ms": 886
+    },
+    {
+      "id": "H29",
+      "ok": false,
+      "expected": [
+        "WHEEL-BEAR-F"
+      ],
+      "got": [],
+      "invented": 0,
+      "transcript": "Front left hub has play, it wobbles side to side and hums at 40, that's a do not dry.",
+      "wer": 0.0526,
+      "ms": 810
+    },
+    {
+      "id": "H30",
+      "ok": false,
+      "expected": [
+        "BRK-PAD-R"
+      ],
+      "got": [],
+      "invented": 0,
+      "transcript": "Ah front fads no wait the rear fads sorry the reels are at two millimetres the fronts are fine",
+      "wer": 0.3333,
+      "ms": 863
+    },
+    {
+      "id": "H31",
+      "ok": false,
+      "expected": [
+        "WIPER-F"
+      ],
+      "got": [
+        "BAT-REPL",
+        "WIPER-F"
+      ],
+      "invented": 0,
+      "transcript": "Needs a new battery, actually scratch that, it was just a loose terminal. I tightened it and it's fine now. The wipers though, they are streaking, recommend them.",
+      "wer": 0.0741,
+      "ms": 1002
+    },
+    {
+      "id": "H32",
+      "ok": false,
+      "expected": [
+        "FLT-CABIN"
+      ],
+      "got": [
+        "FLT-ENGINE"
+      ],
+      "invented": 0,
+      "transcript": "Um, the engine air filter, I mean the cabin filter, the one behind the glove box, is clogged, the engine filter is okay, no hurry.",
+      "wer": 0,
+      "ms": 917
+    },
+    {
+      "id": "H33",
+      "ok": false,
+      "expected": [
+        "BRK-FLUID",
+        "SPARK-4"
+      ],
+      "got": [],
+      "invented": 0,
+      "transcript": "Floods are two, it's a four-cylinder at um like a hundred and twenty thousand and uh fool though the tools is fine, it's the great food at stock both seen.",
+      "wer": 0.3704,
+      "ms": 913
+    },
+    {
+      "id": "H34",
+      "ok": true,
+      "expected": [
+        "TIRE-PATCH"
+      ],
+      "got": [
+        "TIRE-PATCH"
+      ],
+      "invented": 0,
+      "transcript": "Let me find out a screw up in the shoulder. Hold on. Slow puts in the chest. Okay, so you can plug it. Doom the slow movement is.",
+      "wer": 0.5862,
+      "ms": 1070
+    },
+    {
+      "id": "H35",
+      "ok": false,
+      "expected": [
+        "WATER-PUMP"
+      ],
+      "got": [
+        "THERMO",
+        "WATER-PUMP"
+      ],
+      "invented": 0,
+      "transcript": "Thermostat, uh sorry, water pump. The water pump is leaking from the weapon, the thermostat is fine, soon.",
+      "wer": 0.1579,
+      "ms": 1020
+    },
+    {
+      "id": "H36",
+      "ok": false,
+      "expected": [
+        "BRK-ROT-R"
+      ],
+      "got": [],
+      "invented": 0,
+      "transcript": "And the real great rollers are less than lost in the center. Rollers in the world.",
+      "wer": 0.9118,
+      "ms": 906
+    },
+    {
+      "id": "H37",
+      "ok": false,
+      "expected": [
+        "BULB-HEAD"
+      ],
+      "got": [],
+      "invented": 0,
+      "transcript": "The sunroof rattles and the driver window is slow, we don't do your oppos, the headlight on the passenger side is out low.",
+      "wer": 0.1667,
+      "ms": 934
+    },
+    {
+      "id": "H38",
+      "ok": true,
+      "expected": [],
+      "got": [],
+      "invented": 0,
+      "transcript": "The timing delta is due at 105,000, that's a dealer job, we don't do it. The surf bean is fine. The power steering hose is zipping, also not ours, nothing for us today.",
+      "wer": 0.125,
+      "ms": 901
+    },
+    {
+      "id": "H39",
+      "ok": false,
+      "expected": [
+        "WIPER-F"
+      ],
+      "got": [],
+      "invented": 0,
+      "transcript": "The rent has a crack because the driver's view recommend that's replacement, that's not us, and the flight light blades are turned replaced as soon.",
+      "wer": 0.32,
+      "ms": 898
+    },
+    {
+      "id": "H40",
+      "ok": false,
+      "expected": [
+        "DIAG-CEL"
+      ],
+      "got": [],
+      "invented": 0,
+      "transcript": "The catalytic converter is radly, that's a mother's off job, also the check hand to light is on, T0420 again, and the customer wants a diagnosed view first.",
+      "wer": 0.2963,
+      "ms": 885
+    },
+    {
+      "id": "H41",
+      "ok": false,
+      "expected": [
+        "BRK-PAD-R"
+      ],
+      "got": [
+        "SUSP-STRUT-F"
+      ],
+      "invented": 0,
+      "transcript": "Rear shots are leaky! We took stag rules! The front struts are dry and fine! Rear brain pads are at three millimeters! Do them in the next few weeks!",
+      "wer": 0.2143,
+      "ms": 963
+    },
+    {
+      "id": "H42",
+      "ok": false,
+      "expected": [
+        "BULB-BRAKE"
+      ],
+      "got": [],
+      "invented": 0,
+      "transcript": "The brake light on the left is out, the customer is driving to another state tonight, it has to be done before she leaves.",
+      "wer": 0,
+      "ms": 1116
+    },
+    {
+      "id": "H43",
+      "ok": true,
+      "expected": [
+        "ALIGN-4",
+        "STEER-TIE"
+      ],
+      "got": [
+        "ALIGN-4",
+        "STEER-TIE"
+      ],
+      "invented": 0,
+      "transcript": "The tie rod end has a tiny bit of play, it's with inspect for now, recommend replacing it at the next visit, and an alignment then.",
+      "wer": 0.0769,
+      "ms": 1014
+    },
+    {
+      "id": "H44",
+      "ok": true,
+      "expected": [
+        "TIRE-REPL-1"
+      ],
+      "got": [
+        "TIRE-REPL-1"
+      ],
+      "invented": 0,
+      "transcript": "The front right tire has about 330 seconds of trade left, it's legal, but it'll be balled by winter, replace it in the next month.",
+      "wer": 0.1538,
+      "ms": 1137
+    },
+    {
+      "id": "H45",
+      "ok": true,
+      "expected": [
+        "BAT-REPL"
+      ],
+      "got": [
+        "BAT-REPL"
+      ],
+      "invented": 0,
+      "transcript": "The battery is weak, but it started fine all week, no rush, it can wait till spring.",
+      "wer": 0,
+      "ms": 982
+    },
+    {
+      "id": "H46",
+      "ok": false,
+      "expected": [
+        "BRK-FLUID"
+      ],
+      "got": [],
+      "invented": 0,
+      "transcript": "Break through its are but the pedal is firm just a recommendation",
+      "wer": 0.3333,
+      "ms": 838
+    },
+    {
+      "id": "H47",
+      "ok": false,
+      "expected": [
+        "BELT-SERP"
+      ],
+      "got": [
+        "BELT-SERP",
+        "WATER-PUMP"
+      ],
+      "invented": 0,
+      "transcript": "The drive belt is shredding. Pieces are coming off it. If it goes she loses the power steering and the water pump on the highway. Do not let it leave.",
+      "wer": 0,
+      "ms": 780
+    },
+    {
+      "id": "H48",
+      "ok": false,
+      "expected": [
+        "AC-RECHARGE",
+        "FLT-CABIN",
+        "FLT-ENGINE"
+      ],
+      "got": [
+        "FLT-ENGINE"
+      ],
+      "invented": 0,
+      "transcript": "The cabin filter and the engine air filter are both dirty, and the AC is low on refrigerant, none of it is urgent, all recommendations.",
+      "wer": 0.0769,
+      "ms": 837
+    }
+  ],
+  "summary": "keywords on speech recognition local:parakeet: 8/48 exact notes, precision 0.533, recall 0.353, 0 invented codes, urgency 13/24, WER 0.218"
+}

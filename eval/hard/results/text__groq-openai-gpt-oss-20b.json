@@ -1,0 +1,628 @@
+{
+  "stt": "text",
+  "llm": "groq:openai/gpt-oss-20b",
+  "notes": 48,
+  "exact": 47,
+  "precision": 1,
+  "recall": 0.9853,
+  "invented": 0,
+  "urgency": {
+    "ok": 66,
+    "n": 67
+  },
+  "wer": null,
+  "latencyMs": {
+    "p50": 9775,
+    "p95": 13056
+  },
+  "rows": [
+    {
+      "id": "H01",
+      "ok": true,
+      "expected": [
+        "BELT-SERP",
+        "BRK-PAD-F",
+        "FLT-CABIN"
+      ],
+      "got": [
+        "BELT-SERP",
+        "BRK-PAD-F",
+        "FLT-CABIN"
+      ],
+      "invented": 0,
+      "ms": 1166
+    },
+    {
+      "id": "H02",
+      "ok": true,
+      "expected": [
+        "BAT-REPL",
+        "FLT-ENGINE",
+        "WIPER-F"
+      ],
+      "got": [
+        "BAT-REPL",
+        "FLT-ENGINE",
+        "WIPER-F"
+      ],
+      "invented": 0,
+      "ms": 799
+    },
+    {
+      "id": "H03",
+      "ok": true,
+      "expected": [
+        "BRK-FLUID",
+        "COOL-FLUSH",
+        "OIL-SYN",
+        "TRANS-FLUID"
+      ],
+      "got": [
+        "BRK-FLUID",
+        "COOL-FLUSH",
+        "OIL-SYN",
+        "TRANS-FLUID"
+      ],
+      "invented": 0,
+      "ms": 1140
+    },
+    {
+      "id": "H04",
+      "ok": true,
+      "expected": [
+        "ALIGN-4",
+        "STEER-TIE",
+        "WHEEL-BEAR-F"
+      ],
+      "got": [
+        "ALIGN-4",
+        "STEER-TIE",
+        "WHEEL-BEAR-F"
+      ],
+      "invented": 0,
+      "ms": 1003
+    },
+    {
+      "id": "H05",
+      "ok": true,
+      "expected": [
+        "BULB-BRAKE",
+        "BULB-HEAD",
+        "WIPER-F"
+      ],
+      "got": [
+        "BULB-BRAKE",
+        "BULB-HEAD",
+        "WIPER-F"
+      ],
+      "invented": 0,
+      "ms": 1049
+    },
+    {
+      "id": "H06",
+      "ok": true,
+      "expected": [
+        "SUSP-LINK",
+        "SUSP-STRUT-F",
+        "TIRE-ROT"
+      ],
+      "got": [
+        "SUSP-LINK",
+        "SUSP-STRUT-F",
+        "TIRE-ROT"
+      ],
+      "invented": 0,
+      "ms": 816
+    },
+    {
+      "id": "H07",
+      "ok": true,
+      "expected": [
+        "COOL-FLUSH",
+        "THERMO",
+        "WATER-PUMP"
+      ],
+      "got": [
+        "COOL-FLUSH",
+        "THERMO",
+        "WATER-PUMP"
+      ],
+      "invented": 0,
+      "ms": 11003
+    },
+    {
+      "id": "H08",
+      "ok": true,
+      "expected": [
+        "BRK-PAD-F",
+        "BRK-PAD-R",
+        "BRK-ROT-F"
+      ],
+      "got": [
+        "BRK-PAD-F",
+        "BRK-PAD-R",
+        "BRK-ROT-F"
+      ],
+      "invented": 0,
+      "ms": 11280
+    },
+    {
+      "id": "H09",
+      "ok": true,
+      "expected": [
+        "BRK-PAD-R"
+      ],
+      "got": [
+        "BRK-PAD-R"
+      ],
+      "invented": 0,
+      "ms": 10917
+    },
+    {
+      "id": "H10",
+      "ok": true,
+      "expected": [
+        "FLT-CABIN"
+      ],
+      "got": [
+        "FLT-CABIN"
+      ],
+      "invented": 0,
+      "ms": 9835
+    },
+    {
+      "id": "H11",
+      "ok": true,
+      "expected": [
+        "OIL-SYN"
+      ],
+      "got": [
+        "OIL-SYN"
+      ],
+      "invented": 0,
+      "ms": 10764
+    },
+    {
+      "id": "H12",
+      "ok": true,
+      "expected": [],
+      "got": [],
+      "invented": 0,
+      "ms": 7984
+    },
+    {
+      "id": "H13",
+      "ok": true,
+      "expected": [
+        "MOTOR-MOUNT"
+      ],
+      "got": [
+        "MOTOR-MOUNT"
+      ],
+      "invented": 0,
+      "ms": 8215
+    },
+    {
+      "id": "H14",
+      "ok": true,
+      "expected": [
+        "BELT-TENS"
+      ],
+      "got": [
+        "BELT-TENS"
+      ],
+      "invented": 0,
+      "ms": 9154
+    },
+    {
+      "id": "H15",
+      "ok": true,
+      "expected": [
+        "DIAG-CEL"
+      ],
+      "got": [
+        "DIAG-CEL"
+      ],
+      "invented": 0,
+      "ms": 11798
+    },
+    {
+      "id": "H16",
+      "ok": true,
+      "expected": [],
+      "got": [],
+      "invented": 0,
+      "ms": 9175
+    },
+    {
+      "id": "H17",
+      "ok": true,
+      "expected": [],
+      "got": [],
+      "invented": 0,
+      "ms": 7524
+    },
+    {
+      "id": "H18",
+      "ok": true,
+      "expected": [
+        "TIRE-REPL-1"
+      ],
+      "got": [
+        "TIRE-REPL-1"
+      ],
+      "invented": 0,
+      "ms": 11495
+    },
+    {
+      "id": "H19",
+      "ok": true,
+      "expected": [
+        "BRK-ROT-F"
+      ],
+      "got": [
+        "BRK-ROT-F"
+      ],
+      "invented": 0,
+      "ms": 2215
+    },
+    {
+      "id": "H20",
+      "ok": true,
+      "expected": [
+        "OIL-SYN"
+      ],
+      "got": [
+        "OIL-SYN"
+      ],
+      "invented": 0,
+      "ms": 10271
+    },
+    {
+      "id": "H21",
+      "ok": true,
+      "expected": [
+        "TRANS-FLUID"
+      ],
+      "got": [
+        "TRANS-FLUID"
+      ],
+      "invented": 0,
+      "ms": 12106
+    },
+    {
+      "id": "H22",
+      "ok": true,
+      "expected": [
+        "GASKET-VC"
+      ],
+      "got": [
+        "GASKET-VC"
+      ],
+      "invented": 0,
+      "ms": 6783
+    },
+    {
+      "id": "H23",
+      "ok": true,
+      "expected": [
+        "BRK-PAD-F",
+        "BRK-ROT-F"
+      ],
+      "got": [
+        "BRK-PAD-F",
+        "BRK-ROT-F"
+      ],
+      "invented": 0,
+      "ms": 8529
+    },
+    {
+      "id": "H24",
+      "ok": false,
+      "expected": [
+        "CV-AXLE",
+        "MOTOR-MOUNT"
+      ],
+      "got": [
+        "CV-AXLE"
+      ],
+      "invented": 0,
+      "ms": 9775
+    },
+    {
+      "id": "H25",
+      "ok": true,
+      "expected": [
+        "DIAG-CEL"
+      ],
+      "got": [
+        "DIAG-CEL"
+      ],
+      "invented": 0,
+      "ms": 8493
+    },
+    {
+      "id": "H26",
+      "ok": true,
+      "expected": [
+        "SUSP-LINK",
+        "SUSP-STRUT-F"
+      ],
+      "got": [
+        "SUSP-LINK",
+        "SUSP-STRUT-F"
+      ],
+      "invented": 0,
+      "ms": 12347
+    },
+    {
+      "id": "H27",
+      "ok": true,
+      "expected": [
+        "BAT-REPL"
+      ],
+      "got": [
+        "BAT-REPL"
+      ],
+      "invented": 0,
+      "ms": 12492
+    },
+    {
+      "id": "H28",
+      "ok": true,
+      "expected": [
+        "AC-RECHARGE"
+      ],
+      "got": [
+        "AC-RECHARGE"
+      ],
+      "invented": 0,
+      "ms": 15919
+    },
+    {
+      "id": "H29",
+      "ok": true,
+      "expected": [
+        "WHEEL-BEAR-F"
+      ],
+      "got": [
+        "WHEEL-BEAR-F"
+      ],
+      "invented": 0,
+      "ms": 5842
+    },
+    {
+      "id": "H30",
+      "ok": true,
+      "expected": [
+        "BRK-PAD-R"
+      ],
+      "got": [
+        "BRK-PAD-R"
+      ],
+      "invented": 0,
+      "ms": 9889
+    },
+    {
+      "id": "H31",
+      "ok": true,
+      "expected": [
+        "WIPER-F"
+      ],
+      "got": [
+        "WIPER-F"
+      ],
+      "invented": 0,
+      "ms": 12916
+    },
+    {
+      "id": "H32",
+      "ok": true,
+      "expected": [
+        "FLT-CABIN"
+      ],
+      "got": [
+        "FLT-CABIN"
+      ],
+      "invented": 0,
+      "ms": 6227
+    },
+    {
+      "id": "H33",
+      "ok": true,
+      "expected": [
+        "BRK-FLUID",
+        "SPARK-4"
+      ],
+      "got": [
+        "BRK-FLUID",
+        "SPARK-4"
+      ],
+      "invented": 0,
+      "ms": 13056
+    },
+    {
+      "id": "H34",
+      "ok": true,
+      "expected": [
+        "TIRE-PATCH"
+      ],
+      "got": [
+        "TIRE-PATCH"
+      ],
+      "invented": 0,
+      "ms": 10410
+    },
+    {
+      "id": "H35",
+      "ok": true,
+      "expected": [
+        "WATER-PUMP"
+      ],
+      "got": [
+        "WATER-PUMP"
+      ],
+      "invented": 0,
+      "ms": 1949
+    },
+    {
+      "id": "H36",
+      "ok": true,
+      "expected": [
+        "BRK-ROT-R"
+      ],
+      "got": [
+        "BRK-ROT-R"
+      ],
+      "invented": 0,
+      "ms": 9866
+    },
+    {
+      "id": "H37",
+      "ok": true,
+      "expected": [
+        "BULB-HEAD"
+      ],
+      "got": [
+        "BULB-HEAD"
+      ],
+      "invented": 0,
+      "ms": 9869
+    },
+    {
+      "id": "H38",
+      "ok": true,
+      "expected": [],
+      "got": [],
+      "invented": 0,
+      "ms": 9132
+    },
+    {
+      "id": "H39",
+      "ok": true,
+      "expected": [
+        "WIPER-F"
+      ],
+      "got": [
+        "WIPER-F"
+      ],
+      "invented": 0,
+      "ms": 8023
+    },
+    {
+      "id": "H40",
+      "ok": true,
+      "expected": [
+        "DIAG-CEL"
+      ],
+      "got": [
+        "DIAG-CEL"
+      ],
+      "invented": 0,
+      "ms": 5461
+    },
+    {
+      "id": "H41",
+      "ok": true,
+      "expected": [
+        "BRK-PAD-R"
+      ],
+      "got": [
+        "BRK-PAD-R"
+      ],
+      "invented": 0,
+      "ms": 11002
+    },
+    {
+      "id": "H42",
+      "ok": true,
+      "expected": [
+        "BULB-BRAKE"
+      ],
+      "got": [
+        "BULB-BRAKE"
+      ],
+      "invented": 0,
+      "ms": 14393
+    },
+    {
+      "id": "H43",
+      "ok": true,
+      "expected": [
+        "ALIGN-4",
+        "STEER-TIE"
+      ],
+      "got": [
+        "ALIGN-4",
+        "STEER-TIE"
+      ],
+      "invented": 0,
+      "ms": 5286
+    },
+    {
+      "id": "H44",
+      "ok": true,
+      "expected": [
+        "TIRE-REPL-1"
+      ],
+      "got": [
+        "TIRE-REPL-1"
+      ],
+      "invented": 0,
+      "ms": 10899
+    },
+    {
+      "id": "H45",
+      "ok": true,
+      "expected": [
+        "BAT-REPL"
+      ],
+      "got": [
+        "BAT-REPL"
+      ],
+      "invented": 0,
+      "ms": 12880
+    },
+    {
+      "id": "H46",
+      "ok": true,
+      "expected": [
+        "BRK-FLUID"
+      ],
+      "got": [
+        "BRK-FLUID"
+      ],
+      "invented": 0,
+      "ms": 4930
+    },
+    {
+      "id": "H47",
+      "ok": true,
+      "expected": [
+        "BELT-SERP"
+      ],
+      "got": [
+        "BELT-SERP"
+      ],
+      "invented": 0,
+      "ms": 9006
+    },
+    {
+      "id": "H48",
+      "ok": true,
+      "expected": [
+        "AC-RECHARGE",
+        "FLT-CABIN",
+        "FLT-ENGINE"
+      ],
+      "got": [
+        "AC-RECHARGE",
+        "FLT-CABIN",
+        "FLT-ENGINE"
+      ],
+      "invented": 0,
+      "ms": 9989
+    }
+  ],
+  "summary": "groq:openai/gpt-oss-20b on the note text: 47/48 exact notes, precision 1.000, recall 0.985, 0 invented codes, urgency 66/67"
+}

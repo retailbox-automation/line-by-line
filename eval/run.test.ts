@@ -2,7 +2,9 @@ import { cpSync, existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { formatReport, parseCli, percentile, runEval } from "./run.js";
+import { loadPriceList } from "../src/agent/priceList.js";
+import { EVAL_SETS, formatReport, parseCli, percentile, runEval } from "./run.js";
+import { loadFindings } from "./score.js";
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -65,6 +67,61 @@ describe("parseCli", () => {
     expect(() => parseCli(["--text", "--replay"])).toThrow(/cannot be combined/);
     expect(() => parseCli(["--live"])).toThrow();
   });
+
+  it("--set picks the note set: base is this folder, hard is eval/hard", () => {
+    expect(parseCli([]).evalDir).toBeUndefined();
+    expect(parseCli(["--set", "base"]).evalDir).toBeUndefined();
+    expect(parseCli(["--set", "hard", "--text"])).toMatchObject({ stt: "text", evalDir: EVAL_SETS.hard });
+    expect(EVAL_SETS.hard.endsWith(join("eval", "hard"))).toBe(true);
+    expect(() => parseCli(["--set", "harder"])).toThrow(/unknown --set/);
+    expect(() => parseCli(["--set", "toString"])).toThrow(/unknown --set/);
+  });
+});
+
+describe("hard set (eval/hard)", () => {
+  const hardDir = EVAL_SETS.hard;
+  const findings = loadFindings(join(hardDir, "findings.json"));
+  const codes = new Set(loadPriceList().items.map((p) => p.code));
+
+  it("has 48 notes with unique ids and only price-list codes", () => {
+    expect(findings).toHaveLength(48);
+    expect(new Set(findings.map((f) => f.id)).size).toBe(48);
+    for (const f of findings) {
+      for (const e of f.expected) expect(codes.has(e.code), `${f.id} ${e.code}`).toBe(true);
+      expect(new Set(f.expected.map((e) => e.code)).size, f.id).toBe(f.expected.length);
+    }
+  });
+
+  it("both blind labelers agree with the labels on every code and urgency", () => {
+    const check = JSON.parse(readFileSync(join(hardDir, "label-check.json"), "utf8")) as {
+      labelers: Array<{ labels: Array<{ id: string; lines: Array<{ code: string; urgency: string }> }> }>;
+    };
+    expect(check.labelers).toHaveLength(2);
+    const key = (lines: Array<{ code: string; urgency: string }>) => lines.map((l) => `${l.code}:${l.urgency}`).sort().join(",");
+    for (const labeler of check.labelers) {
+      const byId = new Map(labeler.labels.map((l) => [l.id, l.lines]));
+      for (const f of findings) expect(key(byId.get(f.id) ?? []), f.id).toBe(key(f.expected));
+    }
+  });
+
+  it("every note has its audio, mixed at the stated signal-to-noise ratio", () => {
+    const manifest = JSON.parse(readFileSync(join(hardDir, "audio", "manifest.json"), "utf8")) as {
+      items: Array<{ id: string; snr_db: number; snr_db_measured: number }>;
+    };
+    expect(manifest.items.map((m) => m.id)).toEqual(findings.map((f) => f.id));
+    for (const m of manifest.items) {
+      expect([12, 8, 5]).toContain(m.snr_db);
+      expect(Math.abs(m.snr_db_measured - m.snr_db), m.id).toBeLessThan(0.1);
+      expect(existsSync(join(hardDir, "audio", `${m.id}.wav`)), m.id).toBe(true);
+    }
+  });
+
+  it("keywords on the note text: 10/48 (the lower bound for the hard set)", async () => {
+    const r = await runEval({ stt: "text", llm: "keywords", writeResults: false, evalDir: hardDir });
+    expect(r.notes).toBe(48);
+    expect(r.exact).toBe(10);
+    expect(r.invented).toBe(0);
+  });
 });
 
 describe("live providers and recordings", () => {
@@ -107,6 +164,43 @@ describe("live providers and recordings", () => {
     const saved = readFileSync(join(dir, "recordings", "llm", "r2.jsonl"), "utf8").trim().split("\n").map((l) => JSON.parse(l) as { id: string });
     expect(saved.map((r) => r.id)).toEqual(["F01", "F02"]);
     expect(existsSync(join(dir, "results"))).toBe(false);
+  });
+
+  it("a model answer that breaks the JSON schema (Groq 400 json_validate_failed) is a missed note, recorded, and replays the same", async () => {
+    const ok = () => new Response(JSON.stringify({ choices: [{ message: { content: JSON.stringify({ lines: [] }) } }] }), { status: 200 });
+    const invalid = () => new Response(JSON.stringify({ error: { message: "Failed to validate JSON.", type: "invalid_request_error", code: "json_validate_failed", failed_generation: "" } }), { status: 400 });
+    let calls = 0;
+    // Call 21 is F21, a note that expects no line: with the model failing it must not count as exact.
+    vi.stubGlobal("fetch", vi.fn(async () => (++calls === 21 ? invalid() : ok())));
+    vi.stubEnv("LBL_LLM_LIVE", "1");
+    vi.stubEnv("GROQ_API_KEY", "fake-test-key-not-real");
+    const live = await runEval({ stt: "text", llm: "groq:openai/gpt-oss-20b", record: "r3", writeResults: false, evalDir: dir });
+    expect(calls).toBe(32);
+    expect(live.modelErrors).toBe(1);
+    expect(live.exact).toBe(1); // F20 only: every answer is empty, F20 and F21 expect nothing, F21 failed
+    expect(live.rows.find((r) => r.id === "F21")).toMatchObject({ ok: false });
+    expect(live.rows.find((r) => r.id === "F21")?.modelError).toMatch(/json_validate_failed/);
+    expect(live.summary).toContain("1 model error");
+    const saved = readFileSync(join(dir, "recordings", "llm", "r3.jsonl"), "utf8").trim().split("\n").map((l) => JSON.parse(l) as { id: string; error?: string });
+    expect(saved).toHaveLength(32);
+    expect(saved.find((r) => r.id === "F21")?.error).toMatch(/json_validate_failed/);
+
+    vi.unstubAllGlobals();
+    const fake = vi.fn();
+    vi.stubGlobal("fetch", fake);
+    const replay = await runEval({ stt: "text", llm: "recorded:r3", writeResults: false, evalDir: dir });
+    expect(fake).not.toHaveBeenCalled();
+    expect(replay).toMatchObject({ exact: live.exact, modelErrors: 1, precision: live.precision, recall: live.recall });
+  });
+
+  it("any other error from the live model still stops the run", async () => {
+    let calls = 0;
+    const other = () => new Response(JSON.stringify({ error: { message: "Invalid API Key", type: "invalid_request_error", code: "invalid_api_key" } }), { status: 400 });
+    vi.stubGlobal("fetch", vi.fn(async () => (++calls === 2 ? other() : new Response(JSON.stringify({ choices: [{ message: { content: JSON.stringify({ lines: [] }) } }] }), { status: 200 }))));
+    vi.stubEnv("LBL_LLM_LIVE", "1");
+    vi.stubEnv("GROQ_API_KEY", "fake-test-key-not-real");
+    await expect(runEval({ stt: "text", llm: "groq:openai/gpt-oss-20b", writeResults: false, evalDir: dir })).rejects.toThrow(/invalid_api_key/);
+    expect(calls).toBe(2);
   });
 
   it("a recorded live run replays to the same numbers", async () => {

@@ -1,0 +1,1127 @@
+{
+ "about": "Blind label check of the hard set, 2026-11-06. Two independent labelers (Claude Opus 5.5, effort high, no access to our labels or to any file) labeled all 48 notes from the note text and the price list, with the same rules the shop's model gets. Both agreed with our labels on every code (68 of 68) and every urgency (68 of 68). 'doubt' is where a labeler said a careful service writer could answer differently; those notes carry the tag urgency_judgment or code_judgment in findings.json.",
+ "labelers": [
+  {
+   "name": "labeler-1",
+   "labels": [
+    {
+     "id": "H01",
+     "lines": [
+      {
+       "code": "BRK-PAD-F",
+       "urgency": "safety"
+      },
+      {
+       "code": "BELT-SERP",
+       "urgency": "soon"
+      },
+      {
+       "code": "FLT-CABIN",
+       "urgency": "can_wait"
+      }
+     ],
+     "doubt": ""
+    },
+    {
+     "id": "H02",
+     "lines": [
+      {
+       "code": "BAT-REPL",
+       "urgency": "soon"
+      },
+      {
+       "code": "WIPER-F",
+       "urgency": "can_wait"
+      },
+      {
+       "code": "FLT-ENGINE",
+       "urgency": "can_wait"
+      }
+     ],
+     "doubt": ""
+    },
+    {
+     "id": "H03",
+     "lines": [
+      {
+       "code": "BRK-FLUID",
+       "urgency": "soon"
+      },
+      {
+       "code": "COOL-FLUSH",
+       "urgency": "soon"
+      },
+      {
+       "code": "TRANS-FLUID",
+       "urgency": "soon"
+      },
+      {
+       "code": "OIL-SYN",
+       "urgency": "soon"
+      }
+     ],
+     "doubt": ""
+    },
+    {
+     "id": "H04",
+     "lines": [
+      {
+       "code": "WHEEL-BEAR-F",
+       "urgency": "safety"
+      },
+      {
+       "code": "STEER-TIE",
+       "urgency": "safety"
+      },
+      {
+       "code": "ALIGN-4",
+       "urgency": "safety"
+      }
+     ],
+     "doubt": "The alignment follows the safety repairs and is not a safety item in itself, so some writers would mark it soon."
+    },
+    {
+     "id": "H05",
+     "lines": [
+      {
+       "code": "BULB-HEAD",
+       "urgency": "safety"
+      },
+      {
+       "code": "BULB-BRAKE",
+       "urgency": "safety"
+      },
+      {
+       "code": "WIPER-F",
+       "urgency": "can_wait"
+      }
+     ],
+     "doubt": ""
+    },
+    {
+     "id": "H06",
+     "lines": [
+      {
+       "code": "SUSP-STRUT-F",
+       "urgency": "soon"
+      },
+      {
+       "code": "SUSP-LINK",
+       "urgency": "soon"
+      },
+      {
+       "code": "TIRE-ROT",
+       "urgency": "can_wait"
+      }
+     ],
+     "doubt": ""
+    },
+    {
+     "id": "H07",
+     "lines": [
+      {
+       "code": "WATER-PUMP",
+       "urgency": "soon"
+      },
+      {
+       "code": "THERMO",
+       "urgency": "soon"
+      },
+      {
+       "code": "COOL-FLUSH",
+       "urgency": "soon"
+      }
+     ],
+     "doubt": ""
+    },
+    {
+     "id": "H08",
+     "lines": [
+      {
+       "code": "BRK-PAD-F",
+       "urgency": "safety"
+      },
+      {
+       "code": "BRK-ROT-F",
+       "urgency": "safety"
+      },
+      {
+       "code": "BRK-PAD-R",
+       "urgency": "soon"
+      }
+     ],
+     "doubt": ""
+    },
+    {
+     "id": "H09",
+     "lines": [
+      {
+       "code": "BRK-PAD-R",
+       "urgency": "safety"
+      }
+     ],
+     "doubt": ""
+    },
+    {
+     "id": "H10",
+     "lines": [
+      {
+       "code": "FLT-CABIN",
+       "urgency": "can_wait"
+      }
+     ],
+     "doubt": ""
+    },
+    {
+     "id": "H11",
+     "lines": [
+      {
+       "code": "OIL-SYN",
+       "urgency": "soon"
+      }
+     ],
+     "doubt": "No urgency is stated for the overdue oil change, so it could also be can_wait."
+    },
+    {
+     "id": "H12",
+     "lines": [],
+     "doubt": ""
+    },
+    {
+     "id": "H13",
+     "lines": [
+      {
+       "code": "MOTOR-MOUNT",
+       "urgency": "soon"
+      }
+     ],
+     "doubt": ""
+    },
+    {
+     "id": "H14",
+     "lines": [
+      {
+       "code": "BELT-TENS",
+       "urgency": "soon"
+      }
+     ],
+     "doubt": ""
+    },
+    {
+     "id": "H15",
+     "lines": [
+      {
+       "code": "DIAG-CEL",
+       "urgency": "soon"
+      }
+     ],
+     "doubt": "No timing is stated for the misfire diagnosis; a flashing misfire could arguably be safety."
+    },
+    {
+     "id": "H16",
+     "lines": [],
+     "doubt": ""
+    },
+    {
+     "id": "H17",
+     "lines": [],
+     "doubt": ""
+    },
+    {
+     "id": "H18",
+     "lines": [
+      {
+       "code": "TIRE-REPL-1",
+       "urgency": "safety"
+      }
+     ],
+     "doubt": ""
+    },
+    {
+     "id": "H19",
+     "lines": [
+      {
+       "code": "BRK-ROT-F",
+       "urgency": "soon"
+      }
+     ],
+     "doubt": ""
+    },
+    {
+     "id": "H20",
+     "lines": [
+      {
+       "code": "OIL-SYN",
+       "urgency": "soon"
+      }
+     ],
+     "doubt": "An oil change that is merely due could also be read as can_wait."
+    },
+    {
+     "id": "H21",
+     "lines": [
+      {
+       "code": "TRANS-FLUID",
+       "urgency": "can_wait"
+      }
+     ],
+     "doubt": ""
+    },
+    {
+     "id": "H22",
+     "lines": [
+      {
+       "code": "GASKET-VC",
+       "urgency": "soon"
+      }
+     ],
+     "doubt": ""
+    },
+    {
+     "id": "H23",
+     "lines": [
+      {
+       "code": "BRK-PAD-F",
+       "urgency": "safety"
+      },
+      {
+       "code": "BRK-ROT-F",
+       "urgency": "safety"
+      }
+     ],
+     "doubt": ""
+    },
+    {
+     "id": "H24",
+     "lines": [
+      {
+       "code": "MOTOR-MOUNT",
+       "urgency": "soon"
+      },
+      {
+       "code": "CV-AXLE",
+       "urgency": "soon"
+      }
+     ],
+     "doubt": "Mapping the dog bone (torque) mount to the engine mount line is an interpretation."
+    },
+    {
+     "id": "H25",
+     "lines": [
+      {
+       "code": "DIAG-CEL",
+       "urgency": "soon"
+      }
+     ],
+     "doubt": "No urgency is stated, and MAF cleaning has no price-list line."
+    },
+    {
+     "id": "H26",
+     "lines": [
+      {
+       "code": "SUSP-LINK",
+       "urgency": "soon"
+      },
+      {
+       "code": "SUSP-STRUT-F",
+       "urgency": "soon"
+      }
+     ],
+     "doubt": ""
+    },
+    {
+     "id": "H27",
+     "lines": [
+      {
+       "code": "BAT-REPL",
+       "urgency": "soon"
+      }
+     ],
+     "doubt": ""
+    },
+    {
+     "id": "H28",
+     "lines": [
+      {
+       "code": "AC-RECHARGE",
+       "urgency": "can_wait"
+      }
+     ],
+     "doubt": ""
+    },
+    {
+     "id": "H29",
+     "lines": [
+      {
+       "code": "WHEEL-BEAR-F",
+       "urgency": "safety"
+      }
+     ],
+     "doubt": ""
+    },
+    {
+     "id": "H30",
+     "lines": [
+      {
+       "code": "BRK-PAD-R",
+       "urgency": "safety"
+      }
+     ],
+     "doubt": "No urgency is stated for rear pads at 2 mm, so soon is also defensible."
+    },
+    {
+     "id": "H31",
+     "lines": [
+      {
+       "code": "WIPER-F",
+       "urgency": "can_wait"
+      }
+     ],
+     "doubt": ""
+    },
+    {
+     "id": "H32",
+     "lines": [
+      {
+       "code": "FLT-CABIN",
+       "urgency": "can_wait"
+      }
+     ],
+     "doubt": ""
+    },
+    {
+     "id": "H33",
+     "lines": [
+      {
+       "code": "SPARK-4",
+       "urgency": "soon"
+      },
+      {
+       "code": "BRK-FLUID",
+       "urgency": "soon"
+      }
+     ],
+     "doubt": ""
+    },
+    {
+     "id": "H34",
+     "lines": [
+      {
+       "code": "TIRE-PATCH",
+       "urgency": "soon"
+      }
+     ],
+     "doubt": ""
+    },
+    {
+     "id": "H35",
+     "lines": [
+      {
+       "code": "WATER-PUMP",
+       "urgency": "soon"
+      }
+     ],
+     "doubt": ""
+    },
+    {
+     "id": "H36",
+     "lines": [
+      {
+       "code": "BRK-ROT-R",
+       "urgency": "soon"
+      }
+     ],
+     "doubt": ""
+    },
+    {
+     "id": "H37",
+     "lines": [
+      {
+       "code": "BULB-HEAD",
+       "urgency": "safety"
+      }
+     ],
+     "doubt": "No urgency is stated for the burned-out headlight; soon is also plausible."
+    },
+    {
+     "id": "H38",
+     "lines": [],
+     "doubt": ""
+    },
+    {
+     "id": "H39",
+     "lines": [
+      {
+       "code": "WIPER-F",
+       "urgency": "soon"
+      }
+     ],
+     "doubt": ""
+    },
+    {
+     "id": "H40",
+     "lines": [
+      {
+       "code": "DIAG-CEL",
+       "urgency": "soon"
+      }
+     ],
+     "doubt": "No urgency is stated for the diagnosis; can_wait is also plausible."
+    },
+    {
+     "id": "H41",
+     "lines": [
+      {
+       "code": "BRK-PAD-R",
+       "urgency": "soon"
+      }
+     ],
+     "doubt": ""
+    },
+    {
+     "id": "H42",
+     "lines": [
+      {
+       "code": "BULB-BRAKE",
+       "urgency": "safety"
+      }
+     ],
+     "doubt": ""
+    },
+    {
+     "id": "H43",
+     "lines": [
+      {
+       "code": "STEER-TIE",
+       "urgency": "can_wait"
+      },
+      {
+       "code": "ALIGN-4",
+       "urgency": "can_wait"
+      }
+     ],
+     "doubt": "Work deferred to the next visit could be seen as not for this estimate at all."
+    },
+    {
+     "id": "H44",
+     "lines": [
+      {
+       "code": "TIRE-REPL-1",
+       "urgency": "soon"
+      }
+     ],
+     "doubt": ""
+    },
+    {
+     "id": "H45",
+     "lines": [
+      {
+       "code": "BAT-REPL",
+       "urgency": "can_wait"
+      }
+     ],
+     "doubt": ""
+    },
+    {
+     "id": "H46",
+     "lines": [
+      {
+       "code": "BRK-FLUID",
+       "urgency": "can_wait"
+      }
+     ],
+     "doubt": ""
+    },
+    {
+     "id": "H47",
+     "lines": [
+      {
+       "code": "BELT-SERP",
+       "urgency": "safety"
+      }
+     ],
+     "doubt": ""
+    },
+    {
+     "id": "H48",
+     "lines": [
+      {
+       "code": "FLT-CABIN",
+       "urgency": "can_wait"
+      },
+      {
+       "code": "FLT-ENGINE",
+       "urgency": "can_wait"
+      },
+      {
+       "code": "AC-RECHARGE",
+       "urgency": "can_wait"
+      }
+     ],
+     "doubt": ""
+    }
+   ]
+  },
+  {
+   "name": "labeler-2",
+   "labels": [
+    {
+     "id": "H01",
+     "lines": [
+      {
+       "code": "BRK-PAD-F",
+       "urgency": "safety"
+      },
+      {
+       "code": "BELT-SERP",
+       "urgency": "soon"
+      },
+      {
+       "code": "FLT-CABIN",
+       "urgency": "can_wait"
+      }
+     ],
+     "doubt": "The mechanic says the pads are a must today but does not say it is unsafe to drive, so the pads could also be read as soon."
+    },
+    {
+     "id": "H02",
+     "lines": [
+      {
+       "code": "BAT-REPL",
+       "urgency": "soon"
+      },
+      {
+       "code": "WIPER-F",
+       "urgency": "can_wait"
+      },
+      {
+       "code": "FLT-ENGINE",
+       "urgency": "can_wait"
+      }
+     ],
+     "doubt": ""
+    },
+    {
+     "id": "H03",
+     "lines": [
+      {
+       "code": "BRK-FLUID",
+       "urgency": "soon"
+      },
+      {
+       "code": "COOL-FLUSH",
+       "urgency": "soon"
+      },
+      {
+       "code": "TRANS-FLUID",
+       "urgency": "soon"
+      },
+      {
+       "code": "OIL-SYN",
+       "urgency": "soon"
+      }
+     ],
+     "doubt": ""
+    },
+    {
+     "id": "H04",
+     "lines": [
+      {
+       "code": "WHEEL-BEAR-F",
+       "urgency": "safety"
+      },
+      {
+       "code": "STEER-TIE",
+       "urgency": "safety"
+      },
+      {
+       "code": "ALIGN-4",
+       "urgency": "safety"
+      }
+     ],
+     "doubt": "The alignment follows the repairs and on its own is not a safety item, so it could be marked soon."
+    },
+    {
+     "id": "H05",
+     "lines": [
+      {
+       "code": "BULB-HEAD",
+       "urgency": "safety"
+      },
+      {
+       "code": "BULB-BRAKE",
+       "urgency": "safety"
+      },
+      {
+       "code": "WIPER-F",
+       "urgency": "can_wait"
+      }
+     ],
+     "doubt": ""
+    },
+    {
+     "id": "H06",
+     "lines": [
+      {
+       "code": "SUSP-STRUT-F",
+       "urgency": "soon"
+      },
+      {
+       "code": "SUSP-LINK",
+       "urgency": "soon"
+      },
+      {
+       "code": "TIRE-ROT",
+       "urgency": "can_wait"
+      }
+     ],
+     "doubt": ""
+    },
+    {
+     "id": "H07",
+     "lines": [
+      {
+       "code": "WATER-PUMP",
+       "urgency": "soon"
+      },
+      {
+       "code": "THERMO",
+       "urgency": "soon"
+      },
+      {
+       "code": "COOL-FLUSH",
+       "urgency": "soon"
+      }
+     ],
+     "doubt": ""
+    },
+    {
+     "id": "H08",
+     "lines": [
+      {
+       "code": "BRK-PAD-F",
+       "urgency": "safety"
+      },
+      {
+       "code": "BRK-ROT-F",
+       "urgency": "safety"
+      },
+      {
+       "code": "BRK-PAD-R",
+       "urgency": "soon"
+      }
+     ],
+     "doubt": ""
+    },
+    {
+     "id": "H09",
+     "lines": [
+      {
+       "code": "BRK-PAD-R",
+       "urgency": "safety"
+      }
+     ],
+     "doubt": "'Has to be done before she leaves' points to safety, but the mechanic never says the car is unsafe to drive, so soon is also defensible."
+    },
+    {
+     "id": "H10",
+     "lines": [
+      {
+       "code": "FLT-CABIN",
+       "urgency": "can_wait"
+      }
+     ],
+     "doubt": ""
+    },
+    {
+     "id": "H11",
+     "lines": [
+      {
+       "code": "OIL-SYN",
+       "urgency": "soon"
+      }
+     ],
+     "doubt": "No timing is given for an oil change that is 1,000 miles overdue, so it could be soon or can_wait."
+    },
+    {
+     "id": "H12",
+     "lines": [],
+     "doubt": ""
+    },
+    {
+     "id": "H13",
+     "lines": [
+      {
+       "code": "MOTOR-MOUNT",
+       "urgency": "soon"
+      }
+     ],
+     "doubt": ""
+    },
+    {
+     "id": "H14",
+     "lines": [
+      {
+       "code": "BELT-TENS",
+       "urgency": "soon"
+      }
+     ],
+     "doubt": ""
+    },
+    {
+     "id": "H15",
+     "lines": [
+      {
+       "code": "DIAG-CEL",
+       "urgency": "soon"
+      }
+     ],
+     "doubt": "No urgency is given for diagnosing the misfire code."
+    },
+    {
+     "id": "H16",
+     "lines": [],
+     "doubt": ""
+    },
+    {
+     "id": "H17",
+     "lines": [],
+     "doubt": ""
+    },
+    {
+     "id": "H18",
+     "lines": [
+      {
+       "code": "TIRE-REPL-1",
+       "urgency": "safety"
+      }
+     ],
+     "doubt": ""
+    },
+    {
+     "id": "H19",
+     "lines": [
+      {
+       "code": "BRK-ROT-F",
+       "urgency": "soon"
+      }
+     ],
+     "doubt": ""
+    },
+    {
+     "id": "H20",
+     "lines": [
+      {
+       "code": "OIL-SYN",
+       "urgency": "soon"
+      }
+     ],
+     "doubt": "An oil change that is merely 'due' could be read as soon or can_wait."
+    },
+    {
+     "id": "H21",
+     "lines": [
+      {
+       "code": "TRANS-FLUID",
+       "urgency": "can_wait"
+      }
+     ],
+     "doubt": ""
+    },
+    {
+     "id": "H22",
+     "lines": [
+      {
+       "code": "GASKET-VC",
+       "urgency": "soon"
+      }
+     ],
+     "doubt": ""
+    },
+    {
+     "id": "H23",
+     "lines": [
+      {
+       "code": "BRK-PAD-F",
+       "urgency": "safety"
+      },
+      {
+       "code": "BRK-ROT-F",
+       "urgency": "safety"
+      }
+     ],
+     "doubt": ""
+    },
+    {
+     "id": "H24",
+     "lines": [
+      {
+       "code": "MOTOR-MOUNT",
+       "urgency": "soon"
+      },
+      {
+       "code": "CV-AXLE",
+       "urgency": "soon"
+      }
+     ],
+     "doubt": ""
+    },
+    {
+     "id": "H25",
+     "lines": [
+      {
+       "code": "DIAG-CEL",
+       "urgency": "soon"
+      }
+     ],
+     "doubt": "No urgency is given for the diagnosis, and a lean code is not a safety issue."
+    },
+    {
+     "id": "H26",
+     "lines": [
+      {
+       "code": "SUSP-LINK",
+       "urgency": "soon"
+      },
+      {
+       "code": "SUSP-STRUT-F",
+       "urgency": "soon"
+      }
+     ],
+     "doubt": ""
+    },
+    {
+     "id": "H27",
+     "lines": [
+      {
+       "code": "BAT-REPL",
+       "urgency": "soon"
+      }
+     ],
+     "doubt": ""
+    },
+    {
+     "id": "H28",
+     "lines": [
+      {
+       "code": "AC-RECHARGE",
+       "urgency": "can_wait"
+      }
+     ],
+     "doubt": ""
+    },
+    {
+     "id": "H29",
+     "lines": [
+      {
+       "code": "WHEEL-BEAR-F",
+       "urgency": "safety"
+      }
+     ],
+     "doubt": ""
+    },
+    {
+     "id": "H30",
+     "lines": [
+      {
+       "code": "BRK-PAD-R",
+       "urgency": "safety"
+      }
+     ],
+     "doubt": "No urgency is stated for rear pads at 2 mm, so soon is also defensible."
+    },
+    {
+     "id": "H31",
+     "lines": [
+      {
+       "code": "WIPER-F",
+       "urgency": "can_wait"
+      }
+     ],
+     "doubt": ""
+    },
+    {
+     "id": "H32",
+     "lines": [
+      {
+       "code": "FLT-CABIN",
+       "urgency": "can_wait"
+      }
+     ],
+     "doubt": ""
+    },
+    {
+     "id": "H33",
+     "lines": [
+      {
+       "code": "SPARK-4",
+       "urgency": "soon"
+      },
+      {
+       "code": "BRK-FLUID",
+       "urgency": "soon"
+      }
+     ],
+     "doubt": ""
+    },
+    {
+     "id": "H34",
+     "lines": [
+      {
+       "code": "TIRE-PATCH",
+       "urgency": "soon"
+      }
+     ],
+     "doubt": ""
+    },
+    {
+     "id": "H35",
+     "lines": [
+      {
+       "code": "WATER-PUMP",
+       "urgency": "soon"
+      }
+     ],
+     "doubt": ""
+    },
+    {
+     "id": "H36",
+     "lines": [
+      {
+       "code": "BRK-ROT-R",
+       "urgency": "soon"
+      }
+     ],
+     "doubt": ""
+    },
+    {
+     "id": "H37",
+     "lines": [
+      {
+       "code": "BULB-HEAD",
+       "urgency": "safety"
+      }
+     ],
+     "doubt": "No urgency is stated for the burnt-out headlight, so soon is also possible."
+    },
+    {
+     "id": "H38",
+     "lines": [],
+     "doubt": ""
+    },
+    {
+     "id": "H39",
+     "lines": [
+      {
+       "code": "WIPER-F",
+       "urgency": "soon"
+      }
+     ],
+     "doubt": ""
+    },
+    {
+     "id": "H40",
+     "lines": [
+      {
+       "code": "DIAG-CEL",
+       "urgency": "soon"
+      }
+     ],
+     "doubt": "No urgency is given for the diagnosis."
+    },
+    {
+     "id": "H41",
+     "lines": [
+      {
+       "code": "BRK-PAD-R",
+       "urgency": "soon"
+      }
+     ],
+     "doubt": ""
+    },
+    {
+     "id": "H42",
+     "lines": [
+      {
+       "code": "BULB-BRAKE",
+       "urgency": "safety"
+      }
+     ],
+     "doubt": "'Before she leaves' fits safety for a brake light, but the urgency is driven by her trip, so soon is possible."
+    },
+    {
+     "id": "H43",
+     "lines": [
+      {
+       "code": "STEER-TIE",
+       "urgency": "can_wait"
+      },
+      {
+       "code": "ALIGN-4",
+       "urgency": "can_wait"
+      }
+     ],
+     "doubt": "Both are recommended for the next visit, so a writer could leave them off today's estimate entirely."
+    },
+    {
+     "id": "H44",
+     "lines": [
+      {
+       "code": "TIRE-REPL-1",
+       "urgency": "soon"
+      }
+     ],
+     "doubt": ""
+    },
+    {
+     "id": "H45",
+     "lines": [
+      {
+       "code": "BAT-REPL",
+       "urgency": "can_wait"
+      }
+     ],
+     "doubt": ""
+    },
+    {
+     "id": "H46",
+     "lines": [
+      {
+       "code": "BRK-FLUID",
+       "urgency": "can_wait"
+      }
+     ],
+     "doubt": ""
+    },
+    {
+     "id": "H47",
+     "lines": [
+      {
+       "code": "BELT-SERP",
+       "urgency": "safety"
+      }
+     ],
+     "doubt": ""
+    },
+    {
+     "id": "H48",
+     "lines": [
+      {
+       "code": "FLT-CABIN",
+       "urgency": "can_wait"
+      },
+      {
+       "code": "FLT-ENGINE",
+       "urgency": "can_wait"
+      },
+      {
+       "code": "AC-RECHARGE",
+       "urgency": "can_wait"
+      }
+     ],
+     "doubt": ""
+    }
+   ]
+  }
+ ]
+}

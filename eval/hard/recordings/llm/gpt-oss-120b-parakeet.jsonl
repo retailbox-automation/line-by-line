@@ -1,0 +1,48 @@
+{"id":"H01","lines":[{"code":"BRK-PAD-F","urgency":"safety","customerText":"Front brake pads need to be replaced."},{"code":"BELT-SERP","urgency":"soon","customerText":"The serpentine belt should be replaced."},{"code":"FLT-CABIN","urgency":"can_wait","customerText":"The cabin air filter can be replaced."}],"ms":1564}
+{"id":"H02","lines":[{"code":"BAT-REPL","urgency":"soon","customerText":"Your battery failed the load test and should be replaced soon."},{"code":"WIPER-F","urgency":"can_wait","customerText":"The front wiper blades are chattering and should be replaced."},{"code":"FLT-ENGINE","urgency":"can_wait","customerText":"The engine air filter is dirty and should be replaced."}],"ms":1241}
+{"id":"H03","lines":[{"code":"COOL-FLUSH","urgency":"can_wait","customerText":"We'll flush the coolant to remove rust and replace it with fresh fluid."},{"code":"TRANS-FLUID","urgency":"can_wait","customerText":"We'll change the transmission fluid since it smells burnt."},{"code":"OIL-SYN","urgency":"can_wait","customerText":"We'll perform a full synthetic oil change as it's overdue."}],"ms":1371}
+{"id":"H04","lines":[{"code":"WHEEL-BEAR-F","urgency":"safety","customerText":"Your front wheel bearing needs to be replaced."},{"code":"STEER-TIE","urgency":"safety","customerText":"The left outer tie rod needs to be replaced."},{"code":"ALIGN-4","urgency":"safety","customerText":"A four-wheel alignment is required."}],"ms":1453}
+{"id":"H05","lines":[{"code":"BULB-HEAD","urgency":"safety","customerText":"Your headlight needs a new bulb."},{"code":"BULB-BRAKE","urgency":"safety","customerText":"The brake light needs a new bulb."},{"code":"WIPER-F","urgency":"can_wait","customerText":"The front wiper blades should be replaced."}],"ms":914}
+{"id":"H06","lines":[{"code":"SUSP-STRUT-F","urgency":"soon","customerText":"Front struts need to be replaced."},{"code":"SUSP-LINK","urgency":"soon","customerText":"Sway bar end links on both sides need replacement."},{"code":"TIRE-ROT","urgency":"can_wait","customerText":"Tire rotation is recommended."}],"ms":1397}
+{"id":"H07","lines":[],"ms":3774}
+{"id":"H08","lines":[{"code":"BRK-PAD-F","urgency":"soon","customerText":"Front brake pads need to be replaced."},{"code":"BRK-ROT-F","urgency":"soon","customerText":"Front brake rotors need to be replaced."}],"ms":8590}
+{"id":"H09","lines":[],"ms":3763}
+{"id":"H10","lines":[{"code":"FLT-CABIN","urgency":"can_wait","customerText":"We recommend replacing the cabin air filter."}],"ms":8938}
+{"id":"H11","lines":[{"code":"OIL-SYN","urgency":"soon","customerText":"We will change the oil during your service."}],"ms":8206}
+{"id":"H12","lines":[],"ms":9758}
+{"id":"H13","lines":[{"code":"MOTOR-MOUNT","urgency":"soon","customerText":"We’ll replace the engine mount on the passenger side soon."}],"ms":1957}
+{"id":"H14","lines":[{"code":"BELT-TENS","urgency":"soon","customerText":"Replace the belt tensioner to stop the squealing noise."}],"ms":9309}
+{"id":"H15","lines":[{"code":"DIAG-CEL","urgency":"soon","customerText":"We need to diagnose the misfire causing the check engine light."}],"ms":9803}
+{"id":"H16","lines":[],"ms":2808}
+{"id":"H17","lines":[],"ms":8771}
+{"id":"H18","lines":[{"code":"BULB-HEAD","urgency":"soon","customerText":"Your left headlight bulb needs to be replaced."}],"ms":8556}
+{"id":"H19","lines":[{"code":"BRK-ROT-F","urgency":"soon","customerText":"Your front brake rotors need to be replaced."}],"ms":4162}
+{"id":"H20","lines":[{"code":"OIL-SYN","urgency":"can_wait","customerText":"We’ll change the oil as part of routine maintenance."}],"ms":11483}
+{"id":"H21","lines":[{"code":"TRANS-FLUID","urgency":"can_wait","customerText":"We recommend changing the transmission fluid."}],"ms":2019}
+{"id":"H22","lines":[{"code":"GASKET-VC","urgency":"soon","customerText":"Your valve cover gasket is damaged and should be replaced soon."}],"ms":9440}
+{"id":"H23","lines":[{"code":"BRK-PAD-F","urgency":"safety","customerText":"Your front brake pads need to be replaced right away for safe driving."},{"code":"BRK-ROT-F","urgency":"safety","customerText":"Your front brake rotors need to be replaced right away for safe driving."}],"ms":3362}
+{"id":"H24","lines":[],"ms":9908}
+{"id":"H25","lines":[],"ms":10453}
+{"id":"H26","lines":[{"code":"SUSP-STRUT-F","urgency":"soon","customerText":"We’ll replace the front struts to restore proper ride quality."},{"code":"SUSP-LINK","urgency":"soon","customerText":"We’ll replace the sway bar links to stop the knocking noise."}],"ms":1149}
+{"id":"H27","lines":[{"code":"BAT-REPL","urgency":"soon","customerText":"Your battery is weak and should be replaced soon."}],"ms":9009}
+{"id":"H28","lines":[{"code":"AC-RECHARGE","urgency":"can_wait","customerText":"We'll recharge the A/C system to restore proper cooling."}],"ms":9435}
+{"id":"H29","lines":[{"code":"WHEEL-BEAR-F","urgency":"safety","customerText":"Your front left wheel bearing needs to be replaced."}],"ms":4424}
+{"id":"H30","lines":[{"code":"BRK-PAD-R","urgency":"safety","customerText":"Rear brake pads are worn and need to be replaced."},{"code":"BRK-ROT-R","urgency":"safety","customerText":"Rear brake rotors are only 2 mm thick and must be replaced."}],"ms":2761}
+{"id":"H31","lines":[{"code":"WIPER-F","urgency":"can_wait","customerText":"We’ll replace the front wiper blades to improve visibility."}],"ms":5254}
+{"id":"H32","lines":[{"code":"FLT-CABIN","urgency":"can_wait","customerText":"We'll replace the cabin air filter."}],"ms":2764}
+{"id":"H33","lines":[],"ms":8815}
+{"id":"H34","lines":[],"ms":461}
+{"id":"H35","lines":[{"code":"WATER-PUMP","urgency":"soon","customerText":"We need to replace the water pump because it is leaking."}],"ms":10272}
+{"id":"H36","lines":[],"ms":2544}
+{"id":"H37","lines":[{"code":"BULB-HEAD","urgency":"can_wait","customerText":"We'll replace the passenger side headlight bulb."}],"ms":4921}
+{"id":"H38","lines":[],"ms":1636}
+{"id":"H39","lines":[{"code":"WIPER-F","urgency":"soon","customerText":"We’ll replace the front wiper blades soon."}],"ms":4280}
+{"id":"H40","lines":[{"code":"DIAG-CEL","urgency":"can_wait","customerText":"We will diagnose the check engine light to find the problem."}],"ms":2754}
+{"id":"H41","lines":[{"code":"BRK-PAD-R","urgency":"soon","customerText":"Your rear brake pads are worn and should be replaced within the next few weeks."}],"ms":3896}
+{"id":"H42","lines":[{"code":"BULB-BRAKE","urgency":"safety","customerText":"We’ll replace the left brake light bulb before you leave."}],"ms":9212}
+{"id":"H43","lines":[{"code":"STEER-TIE","urgency":"can_wait","customerText":"We recommend replacing the tie rod end."},{"code":"ALIGN-4","urgency":"can_wait","customerText":"We recommend a four-wheel alignment."}],"ms":2189}
+{"id":"H44","lines":[{"code":"TIRE-REPL-1","urgency":"soon","customerText":"Your front right tire needs to be replaced soon before winter."}],"ms":10350}
+{"id":"H45","lines":[{"code":"BAT-REPL","urgency":"can_wait","customerText":"We recommend replacing the battery; it can wait until spring."}],"ms":10309}
+{"id":"H46","lines":[{"code":"BRK-FLUID","urgency":"can_wait","customerText":"We recommend flushing the brake fluid to improve pedal feel."}],"ms":1849}
+{"id":"H47","lines":[{"code":"BELT-SERP","urgency":"safety","customerText":"Your drive belt is worn and needs to be replaced right away to keep the power steering and water pump working."}],"ms":2961}
+{"id":"H48","lines":[{"code":"FLT-CABIN","urgency":"can_wait","customerText":"We'll replace the cabin air filter to improve interior air quality."},{"code":"FLT-ENGINE","urgency":"can_wait","customerText":"We'll replace the engine air filter to keep the engine running cleanly."},{"code":"AC-RECHARGE","urgency":"can_wait","customerText":"We'll recharge the A/C system to restore cooling performance."}],"ms":4510}

@@ -1,0 +1,618 @@
+{
+  "stt": "text",
+  "llm": "keywords",
+  "notes": 48,
+  "exact": 10,
+  "precision": 0.5625,
+  "recall": 0.5294,
+  "invented": 0,
+  "urgency": {
+    "ok": 24,
+    "n": 36
+  },
+  "wer": null,
+  "latencyMs": {
+    "p50": 0,
+    "p95": 0
+  },
+  "rows": [
+    {
+      "id": "H01",
+      "ok": false,
+      "expected": [
+        "BELT-SERP",
+        "BRK-PAD-F",
+        "FLT-CABIN"
+      ],
+      "got": [
+        "BELT-SERP",
+        "BRK-PAD-F"
+      ],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "H02",
+      "ok": true,
+      "expected": [
+        "BAT-REPL",
+        "FLT-ENGINE",
+        "WIPER-F"
+      ],
+      "got": [
+        "BAT-REPL",
+        "FLT-ENGINE",
+        "WIPER-F"
+      ],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "H03",
+      "ok": false,
+      "expected": [
+        "BRK-FLUID",
+        "COOL-FLUSH",
+        "OIL-SYN",
+        "TRANS-FLUID"
+      ],
+      "got": [],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "H04",
+      "ok": false,
+      "expected": [
+        "ALIGN-4",
+        "STEER-TIE",
+        "WHEEL-BEAR-F"
+      ],
+      "got": [
+        "ALIGN-4",
+        "STEER-TIE"
+      ],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "H05",
+      "ok": false,
+      "expected": [
+        "BULB-BRAKE",
+        "BULB-HEAD",
+        "WIPER-F"
+      ],
+      "got": [
+        "WIPER-F"
+      ],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "H06",
+      "ok": false,
+      "expected": [
+        "SUSP-LINK",
+        "SUSP-STRUT-F",
+        "TIRE-ROT"
+      ],
+      "got": [
+        "SUSP-LINK",
+        "SUSP-STRUT-F",
+        "TIRE-REPL-1"
+      ],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "H07",
+      "ok": false,
+      "expected": [
+        "COOL-FLUSH",
+        "THERMO",
+        "WATER-PUMP"
+      ],
+      "got": [
+        "THERMO",
+        "WATER-PUMP"
+      ],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "H08",
+      "ok": false,
+      "expected": [
+        "BRK-PAD-F",
+        "BRK-PAD-R",
+        "BRK-ROT-F"
+      ],
+      "got": [
+        "BRK-PAD-F",
+        "BRK-PAD-R",
+        "BRK-ROT-R"
+      ],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "H09",
+      "ok": true,
+      "expected": [
+        "BRK-PAD-R"
+      ],
+      "got": [
+        "BRK-PAD-R"
+      ],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "H10",
+      "ok": false,
+      "expected": [
+        "FLT-CABIN"
+      ],
+      "got": [
+        "BAT-REPL"
+      ],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "H11",
+      "ok": false,
+      "expected": [
+        "OIL-SYN"
+      ],
+      "got": [
+        "ALIGN-4",
+        "TIRE-REPL-1"
+      ],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "H12",
+      "ok": false,
+      "expected": [],
+      "got": [
+        "TIRE-REPL-1"
+      ],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "H13",
+      "ok": false,
+      "expected": [
+        "MOTOR-MOUNT"
+      ],
+      "got": [
+        "MOTOR-MOUNT",
+        "THERMO",
+        "WATER-PUMP"
+      ],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "H14",
+      "ok": false,
+      "expected": [
+        "BELT-TENS"
+      ],
+      "got": [
+        "BELT-SERP"
+      ],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "H15",
+      "ok": false,
+      "expected": [
+        "DIAG-CEL"
+      ],
+      "got": [
+        "SPARK-4",
+        "TIRE-PATCH"
+      ],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "H16",
+      "ok": false,
+      "expected": [],
+      "got": [
+        "BAT-REPL",
+        "TIRE-REPL-1"
+      ],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "H17",
+      "ok": false,
+      "expected": [],
+      "got": [
+        "FLT-ENGINE"
+      ],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "H18",
+      "ok": false,
+      "expected": [
+        "TIRE-REPL-1"
+      ],
+      "got": [
+        "ALIGN-4",
+        "TIRE-PATCH",
+        "TIRE-REPL-1"
+      ],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "H19",
+      "ok": false,
+      "expected": [
+        "BRK-ROT-F"
+      ],
+      "got": [
+        "BAT-REPL",
+        "BRK-ROT-F",
+        "WIPER-F"
+      ],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "H20",
+      "ok": false,
+      "expected": [
+        "OIL-SYN"
+      ],
+      "got": [],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "H21",
+      "ok": false,
+      "expected": [
+        "TRANS-FLUID"
+      ],
+      "got": [
+        "STEER-TIE"
+      ],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "H22",
+      "ok": false,
+      "expected": [
+        "GASKET-VC"
+      ],
+      "got": [
+        "GASKET-VC",
+        "THERMO"
+      ],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "H23",
+      "ok": false,
+      "expected": [
+        "BRK-PAD-F",
+        "BRK-ROT-F"
+      ],
+      "got": [],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "H24",
+      "ok": false,
+      "expected": [
+        "CV-AXLE",
+        "MOTOR-MOUNT"
+      ],
+      "got": [
+        "CV-AXLE"
+      ],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "H25",
+      "ok": false,
+      "expected": [
+        "DIAG-CEL"
+      ],
+      "got": [],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "H26",
+      "ok": true,
+      "expected": [
+        "SUSP-LINK",
+        "SUSP-STRUT-F"
+      ],
+      "got": [
+        "SUSP-LINK",
+        "SUSP-STRUT-F"
+      ],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "H27",
+      "ok": false,
+      "expected": [
+        "BAT-REPL"
+      ],
+      "got": [],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "H28",
+      "ok": true,
+      "expected": [
+        "AC-RECHARGE"
+      ],
+      "got": [
+        "AC-RECHARGE"
+      ],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "H29",
+      "ok": false,
+      "expected": [
+        "WHEEL-BEAR-F"
+      ],
+      "got": [],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "H30",
+      "ok": false,
+      "expected": [
+        "BRK-PAD-R"
+      ],
+      "got": [
+        "BRK-PAD-F",
+        "BRK-PAD-R"
+      ],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "H31",
+      "ok": false,
+      "expected": [
+        "WIPER-F"
+      ],
+      "got": [
+        "BAT-REPL",
+        "WIPER-F"
+      ],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "H32",
+      "ok": false,
+      "expected": [
+        "FLT-CABIN"
+      ],
+      "got": [
+        "FLT-ENGINE"
+      ],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "H33",
+      "ok": false,
+      "expected": [
+        "BRK-FLUID",
+        "SPARK-4"
+      ],
+      "got": [
+        "TIRE-PATCH"
+      ],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "H34",
+      "ok": false,
+      "expected": [
+        "TIRE-PATCH"
+      ],
+      "got": [
+        "TIRE-PATCH",
+        "TIRE-REPL-1"
+      ],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "H35",
+      "ok": false,
+      "expected": [
+        "WATER-PUMP"
+      ],
+      "got": [
+        "THERMO",
+        "WATER-PUMP"
+      ],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "H36",
+      "ok": true,
+      "expected": [
+        "BRK-ROT-R"
+      ],
+      "got": [
+        "BRK-ROT-R"
+      ],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "H37",
+      "ok": false,
+      "expected": [
+        "BULB-HEAD"
+      ],
+      "got": [],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "H38",
+      "ok": true,
+      "expected": [],
+      "got": [],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "H39",
+      "ok": true,
+      "expected": [
+        "WIPER-F"
+      ],
+      "got": [
+        "WIPER-F"
+      ],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "H40",
+      "ok": false,
+      "expected": [
+        "DIAG-CEL"
+      ],
+      "got": [],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "H41",
+      "ok": false,
+      "expected": [
+        "BRK-PAD-R"
+      ],
+      "got": [
+        "BRK-PAD-R",
+        "SUSP-STRUT-F"
+      ],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "H42",
+      "ok": false,
+      "expected": [
+        "BULB-BRAKE"
+      ],
+      "got": [],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "H43",
+      "ok": true,
+      "expected": [
+        "ALIGN-4",
+        "STEER-TIE"
+      ],
+      "got": [
+        "ALIGN-4",
+        "STEER-TIE"
+      ],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "H44",
+      "ok": true,
+      "expected": [
+        "TIRE-REPL-1"
+      ],
+      "got": [
+        "TIRE-REPL-1"
+      ],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "H45",
+      "ok": true,
+      "expected": [
+        "BAT-REPL"
+      ],
+      "got": [
+        "BAT-REPL"
+      ],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "H46",
+      "ok": false,
+      "expected": [
+        "BRK-FLUID"
+      ],
+      "got": [],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "H47",
+      "ok": false,
+      "expected": [
+        "BELT-SERP"
+      ],
+      "got": [
+        "BELT-SERP",
+        "WATER-PUMP"
+      ],
+      "invented": 0,
+      "ms": 0
+    },
+    {
+      "id": "H48",
+      "ok": false,
+      "expected": [
+        "AC-RECHARGE",
+        "FLT-CABIN",
+        "FLT-ENGINE"
+      ],
+      "got": [
+        "FLT-ENGINE"
+      ],
+      "invented": 0,
+      "ms": 0
+    }
+  ],
+  "summary": "keywords on the note text: 10/48 exact notes, precision 0.563, recall 0.529, 0 invented codes, urgency 24/36"
+}

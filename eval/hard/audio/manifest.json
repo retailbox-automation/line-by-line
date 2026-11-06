@@ -1,0 +1,487 @@
+{
+ "synthetic": true,
+ "tool": "macOS say + ffmpeg + numpy",
+ "snr": "RMS of the voiced samples over RMS of the noise",
+ "items": [
+  {
+   "id": "H01",
+   "file": "audio/H01.wav",
+   "voice": "Eddy (English (US))",
+   "rate_wpm": 200,
+   "noise": "shop",
+   "snr_db": 12,
+   "snr_db_measured": 12.0,
+   "seconds": 13.79
+  },
+  {
+   "id": "H02",
+   "file": "audio/H02.wav",
+   "voice": "Flo (English (US))",
+   "rate_wpm": 215,
+   "noise": "compressor",
+   "snr_db": 12,
+   "snr_db_measured": 12.0,
+   "seconds": 9.49
+  },
+  {
+   "id": "H03",
+   "file": "audio/H03.wav",
+   "voice": "Reed (English (UK))",
+   "rate_wpm": 230,
+   "noise": "phone",
+   "snr_db": 12,
+   "snr_db_measured": 12.0,
+   "seconds": 12.26
+  },
+  {
+   "id": "H04",
+   "file": "audio/H04.wav",
+   "voice": "Rocko (English (US))",
+   "rate_wpm": 240,
+   "noise": "shop",
+   "snr_db": 8,
+   "snr_db_measured": 8.0,
+   "seconds": 9.11
+  },
+  {
+   "id": "H05",
+   "file": "audio/H05.wav",
+   "voice": "Grandpa (English (US))",
+   "rate_wpm": 210,
+   "noise": "compressor",
+   "snr_db": 8,
+   "snr_db_measured": 8.0,
+   "seconds": 9.26
+  },
+  {
+   "id": "H06",
+   "file": "audio/H06.wav",
+   "voice": "Fred",
+   "rate_wpm": 200,
+   "noise": "phone",
+   "snr_db": 8,
+   "snr_db_measured": 8.0,
+   "seconds": 8.76
+  },
+  {
+   "id": "H07",
+   "file": "audio/H07.wav",
+   "voice": "Kathy",
+   "rate_wpm": 215,
+   "noise": "shop",
+   "snr_db": 5,
+   "snr_db_measured": 5.0,
+   "seconds": 7.9
+  },
+  {
+   "id": "H08",
+   "file": "audio/H08.wav",
+   "voice": "Ralph",
+   "rate_wpm": 230,
+   "noise": "compressor",
+   "snr_db": 5,
+   "snr_db_measured": 5.0,
+   "seconds": 8.81
+  },
+  {
+   "id": "H09",
+   "file": "audio/H09.wav",
+   "voice": "Albert",
+   "rate_wpm": 240,
+   "noise": "phone",
+   "snr_db": 5,
+   "snr_db_measured": 5.0,
+   "seconds": 8.17
+  },
+  {
+   "id": "H10",
+   "file": "audio/H10.wav",
+   "voice": "Karen",
+   "rate_wpm": 210,
+   "noise": "shop",
+   "snr_db": 12,
+   "snr_db_measured": 12.0,
+   "seconds": 7.2
+  },
+  {
+   "id": "H11",
+   "file": "audio/H11.wav",
+   "voice": "Moira",
+   "rate_wpm": 200,
+   "noise": "compressor",
+   "snr_db": 12,
+   "snr_db_measured": 12.0,
+   "seconds": 11.05
+  },
+  {
+   "id": "H12",
+   "file": "audio/H12.wav",
+   "voice": "Tessa",
+   "rate_wpm": 215,
+   "noise": "phone",
+   "snr_db": 12,
+   "snr_db_measured": 12.0,
+   "seconds": 6.54
+  },
+  {
+   "id": "H13",
+   "file": "audio/H13.wav",
+   "voice": "Rishi",
+   "rate_wpm": 230,
+   "noise": "shop",
+   "snr_db": 8,
+   "snr_db_measured": 8.0,
+   "seconds": 11.03
+  },
+  {
+   "id": "H14",
+   "file": "audio/H14.wav",
+   "voice": "Aman (English (India))",
+   "rate_wpm": 240,
+   "noise": "compressor",
+   "snr_db": 8,
+   "snr_db_measured": 8.0,
+   "seconds": 7.31
+  },
+  {
+   "id": "H15",
+   "file": "audio/H15.wav",
+   "voice": "Daniel (English (UK))",
+   "rate_wpm": 210,
+   "noise": "phone",
+   "snr_db": 8,
+   "snr_db_measured": 8.0,
+   "seconds": 9.48
+  },
+  {
+   "id": "H16",
+   "file": "audio/H16.wav",
+   "voice": "Samantha",
+   "rate_wpm": 200,
+   "noise": "shop",
+   "snr_db": 5,
+   "snr_db_measured": 5.0,
+   "seconds": 9.4
+  },
+  {
+   "id": "H17",
+   "file": "audio/H17.wav",
+   "voice": "Eddy (English (US))",
+   "rate_wpm": 215,
+   "noise": "compressor",
+   "snr_db": 5,
+   "snr_db_measured": 5.0,
+   "seconds": 6.93
+  },
+  {
+   "id": "H18",
+   "file": "audio/H18.wav",
+   "voice": "Flo (English (US))",
+   "rate_wpm": 230,
+   "noise": "phone",
+   "snr_db": 5,
+   "snr_db_measured": 5.0,
+   "seconds": 13.63
+  },
+  {
+   "id": "H19",
+   "file": "audio/H19.wav",
+   "voice": "Reed (English (UK))",
+   "rate_wpm": 240,
+   "noise": "shop",
+   "snr_db": 12,
+   "snr_db_measured": 12.0,
+   "seconds": 12.19
+  },
+  {
+   "id": "H20",
+   "file": "audio/H20.wav",
+   "voice": "Rocko (English (US))",
+   "rate_wpm": 210,
+   "noise": "compressor",
+   "snr_db": 12,
+   "snr_db_measured": 12.0,
+   "seconds": 10.36
+  },
+  {
+   "id": "H21",
+   "file": "audio/H21.wav",
+   "voice": "Grandpa (English (US))",
+   "rate_wpm": 200,
+   "noise": "phone",
+   "snr_db": 12,
+   "snr_db_measured": 12.0,
+   "seconds": 11.49
+  },
+  {
+   "id": "H22",
+   "file": "audio/H22.wav",
+   "voice": "Fred",
+   "rate_wpm": 215,
+   "noise": "shop",
+   "snr_db": 8,
+   "snr_db_measured": 8.0,
+   "seconds": 8.28
+  },
+  {
+   "id": "H23",
+   "file": "audio/H23.wav",
+   "voice": "Kathy",
+   "rate_wpm": 230,
+   "noise": "compressor",
+   "snr_db": 8,
+   "snr_db_measured": 8.0,
+   "seconds": 5.5
+  },
+  {
+   "id": "H24",
+   "file": "audio/H24.wav",
+   "voice": "Ralph",
+   "rate_wpm": 240,
+   "noise": "phone",
+   "snr_db": 8,
+   "snr_db_measured": 8.0,
+   "seconds": 5.77
+  },
+  {
+   "id": "H25",
+   "file": "audio/H25.wav",
+   "voice": "Albert",
+   "rate_wpm": 210,
+   "noise": "shop",
+   "snr_db": 5,
+   "snr_db_measured": 5.0,
+   "seconds": 6.29
+  },
+  {
+   "id": "H26",
+   "file": "audio/H26.wav",
+   "voice": "Karen",
+   "rate_wpm": 200,
+   "noise": "compressor",
+   "snr_db": 5,
+   "snr_db_measured": 5.0,
+   "seconds": 6.69
+  },
+  {
+   "id": "H27",
+   "file": "audio/H27.wav",
+   "voice": "Moira",
+   "rate_wpm": 215,
+   "noise": "phone",
+   "snr_db": 5,
+   "snr_db_measured": 5.0,
+   "seconds": 6.52
+  },
+  {
+   "id": "H28",
+   "file": "audio/H28.wav",
+   "voice": "Tessa",
+   "rate_wpm": 230,
+   "noise": "shop",
+   "snr_db": 12,
+   "snr_db_measured": 12.0,
+   "seconds": 7.49
+  },
+  {
+   "id": "H29",
+   "file": "audio/H29.wav",
+   "voice": "Rishi",
+   "rate_wpm": 240,
+   "noise": "compressor",
+   "snr_db": 12,
+   "snr_db_measured": 12.0,
+   "seconds": 5.71
+  },
+  {
+   "id": "H30",
+   "file": "audio/H30.wav",
+   "voice": "Aman (English (India))",
+   "rate_wpm": 210,
+   "noise": "phone",
+   "snr_db": 12,
+   "snr_db_measured": 12.0,
+   "seconds": 6.41
+  },
+  {
+   "id": "H31",
+   "file": "audio/H31.wav",
+   "voice": "Daniel (English (UK))",
+   "rate_wpm": 200,
+   "noise": "shop",
+   "snr_db": 8,
+   "snr_db_measured": 8.0,
+   "seconds": 9.73
+  },
+  {
+   "id": "H32",
+   "file": "audio/H32.wav",
+   "voice": "Samantha",
+   "rate_wpm": 215,
+   "noise": "compressor",
+   "snr_db": 8,
+   "snr_db_measured": 8.0,
+   "seconds": 8.25
+  },
+  {
+   "id": "H33",
+   "file": "audio/H33.wav",
+   "voice": "Eddy (English (US))",
+   "rate_wpm": 230,
+   "noise": "phone",
+   "snr_db": 8,
+   "snr_db_measured": 8.0,
+   "seconds": 11.43
+  },
+  {
+   "id": "H34",
+   "file": "audio/H34.wav",
+   "voice": "Flo (English (US))",
+   "rate_wpm": 240,
+   "noise": "shop",
+   "snr_db": 5,
+   "snr_db_measured": 5.0,
+   "seconds": 9.12
+  },
+  {
+   "id": "H35",
+   "file": "audio/H35.wav",
+   "voice": "Reed (English (UK))",
+   "rate_wpm": 210,
+   "noise": "compressor",
+   "snr_db": 5,
+   "snr_db_measured": 5.0,
+   "seconds": 8.64
+  },
+  {
+   "id": "H36",
+   "file": "audio/H36.wav",
+   "voice": "Rocko (English (US))",
+   "rate_wpm": 200,
+   "noise": "phone",
+   "snr_db": 5,
+   "snr_db_measured": 5.0,
+   "seconds": 11.31
+  },
+  {
+   "id": "H37",
+   "file": "audio/H37.wav",
+   "voice": "Grandpa (English (US))",
+   "rate_wpm": 215,
+   "noise": "shop",
+   "snr_db": 12,
+   "snr_db_measured": 12.0,
+   "seconds": 7.46
+  },
+  {
+   "id": "H38",
+   "file": "audio/H38.wav",
+   "voice": "Fred",
+   "rate_wpm": 230,
+   "noise": "compressor",
+   "snr_db": 12,
+   "snr_db_measured": 12.0,
+   "seconds": 10.19
+  },
+  {
+   "id": "H39",
+   "file": "audio/H39.wav",
+   "voice": "Kathy",
+   "rate_wpm": 240,
+   "noise": "phone",
+   "snr_db": 12,
+   "snr_db_measured": 12.0,
+   "seconds": 7.24
+  },
+  {
+   "id": "H40",
+   "file": "audio/H40.wav",
+   "voice": "Ralph",
+   "rate_wpm": 210,
+   "noise": "shop",
+   "snr_db": 8,
+   "snr_db_measured": 8.0,
+   "seconds": 9.8
+  },
+  {
+   "id": "H41",
+   "file": "audio/H41.wav",
+   "voice": "Albert",
+   "rate_wpm": 200,
+   "noise": "compressor",
+   "snr_db": 8,
+   "snr_db_measured": 8.0,
+   "seconds": 8.52
+  },
+  {
+   "id": "H42",
+   "file": "audio/H42.wav",
+   "voice": "Karen",
+   "rate_wpm": 215,
+   "noise": "phone",
+   "snr_db": 8,
+   "snr_db_measured": 8.0,
+   "seconds": 6.56
+  },
+  {
+   "id": "H43",
+   "file": "audio/H43.wav",
+   "voice": "Moira",
+   "rate_wpm": 230,
+   "noise": "shop",
+   "snr_db": 5,
+   "snr_db_measured": 5.0,
+   "seconds": 7.27
+  },
+  {
+   "id": "H44",
+   "file": "audio/H44.wav",
+   "voice": "Tessa",
+   "rate_wpm": 240,
+   "noise": "compressor",
+   "snr_db": 5,
+   "snr_db_measured": 5.0,
+   "seconds": 8.01
+  },
+  {
+   "id": "H45",
+   "file": "audio/H45.wav",
+   "voice": "Rishi",
+   "rate_wpm": 210,
+   "noise": "phone",
+   "snr_db": 5,
+   "snr_db_measured": 5.0,
+   "seconds": 6.34
+  },
+  {
+   "id": "H46",
+   "file": "audio/H46.wav",
+   "voice": "Aman (English (India))",
+   "rate_wpm": 200,
+   "noise": "shop",
+   "snr_db": 12,
+   "snr_db_measured": 12.0,
+   "seconds": 4.31
+  },
+  {
+   "id": "H47",
+   "file": "audio/H47.wav",
+   "voice": "Daniel (English (UK))",
+   "rate_wpm": 215,
+   "noise": "compressor",
+   "snr_db": 12,
+   "snr_db_measured": 12.0,
+   "seconds": 8.12
+  },
+  {
+   "id": "H48",
+   "file": "audio/H48.wav",
+   "voice": "Samantha",
+   "rate_wpm": 230,
+   "noise": "phone",
+   "snr_db": 12,
+   "snr_db_measured": 12.0,
+   "seconds": 7.13
+  }
+ ]
+}
