@@ -1,5 +1,5 @@
 {
- "about": "Blind label check of the hard set, 2026-11-06. Two independent labelers (Claude Opus 5.5, effort high, no access to our labels or to any file) labeled all 48 notes from the note text and the price list, with the same rules the shop's model gets. Both agreed with our labels on every code (68 of 68) and every urgency (68 of 68). 'doubt' is where a labeler said a careful service writer could answer differently; those notes carry the tag urgency_judgment or code_judgment in findings.json.",
+ "about": "Blind label check of the hard set, 2026-11-06. Two independent labelers (a large language model, run twice on its own, with no access to our labels or to any file) labeled all 48 notes from the note text and the price list, with the same rules the shop's model gets. Both agreed with our labels on every code (68 of 68) and every urgency (68 of 68). 'doubt' is where a labeler said a careful service writer could answer differently; those notes carry the tag urgency_judgment or code_judgment in findings.json.",
  "labelers": [
   {
    "name": "labeler-1",
